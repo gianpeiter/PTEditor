@@ -1,4 +1,3 @@
-; ExpLevelTable de Source25\Source\Shared\LevelTable.h (linha N = EXP no inicio do level N)
 0
 2000
 5000
