@@ -61,6 +61,18 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Data\BackupHelper.vb" />
+    <Compile Include="Data\Character\AccountFile.vb" />
+    <Compile Include="Data\Character\CharacterFile.vb" />
+    <Compile Include="Data\Character\CharacterIndex.vb" />
+    <Compile Include="Data\Character\CharacterRules.vb" />
+    <Compile Include="Data\Character\GameItem.vb" />
+    <Compile Include="Data\Character\GameTables.vb" />
+    <Compile Include="Data\Character\ItemChecksum.vb" />
+    <Compile Include="Data\Character\ItemCompression.vb" />
+    <Compile Include="Data\Character\LevelTable.vb" />
+    <Compile Include="Data\Character\RecordLayout.vb" />
+    <Compile Include="Data\Character\UserCode.vb" />
+    <Compile Include="Data\Character\WarehouseFile.vb" />
     <Compile Include="Data\GameFields.vb" />
     <Compile Include="Data\ItemData.vb" />
     <Compile Include="Data\MapData.vb" />
@@ -68,6 +80,18 @@
     <Compile Include="Data\MonsterData.vb" />
     <Compile Include="Data\NpcData.vb" />
     <Compile Include="Data\ZhoonFile.vb" />
+    <Compile Include="Forms\CharacterEditor.vb">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Forms\CharacterEditor.Designer.vb">
+      <DependentUpon>CharacterEditor.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\ItemFinder.vb">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Forms\ItemFinder.Designer.vb">
+      <DependentUpon>ItemFinder.vb</DependentUpon>
+    </Compile>
     <Compile Include="Forms\ExpChanger.vb">
       <SubType>Form</SubType>
     </Compile>

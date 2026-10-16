@@ -27,11 +27,38 @@ Saida em `PTEditor\bin\<Configuration>\`. Os formularios abrem no designer do VS
 | `Data\NpcData.vb` | `NPC\*.NPC` (nome, falas, loja) e registros binarios dos `Field\*.spc` (504 bytes cada). |
 | `Data\ZhoonFile.vb` | Arquivos `.zhoon`: aceita `*X_NAME`/`*X_CHAT` de qualquer idioma (o original so lia `*J_`). |
 | `Data\BackupHelper.vb` | Backups em `<pasta>\Backup\` (`Default_<arquivo>` na primeira vez, depois com data/hora). |
+| `Data\Character\` | Personagens, contas e baus do `DataServer` (ver secao abaixo). |
 | `Helpers\` | Log de erros, dialogos, I/O com encoding, avaliacao de formulas, abertura de arquivos externos. |
-| `Forms\` | `MainEditor` (janela principal), `ExpChanger`, `GoldChanger`, `ItemSearch`, `ItemDistributor`. |
+| `Forms\` | `MainEditor` (janela principal), `CharacterEditor` (aba Characters), `ItemFinder` (aba Item Finder), `ExpChanger`, `GoldChanger`, `ItemSearch`, `ItemDistributor`. |
 | `Maps\*.bmp` | Miniaturas dos mapas para o editor de NPC (copiadas para a saida). |
 
 Os formularios so cuidam da interface; leitura/gravacao fica em `Data\`.
+
+## Personagens (abas Characters e Item Finder)
+
+Le `DataServer\userdata\<n>\*.dat`, `userinfo\<n>\*.dat` e `warehouse\<n>\*.war` (`<n>` = soma dos bytes do nome,
+a..z em maiusculas, modulo 256 - `GetUserCode` em `Servidor\record.cpp`). A pasta fica em `PTEditor.Config.txt`:
+
+```
+DataServer-Path=C:\Servidor\DataServer
+```
+
+| Arquivo | Conteudo |
+|---------|----------|
+| `RecordLayout.vb` | Offsets dos dois layouts conhecidos: `Servidor` (source atual, itens em `0x718`) e `Classic` (PTClassic, itens em `0x6F0`). Detectado pelo cabecalho de cada arquivo. |
+| `CharacterFile.vb` | `TRANS_RECORD_DATA`: nome, classe, level, EXP 64 bits (`Exp` + `Exp_High`), atributos, ouro, skills, itens; grava recomprimindo os itens. |
+| `ItemCompression.vb` | `EecodeCompress`/`DecodeCompress` (byte com bit 7 = sequencia de zeros, senao bytes literais). Recomprimir reproduz os bytes do jogo. |
+| `ItemChecksum.vb` | `dwChkSum` (conferido pelo cliente ao logar) e `dwTime` (`rsGetItem_ServerForm`, conferido pelo servidor ao vender/trocar). |
+| `CharacterRules.vb` | O que o servidor faz ao carregar: level corrigido pela EXP (`LevelTable.vb`, copia de `LevelTable.h`), pontos livres recalculados (`ReformCharStatePoint`), reset de atributos abaixo de -10. |
+| `WarehouseFile.vb` | `.war`: um bloco comprimido com 100 `sITEM`, ouro gravado como valor + 2023, checksum do bau. Somente leitura. |
+| `CharacterIndex.vb` | Varre o DataServer; arquivos ilegiveis entram na lista com o motivo, sem interromper a carga. |
+
+Ao salvar: confirmacao com as diferencas e avisos, copia em `<DataServer>\PTEditor_Backup\`, pontos livres gravados
+como o servidor calcularia e `LastMoeny` zerado (se > 0 o jogo usaria `LastMoeny - 1` como ouro). O personagem
+precisa estar deslogado: o servidor regrava o arquivo ao sair.
+
+Pendente: conferir o layout `Servidor` e o formato do bau com arquivos reais deste servidor (os testes usaram
+personagens do PTClassic e um bau gerado a partir do fonte).
 
 ## Encoding dos arquivos do servidor
 

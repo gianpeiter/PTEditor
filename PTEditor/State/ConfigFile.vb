@@ -17,6 +17,8 @@ Friend Module ConfigFile
     Friend Const KeyFindItems As String = "Monstereditor: Find Items="
     ''' <summary>Letra do idioma dos .zhoon (*B_NAME -> "B"). Ausente = auto-detectar.</summary>
     Friend Const KeyNameTag As String = "Name-Tag="
+    ''' <summary>Pasta DataServer usada pelas abas Characters/Item Finder. Ausente = &lt;Server-Path&gt;\DataServer.</summary>
+    Friend Const KeyDataServerPath As String = "DataServer-Path="
 
     Friend Class ConfigData
         Public ReadOnly Property ItemSelectors As New List(Of String)()
@@ -67,6 +69,7 @@ Friend Module ConfigFile
                 ReadBoolean(data, item, KeyFindMaps)
                 ReadBoolean(data, item, KeyFindItems)
                 ReadNameTag(data, item)
+                ReadValue(data, item, KeyDataServerPath)
             Loop
         End Using
         Return data

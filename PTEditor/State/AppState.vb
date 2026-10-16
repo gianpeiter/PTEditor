@@ -22,6 +22,8 @@ Friend Module AppState
     Friend Const CharFolder As String = "char"
     Friend Const UserInfoFolder As String = "DataServer\userinfo"
     Friend Const PostBoxFolder As String = "PostBox"
+    Friend Const DataServerFolder As String = "DataServer"
+    Friend Const DataServerBackupFolder As String = "PTEditor_Backup"
 
     Friend Const MonsterPattern As String = "*.inf"
     Friend Const ItemPattern As String = "*.txt"
@@ -52,6 +54,11 @@ Friend Module AppState
             Return If(detected = "", ZhoonFile.DefaultTag, detected)
         End Get
     End Property
+
+    ''' <summary>Pasta DataServer (personagens, contas e baus); vazio = &lt;ServerPath&gt;\DataServer.</summary>
+    Friend DataServerPath As String = ""
+    ''' <summary>Personagens/contas carregados pela aba Characters (Nothing ate o primeiro carregamento).</summary>
+    Friend CharacterIndex As CharacterIndex
 
     Friend ReadOnly Monsters As New List(Of MonsterFile)()
     Friend ReadOnly Items As New List(Of ItemFile)()

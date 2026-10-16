@@ -376,6 +376,10 @@ Partial Class MainEditor
         Me.tbNPCz = New System.Windows.Forms.TextBox()
         Me.tbNPCy = New System.Windows.Forms.TextBox()
         Me.tbNPCx = New System.Windows.Forms.TextBox()
+        Me.TabPageCharacters = New System.Windows.Forms.TabPage()
+        Me.CharacterEditor1 = New PTEditor.CharacterEditor()
+        Me.TabPageItemFinder = New System.Windows.Forms.TabPage()
+        Me.ItemFinder1 = New PTEditor.ItemFinder()
         Me.TabPage4 = New System.Windows.Forms.TabPage()
         Me.GroupBox7 = New System.Windows.Forms.GroupBox()
         Me.Label100 = New System.Windows.Forms.Label()
@@ -460,6 +464,8 @@ Partial Class MainEditor
         CType(Me.PictureBox1, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.CMNPCPicturebox.SuspendLayout()
         Me.CMSNPCList.SuspendLayout()
+        Me.TabPageCharacters.SuspendLayout()
+        Me.TabPageItemFinder.SuspendLayout()
         Me.TabPage4.SuspendLayout()
         Me.GroupBox7.SuspendLayout()
         Me.gbSettings.SuspendLayout()
@@ -1237,6 +1243,8 @@ Partial Class MainEditor
         Me.TabControl1.Controls.Add(Me.TabPage2)
         Me.TabControl1.Controls.Add(Me.TabPage3)
         Me.TabControl1.Controls.Add(Me.TabPage5)
+        Me.TabControl1.Controls.Add(Me.TabPageCharacters)
+        Me.TabControl1.Controls.Add(Me.TabPageItemFinder)
         Me.TabControl1.Controls.Add(Me.TabPage4)
         Me.TabControl1.Location = New System.Drawing.Point(4, 5)
         Me.TabControl1.Name = "TabControl1"
@@ -3610,6 +3618,44 @@ Partial Class MainEditor
         Me.tbNPCx.TabIndex = 42
         Me.tbNPCx.Text = "1"
         '
+        'TabPageCharacters
+        '
+        Me.TabPageCharacters.Controls.Add(Me.CharacterEditor1)
+        Me.TabPageCharacters.Location = New System.Drawing.Point(4, 22)
+        Me.TabPageCharacters.Name = "TabPageCharacters"
+        Me.TabPageCharacters.Padding = New System.Windows.Forms.Padding(3)
+        Me.TabPageCharacters.Size = New System.Drawing.Size(1040, 660)
+        Me.TabPageCharacters.TabIndex = 5
+        Me.TabPageCharacters.Text = "Characters"
+        Me.TabPageCharacters.UseVisualStyleBackColor = True
+        '
+        'CharacterEditor1
+        '
+        Me.CharacterEditor1.Dock = System.Windows.Forms.DockStyle.Fill
+        Me.CharacterEditor1.Location = New System.Drawing.Point(3, 3)
+        Me.CharacterEditor1.Name = "CharacterEditor1"
+        Me.CharacterEditor1.Size = New System.Drawing.Size(1034, 654)
+        Me.CharacterEditor1.TabIndex = 0
+        '
+        'TabPageItemFinder
+        '
+        Me.TabPageItemFinder.Controls.Add(Me.ItemFinder1)
+        Me.TabPageItemFinder.Location = New System.Drawing.Point(4, 22)
+        Me.TabPageItemFinder.Name = "TabPageItemFinder"
+        Me.TabPageItemFinder.Padding = New System.Windows.Forms.Padding(3)
+        Me.TabPageItemFinder.Size = New System.Drawing.Size(1040, 660)
+        Me.TabPageItemFinder.TabIndex = 6
+        Me.TabPageItemFinder.Text = "Item Finder"
+        Me.TabPageItemFinder.UseVisualStyleBackColor = True
+        '
+        'ItemFinder1
+        '
+        Me.ItemFinder1.Dock = System.Windows.Forms.DockStyle.Fill
+        Me.ItemFinder1.Location = New System.Drawing.Point(3, 3)
+        Me.ItemFinder1.Name = "ItemFinder1"
+        Me.ItemFinder1.Size = New System.Drawing.Size(1034, 654)
+        Me.ItemFinder1.TabIndex = 0
+        '
         'TabPage4
         '
         Me.TabPage4.Controls.Add(Me.GroupBox7)
@@ -4102,6 +4148,8 @@ Partial Class MainEditor
         CType(Me.PictureBox1, System.ComponentModel.ISupportInitialize).EndInit()
         Me.CMNPCPicturebox.ResumeLayout(False)
         Me.CMSNPCList.ResumeLayout(False)
+        Me.TabPageCharacters.ResumeLayout(False)
+        Me.TabPageItemFinder.ResumeLayout(False)
         Me.TabPage4.ResumeLayout(False)
         Me.GroupBox7.ResumeLayout(False)
         Me.GroupBox7.PerformLayout()
@@ -4401,6 +4449,10 @@ Partial Class MainEditor
     Friend WithEvents TabPage2 As System.Windows.Forms.TabPage
     Friend WithEvents TabPage3 As System.Windows.Forms.TabPage
     Friend WithEvents TabPage4 As System.Windows.Forms.TabPage
+    Friend WithEvents TabPageCharacters As System.Windows.Forms.TabPage
+    Friend WithEvents CharacterEditor1 As PTEditor.CharacterEditor
+    Friend WithEvents TabPageItemFinder As System.Windows.Forms.TabPage
+    Friend WithEvents ItemFinder1 As PTEditor.ItemFinder
     Friend WithEvents TabPage5 As System.Windows.Forms.TabPage
     Friend WithEvents tbDroprate As System.Windows.Forms.TextBox
     Friend WithEvents tbDrops As System.Windows.Forms.TextBox

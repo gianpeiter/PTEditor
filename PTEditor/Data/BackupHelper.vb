@@ -22,6 +22,18 @@ Friend Module BackupHelper
         End If
     End Sub
 
+    ''' <summary>
+    ''' Copia um arquivo do DataServer para &lt;DataServer&gt;\PTEditor_Backup\ com data/hora no nome, fora das
+    ''' pastas que o servidor le. Retorna o caminho da copia.
+    ''' </summary>
+    Friend Function CreateDataServerBackup(ByVal dataServerPath As String, ByVal filePath As String) As String
+        Dim backupDir As String = Path.Combine(dataServerPath, AppState.DataServerBackupFolder)
+        Directory.CreateDirectory(backupDir)
+        Dim target As String = Path.Combine(backupDir, Format(Now, "yyyy-MM-dd_HH-mm-ss") & "_" & Path.GetFileName(filePath))
+        File.Copy(filePath, target, True)
+        Return target
+    End Function
+
     Friend Function BackupPath(ByVal folder As String, ByVal backupFileName As String) As String
         Return Path.Combine(folder, AppState.BackupFolder, backupFileName)
     End Function

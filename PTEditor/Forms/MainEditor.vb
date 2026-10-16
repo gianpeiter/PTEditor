@@ -8,6 +8,7 @@ Public Class MainEditor
     Private Const TabItems As String = "Items"
     Private Const TabMaps As String = "Maps"
     Private Const TabNpc As String = "NPC Editor"
+    Private Const TabCharacters As String = "Characters"
 
     ''' <summary>Conversao do angulo do NPC (0..4096) para radianos: 2*PI/4096.</summary>
     Private Const AngleToRadians As Double = 0.0015339807878856412
@@ -59,6 +60,7 @@ Public Class MainEditor
     Public Sub New()
         InitializeComponent()
         BuildFieldMaps()
+        ItemFinder1.IndexProvider = AddressOf CharacterEditor1.GetIndex
     End Sub
 
     ''' <summary>Chave do arquivo -> TextBox. A ordem importa so para *유니크색상 antes de *유니크 (prefixo).</summary>
@@ -173,6 +175,7 @@ Public Class MainEditor
                 tbServerPath.Text = AppState.ServerPath
                 My.Settings.sspath = AppState.ServerPath
             End If
+            If cfg.Values.TryGetValue(ConfigFile.KeyDataServerPath, value) Then AppState.DataServerPath = value
             If cfg.Values.TryGetValue(ConfigFile.KeyMaxExp, value) Then
                 tbMaxExp.Text = value
                 My.Settings.MaxExp = value
@@ -372,10 +375,21 @@ Public Class MainEditor
                     RefreshMonsterSource()
                 Case TabNpc
                     FillNpcMapList()
+                Case TabCharacters
+                    CharacterEditor1.EnsureLoaded()
             End Select
         Catch ex As Exception
             ErrorLog.Report("TabControl1_Selected", ex)
         End Try
+    End Sub
+
+    Private Sub ItemFinder1_OpenCharacterRequested(ByVal name As String, ByVal showWarehouse As Boolean) Handles ItemFinder1.OpenCharacterRequested
+        TabControl1.SelectedTab = TabPageCharacters
+        CharacterEditor1.SelectCharacter(name, showWarehouse)
+    End Sub
+
+    Private Sub CharacterEditor1_CharacterSaved() Handles CharacterEditor1.CharacterSaved
+        ItemFinder1.ClearCache()
     End Sub
 
     Private Sub lblMonsterFolder_Click(ByVal sender As Object, ByVal e As EventArgs) Handles lblMonsterFolder.Click
