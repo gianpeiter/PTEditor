@@ -1,0 +1,25 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36301.6
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "PTEditor", "PTEditor\PTEditor.vbproj", "{B2E5C9D4-7A1F-4E63-9C0B-3D8F2A6E5B71}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B2E5C9D4-7A1F-4E63-9C0B-3D8F2A6E5B71}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B2E5C9D4-7A1F-4E63-9C0B-3D8F2A6E5B71}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B2E5C9D4-7A1F-4E63-9C0B-3D8F2A6E5B71}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B2E5C9D4-7A1F-4E63-9C0B-3D8F2A6E5B71}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {6F3A1C2E-8B4D-4F7A-A5E9-1D2C3B4A5F60}
+	EndGlobalSection
+EndGlobal

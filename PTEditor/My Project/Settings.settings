@@ -1,0 +1,89 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="My" GeneratedClassName="MySettings" UseMySettingsClassName="true">
+  <Profiles />
+  <Settings>
+    <Setting Name="chItemInfo" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="chMap" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="Config" Type="System.String" Scope="User">
+      <Value Profile="(Default)">ItemSelector:
+Everything=
+--Defence--=da,db,dg1,oa2,om,ds
+Armor=da1
+Robe=da2
+Boots=db
+Gauntletss=dg1
+Armlets=oa2
+Orb=om
+Shield=ds
+--Weapons--=wp,ws1,ws3,wa,wm,wt,wh,wc,ws2,ws4
+Pike=wp
+Bow=ws1,ws3
+Axe=wa
+Staff/Wand=wm
+Javelin=wt
+Mace=wh
+Claw=wc
+Sword=ws2,ws4
+--Spick and span--=or,oa1,os
+Ring=or
+Amulet=oa1
+Sheltom=os
+--Others--
+Potions=pm,ps,pl
+Crystals=gp
+Force Orb=fo
+Donation Items=b
+Quest Items=_u,2_,ma,qt,sp,uw
+Event Items=ch,pz,sd,se,sp
+Other=ec
+&lt;End&gt;
+
+MonsterSelector:
+Name=
+Level=0-10
+Level=11-20
+Level=21-30
+Level=31-40
+Level=41-50
+Level=51-60
+Level=61-70
+Level=71-80
+Level=81-90
+Level=91-100
+Level=100-200
+Name=Hopy
+&lt;End&gt;</Value>
+    </Setting>
+    <Setting Name="Editor" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="EXPFormel" Type="System.String" Scope="User">
+      <Value Profile="(Default)">EXP*2</Value>
+    </Setting>
+    <Setting Name="FindMonsters" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="GoldFormel" Type="System.String" Scope="User">
+      <Value Profile="(Default)">Gold*2</Value>
+    </Setting>
+    <Setting Name="ItemWarn" Type="System.String" Scope="User">
+      <Value Profile="(Default)">DA120,DA220</Value>
+    </Setting>
+    <Setting Name="MaxExp" Type="System.String" Scope="User">
+      <Value Profile="(Default)">1000000</Value>
+    </Setting>
+    <Setting Name="MaxGold" Type="System.String" Scope="User">
+      <Value Profile="(Default)">1000000</Value>
+    </Setting>
+    <Setting Name="sspath" Type="System.String" Scope="User">
+      <Value Profile="(Default)">c:</Value>
+    </Setting>
+    <Setting Name="WarnMoZhoon" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>
