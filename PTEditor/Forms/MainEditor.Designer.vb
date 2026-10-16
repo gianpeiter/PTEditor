@@ -278,7 +278,7 @@ Partial Class MainEditor
         Me.cmFileListItems = New System.Windows.Forms.ContextMenuStrip(Me.components)
         Me.LoadBackupToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.DeleteItemBackupToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
-        Me.ItemDistribToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.AwardItemsToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.SearchItemNameToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.SendToItemSearcherToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.lbItemsListCount = New System.Windows.Forms.Label()
@@ -380,6 +380,8 @@ Partial Class MainEditor
         Me.CharacterEditor1 = New PTEditor.CharacterEditor()
         Me.TabPageItemFinder = New System.Windows.Forms.TabPage()
         Me.ItemFinder1 = New PTEditor.ItemFinder()
+        Me.TabPageAwardItems = New System.Windows.Forms.TabPage()
+        Me.AwardItemsPanel1 = New PTEditor.AwardItemsPanel()
         Me.TabPage4 = New System.Windows.Forms.TabPage()
         Me.ProfilePanel1 = New PTEditor.ProfilePanel()
         Me.GroupBox7 = New System.Windows.Forms.GroupBox()
@@ -467,6 +469,7 @@ Partial Class MainEditor
         Me.CMSNPCList.SuspendLayout()
         Me.TabPageCharacters.SuspendLayout()
         Me.TabPageItemFinder.SuspendLayout()
+        Me.TabPageAwardItems.SuspendLayout()
         Me.TabPage4.SuspendLayout()
         Me.GroupBox7.SuspendLayout()
         Me.gbSettings.SuspendLayout()
@@ -1246,6 +1249,7 @@ Partial Class MainEditor
         Me.TabControl1.Controls.Add(Me.TabPage5)
         Me.TabControl1.Controls.Add(Me.TabPageCharacters)
         Me.TabControl1.Controls.Add(Me.TabPageItemFinder)
+        Me.TabControl1.Controls.Add(Me.TabPageAwardItems)
         Me.TabControl1.Controls.Add(Me.TabPage4)
         Me.TabControl1.Location = New System.Drawing.Point(4, 5)
         Me.TabControl1.Name = "TabControl1"
@@ -2781,7 +2785,7 @@ Partial Class MainEditor
         '
         'cmFileListItems
         '
-        Me.cmFileListItems.Items.AddRange(New System.Windows.Forms.ToolStripItem() { Me.LoadBackupToolStripMenuItem, Me.DeleteItemBackupToolStripMenuItem, Me.ItemDistribToolStripMenuItem, Me.SearchItemNameToolStripMenuItem, Me.SendToItemSearcherToolStripMenuItem })
+        Me.cmFileListItems.Items.AddRange(New System.Windows.Forms.ToolStripItem() { Me.LoadBackupToolStripMenuItem, Me.DeleteItemBackupToolStripMenuItem, Me.AwardItemsToolStripMenuItem, Me.SearchItemNameToolStripMenuItem, Me.SendToItemSearcherToolStripMenuItem })
         Me.cmFileListItems.Name = "cmFileListItems"
         Me.cmFileListItems.Size = New System.Drawing.Size(190, 114)
         '
@@ -2797,11 +2801,11 @@ Partial Class MainEditor
         Me.DeleteItemBackupToolStripMenuItem.Size = New System.Drawing.Size(189, 22)
         Me.DeleteItemBackupToolStripMenuItem.Text = "Delete Backup"
         '
-        'ItemDistribToolStripMenuItem
+        'AwardItemsToolStripMenuItem
         '
-        Me.ItemDistribToolStripMenuItem.Name = "ItemDistribToolStripMenuItem"
-        Me.ItemDistribToolStripMenuItem.Size = New System.Drawing.Size(189, 22)
-        Me.ItemDistribToolStripMenuItem.Text = "Send to Item Distributor"
+        Me.AwardItemsToolStripMenuItem.Name = "AwardItemsToolStripMenuItem"
+        Me.AwardItemsToolStripMenuItem.Size = New System.Drawing.Size(189, 22)
+        Me.AwardItemsToolStripMenuItem.Text = "Send to Award Items"
         '
         'SearchItemNameToolStripMenuItem
         '
@@ -3657,6 +3661,25 @@ Partial Class MainEditor
         Me.ItemFinder1.Size = New System.Drawing.Size(1034, 654)
         Me.ItemFinder1.TabIndex = 0
         '
+        'TabPageAwardItems
+        '
+        Me.TabPageAwardItems.Controls.Add(Me.AwardItemsPanel1)
+        Me.TabPageAwardItems.Location = New System.Drawing.Point(4, 22)
+        Me.TabPageAwardItems.Name = "TabPageAwardItems"
+        Me.TabPageAwardItems.Padding = New System.Windows.Forms.Padding(3)
+        Me.TabPageAwardItems.Size = New System.Drawing.Size(1040, 660)
+        Me.TabPageAwardItems.TabIndex = 7
+        Me.TabPageAwardItems.Text = "Award Items"
+        Me.TabPageAwardItems.UseVisualStyleBackColor = True
+        '
+        'AwardItemsPanel1
+        '
+        Me.AwardItemsPanel1.Dock = System.Windows.Forms.DockStyle.Fill
+        Me.AwardItemsPanel1.Location = New System.Drawing.Point(3, 3)
+        Me.AwardItemsPanel1.Name = "AwardItemsPanel1"
+        Me.AwardItemsPanel1.Size = New System.Drawing.Size(1034, 654)
+        Me.AwardItemsPanel1.TabIndex = 0
+        '
         'TabPage4
         '
         Me.TabPage4.Controls.Add(Me.ProfilePanel1)
@@ -4159,6 +4182,7 @@ Partial Class MainEditor
         Me.CMSNPCList.ResumeLayout(False)
         Me.TabPageCharacters.ResumeLayout(False)
         Me.TabPageItemFinder.ResumeLayout(False)
+        Me.TabPageAwardItems.ResumeLayout(False)
         Me.TabPage4.ResumeLayout(False)
         Me.GroupBox7.ResumeLayout(False)
         Me.GroupBox7.PerformLayout()
@@ -4291,7 +4315,7 @@ Partial Class MainEditor
     Friend WithEvents GroupBox7 As System.Windows.Forms.GroupBox
     Friend WithEvents GroupBox8 As System.Windows.Forms.GroupBox
     Friend WithEvents GroupBox9 As System.Windows.Forms.GroupBox
-    Friend WithEvents ItemDistribToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
+    Friend WithEvents AwardItemsToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
     Friend WithEvents ItemFound As System.Windows.Forms.Label
     Friend WithEvents SearchItemToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
     Friend WithEvents Label1 As System.Windows.Forms.Label
@@ -4463,6 +4487,8 @@ Partial Class MainEditor
     Friend WithEvents TabPageItemFinder As System.Windows.Forms.TabPage
     Friend WithEvents ItemFinder1 As PTEditor.ItemFinder
     Friend WithEvents ProfilePanel1 As PTEditor.ProfilePanel
+    Friend WithEvents TabPageAwardItems As System.Windows.Forms.TabPage
+    Friend WithEvents AwardItemsPanel1 As PTEditor.AwardItemsPanel
     Friend WithEvents TabPage5 As System.Windows.Forms.TabPage
     Friend WithEvents tbDroprate As System.Windows.Forms.TextBox
     Friend WithEvents tbDrops As System.Windows.Forms.TextBox

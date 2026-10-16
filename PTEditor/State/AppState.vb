@@ -20,8 +20,6 @@ Friend Module AppState
     Friend Const NpcFolder As String = "GameServer\NPC\"
     Friend Const NpcNameFolder As String = "GameServer\NPC\name\"
     Friend Const CharFolder As String = "char"
-    Friend Const UserInfoFolder As String = "DataServer\userinfo"
-    Friend Const PostBoxFolder As String = "PostBox"
     Friend Const DataServerFolder As String = "DataServer"
     Friend Const DataServerBackupFolder As String = "PTEditor_Backup"
 

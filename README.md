@@ -29,7 +29,8 @@ Saida em `PTEditor\bin\<Configuration>\`. Os formularios abrem no designer do VS
 | `Data\BackupHelper.vb` | Backups em `<pasta>\Backup\` (`Default_<arquivo>` na primeira vez, depois com data/hora). |
 | `Data\Character\` | Personagens, contas e baus do `DataServer` (ver secao abaixo). |
 | `Helpers\` | Log de erros, dialogos, I/O com encoding, avaliacao de formulas, abertura de arquivos externos. |
-| `Forms\` | `MainEditor` (janela principal), `CharacterEditor` (aba Characters), `ItemFinder` (aba Item Finder), `ExpChanger`, `GoldChanger`, `ItemSearch`, `ItemDistributor`. |
+| `Data\AwardItems\` | Fila do NPC de entrega (`AwardItem_List` no SQL) e leitura do `server.ini`. |
+| `Forms\` | `MainEditor` (janela principal), `CharacterEditor` (aba Characters), `ItemFinder` (aba Item Finder), `AwardItemsPanel` (aba Award Items), `ProfilePanel` (Options), `ExpChanger`, `GoldChanger`, `ItemSearch`. |
 | `Maps\*.bmp` | Miniaturas dos mapas para o editor de NPC (copiadas para a saida). |
 
 Os formularios so cuidam da interface; leitura/gravacao fica em `Data\`.
@@ -80,6 +81,21 @@ precisa estar deslogado: o servidor regrava o arquivo ao sair.
 
 Validacao: `Classic` com personagens reais do PTClassic; `Elemental` com 10 personagens, 3 contas e 1 bau reais;
 `Happy` so com um arquivo convertido e um bau gerado a partir do fonte (falta conferir com arquivos reais do Happy).
+
+## Entrega de itens (aba Award Items)
+
+O NPC com `*AwardItem` no `.npc` (no Happy, `itempost.npc`) entrega os itens da tabela `[PristonDB].[dbo].[AwardItem_List]`
+(`Servidor\Gameplay\Items\AwardItem.cpp`): lista ate 10 por visita, pelo nome do personagem, cria o item com a spec da
+classe atual e apaga a linha. A aba envia, lista e remove pendentes nessa tabela.
+
+- Conexao: secao `[Database]` do `server.ini` da pasta do servidor (`Host`, `User`, `Pass`; `User` vazio = login do Windows).
+- Consultas parametrizadas; envio de varios itens numa transacao.
+- So aceita codigos que existem no OpenItem e com ate 7 caracteres (`AWARD_ITEM.Code` e `char[4]` no servidor: codigos
+  maiores corrompem o pacote). Nome mostrado no NPC cortado em 31 caracteres (`varchar(32)`).
+- Cada envio/remocao vai para `AwardItems.log` ao lado do exe (o servidor nao registra esse fluxo).
+- Na aba Items, botao direito na lista de arquivos: **Send to Award Items**.
+
+Substitui o antigo `ItemDistributor`, que gravava no `PostBox` (o NPC do servidor nao le o PostBox).
 
 ## Encoding dos arquivos do servidor
 

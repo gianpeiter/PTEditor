@@ -70,7 +70,7 @@ Friend Class GameItem
     Private Shared ReadOnly StrictUtf8 As New UTF8Encoding(False, True)
 
     ''' <summary>Nome do .zhoon sem aspas; se o .zhoon era UTF-8 (lido como CP1252, ex.: "BuquÃª"), decodifica de volta.</summary>
-    Private Shared Function CleanName(ByVal name As String) As String
+    Friend Shared Function CleanName(ByVal name As String) As String
         name = name.Trim().Trim(""""c)
         If name.IndexOf("Ã"c) >= 0 OrElse name.IndexOf("Â"c) >= 0 Then
             Try

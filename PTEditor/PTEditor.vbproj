@@ -60,6 +60,8 @@
     <Import Include="System.Windows.Forms" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Data\AwardItems\AwardItemRepository.vb" />
+    <Compile Include="Data\AwardItems\DatabaseConfig.vb" />
     <Compile Include="Data\BackupHelper.vb" />
     <Compile Include="Data\Character\AccountFile.vb" />
     <Compile Include="Data\Character\CharacterFile.vb" />
@@ -81,6 +83,12 @@
     <Compile Include="Data\MonsterData.vb" />
     <Compile Include="Data\NpcData.vb" />
     <Compile Include="Data\ZhoonFile.vb" />
+    <Compile Include="Forms\AwardItemsPanel.vb">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Forms\AwardItemsPanel.Designer.vb">
+      <DependentUpon>AwardItemsPanel.vb</DependentUpon>
+    </Compile>
     <Compile Include="Forms\CharacterEditor.vb">
       <SubType>UserControl</SubType>
     </Compile>
@@ -110,12 +118,6 @@
     </Compile>
     <Compile Include="Forms\GoldChanger.Designer.vb">
       <DependentUpon>GoldChanger.vb</DependentUpon>
-    </Compile>
-    <Compile Include="Forms\ItemDistributor.vb">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Forms\ItemDistributor.Designer.vb">
-      <DependentUpon>ItemDistributor.vb</DependentUpon>
     </Compile>
     <Compile Include="Forms\ItemSearch.vb">
       <SubType>Form</SubType>
