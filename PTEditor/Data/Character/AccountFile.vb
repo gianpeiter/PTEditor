@@ -2,7 +2,7 @@
 
 ''' <summary>
 ''' DataServer\userinfo\&lt;n&gt;\&lt;conta&gt;.dat (sPLAY_USER_DATA): cabecalho de 16 bytes, ID e N nomes de 32 bytes.
-''' N depende da source (6 = 240 bytes; 11 no Elemental = 400 bytes) e e deduzido do tamanho do arquivo.
+''' N depende da source (6 = 240 bytes; 11 no perfil Custom = 400 bytes) e e deduzido do tamanho do arquivo.
 ''' </summary>
 Friend Class AccountFile
 

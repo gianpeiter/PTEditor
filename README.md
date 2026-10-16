@@ -51,9 +51,8 @@ codigos de pacote, tabela de EXP, regras). O formato de cada uma fica num perfil
 
 | Perfil | Source | Itens em | Codigo | Level max | Corrige level pela EXP |
 |--------|--------|----------|--------|-----------|------------------------|
-| `Classic` | PTClassic-master | `0x6F0` | `0x48470081` | 119 | sim |
-| `Happy` | source\Servidor (game.exe do Happy) | `0x718` | `0x48470081` | 170 | sim |
-| `Elemental` | Source Elemental (Source25) | `0x704` | `4` (`enum OpCode`) | 150 | nao |
+| `Priston` | source\Servidor (game.exe do Happy) | `0x718` | `0x48470081` | 170 | sim |
+| `Custom` | Source Elemental (Source25) | `0x704` | `4` (`enum OpCode`) | 150 | nao |
 
 Na aba Characters o combo **Profile** fica em `Auto-detect` (cada arquivo e lido pelo primeiro perfil cujo codigo e
 `offset dos itens + DataSize = size` batem) ou fixo num perfil; a escolha fica em `Profiles\DataServers.txt` por pasta.
@@ -79,8 +78,8 @@ Ao salvar: confirmacao com as diferencas e avisos, copia em `<DataServer>\PTEdit
 como o servidor calcularia e `LastMoeny` zerado (se > 0 o jogo usaria `LastMoeny - 1` como ouro). O personagem
 precisa estar deslogado: o servidor regrava o arquivo ao sair.
 
-Validacao: `Classic` com personagens reais do PTClassic; `Elemental` com 10 personagens, 3 contas e 1 bau reais;
-`Happy` so com um arquivo convertido e um bau gerado a partir do fonte (falta conferir com arquivos reais do Happy).
+Validacao: `Custom` com 10 personagens, 3 contas e 1 bau reais da Source Elemental; `Priston` so com um arquivo
+convertido e um bau gerado a partir do fonte (falta conferir com arquivos reais do Happy).
 
 ## Entrega de itens (aba Award Items)
 
