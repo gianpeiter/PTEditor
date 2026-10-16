@@ -36,7 +36,7 @@ Friend Module ServerDatabase
         Try
             _config = DatabaseConfig.Load(AppState.ServerPath)
             _loadError = ""
-            SetStatus("Read from " & _config.FilePath & ". Not tested yet.", SystemColors.GrayText)
+            SetStatus("Read from " & DatabaseConfig.FileName & ". Not tested yet.", SystemColors.GrayText)
         Catch ex As Exception
             _config = Nothing
             _loadError = ex.Message
