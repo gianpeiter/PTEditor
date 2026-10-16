@@ -79,9 +79,37 @@ Public Class CharacterEditor
 
     Private Shared Function DefaultDataServerPath() As String
         If AppState.DataServerPath <> "" Then Return AppState.DataServerPath
-        If AppState.ServerPath = "" Then Return ""
-        Return Path.Combine(AppState.ServerPath, AppState.DataServerFolder)
+        Return ServerDataServerPath()
     End Function
+
+    ''' <summary>DataServer dentro do Server Path atual (subpasta DataServer* valida, ou &lt;ServerPath&gt;\DataServer).</summary>
+    Private Shared Function ServerDataServerPath() As String
+        If AppState.ServerPath = "" Then Return ""
+        Return If(CharacterIndex.ResolveDataServer(AppState.ServerPath), Path.Combine(AppState.ServerPath, AppState.DataServerFolder))
+    End Function
+
+    ''' <summary>
+    ''' O Server Path mudou: descarta a pasta DataServer escolhida a mao (era do servidor anterior) e volta a seguir o
+    ''' Server Path. Se a aba ja foi aberta, recarrega a partir da nova pasta.
+    ''' </summary>
+    Friend Sub FollowServerPath()
+        SaveDataServerOverride("")
+        If Not _initialized Then Return
+        tbDataServer.Text = DefaultDataServerPath()
+        SelectProfileFor(tbDataServer.Text)
+        If CharacterIndex.ResolveDataServer(tbDataServer.Text) IsNot Nothing Then
+            LoadIndex()
+        Else
+            lblStatus.Text = "Select the DataServer folder and click Load."
+        End If
+    End Sub
+
+    ''' <summary>Grava a pasta DataServer escolhida; vazio = seguir o Server Path.</summary>
+    Private Shared Sub SaveDataServerOverride(ByVal folder As String)
+        If String.Equals(AppState.DataServerPath, folder, StringComparison.OrdinalIgnoreCase) Then Return
+        AppState.DataServerPath = folder
+        ConfigFile.SaveValues(New Dictionary(Of String, String) From {{ConfigFile.KeyDataServerPath, folder}})
+    End Sub
 
     Private Sub cmdBrowse_Click(ByVal sender As Object, ByVal e As EventArgs) Handles cmdBrowse.Click
         dlgFolder.Description = "Select the DataServer folder (the one containing userdata, userinfo and warehouse)"
@@ -128,10 +156,9 @@ Public Class CharacterEditor
                                                                      End If
                                                                  End Sub)
             AppState.CharacterIndex = index
-            If Not String.Equals(AppState.DataServerPath, folder, StringComparison.OrdinalIgnoreCase) Then
-                AppState.DataServerPath = folder
-                ConfigFile.SaveValues(New Dictionary(Of String, String) From {{ConfigFile.KeyDataServerPath, folder}})
-            End If
+            ' So guarda a pasta quando difere da derivada do Server Path; assim ela acompanha mudancas do Server Path
+            Dim followsServer As Boolean = String.Equals(folder.TrimEnd("\"c), ServerDataServerPath().TrimEnd("\"c), StringComparison.OrdinalIgnoreCase)
+            SaveDataServerOverride(If(followsServer, "", folder))
             ProfileStore.SaveSelection(folder, chosen)
             Dim failed As Integer = index.Characters.Where(Function(c) c.LoadError <> "").Count()
             lblStatus.Text = index.Characters.Count & " characters, " & index.Accounts.Count & " accounts" &

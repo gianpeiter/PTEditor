@@ -286,6 +286,7 @@ Public Class MainEditor
         LoadAllData()
         lbItemFiles.Items.Clear()
         RefreshMonsterList()
+        CharacterEditor1.FollowServerPath()
     End Sub
 
     Private Sub cmdReload_Click(ByVal sender As Object, ByVal e As EventArgs) Handles cmdReload.Click, cmdReload1.Click, cmdMapReload.Click

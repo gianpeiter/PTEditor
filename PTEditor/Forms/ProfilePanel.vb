@@ -72,7 +72,7 @@ Public Class ProfilePanel
 
     ''' <summary>Tenta ler os personagens e baus do DataServer atual com cada perfil, isoladamente.</summary>
     Private Sub cmdTest_Click(ByVal sender As Object, ByVal e As EventArgs) Handles cmdTest.Click
-        Dim folder As String = AppState.DataServerPath
+        Dim folder As String = If(AppState.CharacterIndex Is Nothing, "", AppState.CharacterIndex.DataServerPath)
         If Not CharacterIndex.IsDataServer(folder) Then
             MsgBox("Load a DataServer in the Characters tab first.", MsgBoxStyle.Information)
             Return
