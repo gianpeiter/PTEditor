@@ -64,6 +64,7 @@
     <Compile Include="Data\AwardItems\DatabaseConfig.vb" />
     <Compile Include="Data\BackupHelper.vb" />
     <Compile Include="Data\Character\AccountFile.vb" />
+    <Compile Include="Data\Character\ClanMembership.vb" />
     <Compile Include="Data\Character\CharacterFile.vb" />
     <Compile Include="Data\Character\CharacterIndex.vb" />
     <Compile Include="Data\Character\CharacterProfile.vb" />

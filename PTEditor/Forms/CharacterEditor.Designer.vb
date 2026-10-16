@@ -89,6 +89,7 @@ Partial Class CharacterEditor
         Me.colMessage = CType(New System.Windows.Forms.ColumnHeader(), System.Windows.Forms.ColumnHeader)
         Me.pnlButtons = New System.Windows.Forms.Panel()
         Me.cmdOpenFolder = New System.Windows.Forms.Button()
+        Me.cmdDelete = New System.Windows.Forms.Button()
         Me.cmdDiscard = New System.Windows.Forms.Button()
         Me.cmdSave = New System.Windows.Forms.Button()
         Me.lblSubtitle = New System.Windows.Forms.Label()
@@ -835,6 +836,7 @@ Partial Class CharacterEditor
         '
         'pnlButtons
         '
+        Me.pnlButtons.Controls.Add(Me.cmdDelete)
         Me.pnlButtons.Controls.Add(Me.cmdOpenFolder)
         Me.pnlButtons.Controls.Add(Me.cmdDiscard)
         Me.pnlButtons.Controls.Add(Me.cmdSave)
@@ -849,7 +851,7 @@ Partial Class CharacterEditor
         Me.cmdSave.Enabled = False
         Me.cmdSave.Location = New System.Drawing.Point(8, 4)
         Me.cmdSave.Name = "cmdSave"
-        Me.cmdSave.Size = New System.Drawing.Size(136, 30)
+        Me.cmdSave.Size = New System.Drawing.Size(136, 28)
         Me.cmdSave.TabIndex = 0
         Me.cmdSave.Text = "Save changes"
         Me.cmdSave.UseVisualStyleBackColor = True
@@ -857,9 +859,9 @@ Partial Class CharacterEditor
         'cmdDiscard
         '
         Me.cmdDiscard.Enabled = False
-        Me.cmdDiscard.Location = New System.Drawing.Point(8, 40)
+        Me.cmdDiscard.Location = New System.Drawing.Point(8, 36)
         Me.cmdDiscard.Name = "cmdDiscard"
-        Me.cmdDiscard.Size = New System.Drawing.Size(136, 26)
+        Me.cmdDiscard.Size = New System.Drawing.Size(136, 24)
         Me.cmdDiscard.TabIndex = 1
         Me.cmdDiscard.Text = "Discard"
         Me.cmdDiscard.UseVisualStyleBackColor = True
@@ -867,12 +869,23 @@ Partial Class CharacterEditor
         'cmdOpenFolder
         '
         Me.cmdOpenFolder.Enabled = False
-        Me.cmdOpenFolder.Location = New System.Drawing.Point(8, 72)
+        Me.cmdOpenFolder.Location = New System.Drawing.Point(8, 64)
         Me.cmdOpenFolder.Name = "cmdOpenFolder"
-        Me.cmdOpenFolder.Size = New System.Drawing.Size(136, 26)
+        Me.cmdOpenFolder.Size = New System.Drawing.Size(136, 24)
         Me.cmdOpenFolder.TabIndex = 2
         Me.cmdOpenFolder.Text = "Open file folder"
         Me.cmdOpenFolder.UseVisualStyleBackColor = True
+        '
+        'cmdDelete
+        '
+        Me.cmdDelete.Enabled = False
+        Me.cmdDelete.ForeColor = System.Drawing.Color.Firebrick
+        Me.cmdDelete.Location = New System.Drawing.Point(8, 92)
+        Me.cmdDelete.Name = "cmdDelete"
+        Me.cmdDelete.Size = New System.Drawing.Size(136, 24)
+        Me.cmdDelete.TabIndex = 3
+        Me.cmdDelete.Text = "Delete character..."
+        Me.cmdDelete.UseVisualStyleBackColor = True
         '
         'CharacterEditor
         '
@@ -990,6 +1003,7 @@ Partial Class CharacterEditor
     Friend WithEvents colMessage As System.Windows.Forms.ColumnHeader
     Friend WithEvents pnlButtons As System.Windows.Forms.Panel
     Friend WithEvents cmdOpenFolder As System.Windows.Forms.Button
+    Friend WithEvents cmdDelete As System.Windows.Forms.Button
     Friend WithEvents cmdDiscard As System.Windows.Forms.Button
     Friend WithEvents cmdSave As System.Windows.Forms.Button
     Friend WithEvents lblSubtitle As System.Windows.Forms.Label

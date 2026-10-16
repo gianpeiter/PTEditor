@@ -32,6 +32,25 @@ Friend Class AccountFile
         Return account
     End Function
 
+    ''' <summary>
+    ''' Libera o slot do personagem no arquivo, como o servidor faz ao excluir (zera so o primeiro byte do nome).
+    ''' Retorna False se a conta nao lista o personagem.
+    ''' </summary>
+    Public Function RemoveCharacter(ByVal name As String) As Boolean
+        Dim data As Byte() = File.ReadAllBytes(FilePath)
+        Dim slots As Integer = Math.Max(0, (data.Length - NamesOffset) \ NameLength)
+        For i = 0 To slots - 1
+            Dim offset As Integer = NamesOffset + i * NameLength
+            If ReadText(data, offset).Equals(name, StringComparison.OrdinalIgnoreCase) Then
+                data(offset) = 0
+                File.WriteAllBytes(FilePath, data)
+                CharacterNames.RemoveAll(Function(n) n.Equals(name, StringComparison.OrdinalIgnoreCase))
+                Return True
+            End If
+        Next
+        Return False
+    End Function
+
     Private Shared Function ReadText(ByVal data As Byte(), ByVal offset As Integer) As String
         If offset >= data.Length Then Return ""
         Dim length As Integer = 0

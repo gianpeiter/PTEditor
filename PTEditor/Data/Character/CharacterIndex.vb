@@ -38,6 +38,8 @@ Friend Class CharacterIndex
     Friend Const UserDataFolder As String = "userdata"
     Friend Const UserInfoFolder As String = "userinfo"
     Friend Const WarehouseFolder As String = "warehouse"
+    ''' <summary>Copias de personagens excluidos (o servidor restaura daqui pelo comando de admin).</summary>
+    Friend Const DeletedFolder As String = "deleted"
     Friend Const NoAccount As String = "(no account)"
 
     Public ReadOnly Property DataServerPath As String
@@ -135,6 +137,34 @@ Friend Class CharacterIndex
             entry.Account = NoAccount
         End If
         Return entry
+    End Function
+
+    ''' <summary>
+    ''' Exclui o personagem como rsRECORD_DBASE::DeleteCharData: libera o slot no userinfo da conta, copia o arquivo
+    ''' para DataServer\deleted (Lv 10+; Lv 20+ nao sobrescreve copia existente) e apaga o userdata. Antes faz backup
+    ''' dos dois arquivos em PTEditor_Backup. O bau da conta nao e alterado. Retorna os backups criados.
+    ''' </summary>
+    Public Function DeleteCharacter(ByVal entry As CharacterEntry) As List(Of String)
+        Dim backups As New List(Of String)()
+        Dim account As AccountFile = Nothing
+        If Accounts.TryGetValue(entry.Account, account) AndAlso
+           Not account.CharacterNames.Contains(entry.Name, StringComparer.OrdinalIgnoreCase) Then account = Nothing
+
+        If File.Exists(entry.FilePath) Then backups.Add(BackupHelper.CreateDataServerBackup(DataServerPath, entry.FilePath))
+        If account IsNot Nothing Then backups.Add(BackupHelper.CreateDataServerBackup(DataServerPath, account.FilePath))
+
+        If account IsNot Nothing Then account.RemoveCharacter(entry.Name)
+        If File.Exists(entry.FilePath) Then
+            If entry.LoadError = "" AndAlso entry.Level >= 10 Then
+                Dim folder As String = Path.Combine(DataServerPath, DeletedFolder)
+                Dim target As String = Path.Combine(folder, Path.GetFileName(entry.FilePath))
+                Directory.CreateDirectory(folder)
+                If entry.Level < 20 OrElse Not File.Exists(target) Then File.Copy(entry.FilePath, target, True)
+            End If
+            File.Delete(entry.FilePath)
+        End If
+        Characters.Remove(entry)
+        Return backups
     End Function
 
     ''' <summary>Quantos personagens cada perfil leu (perfil -> quantidade), do mais usado para o menos usado.</summary>

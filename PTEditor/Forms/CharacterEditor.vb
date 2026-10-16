@@ -340,6 +340,7 @@ Public Class CharacterEditor
                 ShowMessages({New RuleMessage(RuleSeverity.Error, "File cannot be read: " & entry.LoadError)})
                 _entry = entry
                 cmdOpenFolder.Enabled = True
+                cmdDelete.Enabled = True
                 Return
             End If
             _original = CharacterFile.Load(entry.FilePath, AppState.CharacterIndex.Candidates)
@@ -360,6 +361,7 @@ Public Class CharacterEditor
             Dim hasChar As Boolean = c IsNot Nothing
             tabs.Enabled = hasChar
             cmdOpenFolder.Enabled = hasChar
+            cmdDelete.Enabled = hasChar
             If Not hasChar Then
                 _original = Nothing
                 _working = Nothing
@@ -679,6 +681,62 @@ Public Class CharacterEditor
     Private Sub cmdOpenFolder_Click(ByVal sender As Object, ByVal e As EventArgs) Handles cmdOpenFolder.Click
         If _entry Is Nothing Then Return
         Process.Start(AppState.Explorer, "/select,""" & _entry.FilePath & """")
+    End Sub
+
+    Private Sub cmdDelete_Click(ByVal sender As Object, ByVal e As EventArgs) Handles cmdDelete.Click
+        If _entry Is Nothing Then Return
+        Dim entry As CharacterEntry = _entry
+        Dim index = AppState.CharacterIndex
+        Dim relative As String = entry.FilePath.Substring(Math.Min(entry.FilePath.Length, index.DataServerPath.TrimEnd("\"c).Length + 1))
+        Dim account As AccountFile = Nothing
+        Dim listed As Boolean = index.Accounts.TryGetValue(entry.Account, account) AndAlso
+                                account.CharacterNames.Contains(entry.Name, StringComparer.OrdinalIgnoreCase)
+
+        ' Mesma regra do jogo: personagem em clan nao pode ser excluido
+        Dim clan As ClanMembership = Nothing
+        Dim clanError As String = ""
+        Cursor = Cursors.WaitCursor
+        Try
+            clan = ClanMembership.Lookup(DatabaseConfig.Load(AppState.ServerPath), entry.Name)
+        Catch ex As Exception
+            clanError = ex.Message
+        Finally
+            Cursor = Cursors.Default
+        End Try
+        If clan IsNot Nothing Then
+            MsgBox("Cannot delete " & entry.Name & ": the character " & clan.BlockReason, MsgBoxStyle.Exclamation, "Delete character")
+            Return
+        End If
+
+        Dim text As String = "Delete " & NodeText(entry) & "?" & vbCrLf & vbCrLf &
+                             If(clanError = "", "Clan: not in a clan (checked in " & ClanMembership.DatabaseName & ")." & vbCrLf & vbCrLf,
+                                "WARNING: the clan could not be checked (" & clanError & ")." & vbCrLf &
+                                "The game refuses to delete in this case. If the character is in a clan, the clan keeps it " &
+                                "as a member, and a new character created with this name takes its place in the clan." &
+                                vbCrLf & vbCrLf) &
+                             "Same steps as deleting in the game:" & vbCrLf &
+                             If(listed, "  - frees its slot in account " & account.Id & " (userinfo)",
+                                        "  - no account lists this character (userinfo is not changed)") & vbCrLf &
+                             "  - deletes " & relative & vbCrLf &
+                             If(entry.LoadError = "" AndAlso entry.Level >= 10,
+                                "  - keeps a copy in " & CharacterIndex.DeletedFolder & "\ (the server restore command reads it)",
+                                "  - no copy in " & CharacterIndex.DeletedFolder & "\ (the server only keeps Lv 10+)") & vbCrLf & vbCrLf &
+                             "Not changed: the account warehouse." & vbCrLf & vbCrLf &
+                             "The account must be LOGGED OUT." & vbCrLf &
+                             If(PendingChanges().Count > 0, "Unsaved changes to this character are lost." & vbCrLf, "") &
+                             "A backup of the files is created first. Delete?"
+        If Not Dialogs.Confirm("Delete character", text, MsgBoxStyle.Exclamation) Then Return
+
+        Try
+            Dim backups = index.DeleteCharacter(entry)
+            ShowCharacter(Nothing)
+            FillTree()
+            lblStatus.Text = "Deleted " & entry.Name & ". Backup in " & AppState.DataServerBackupFolder & ": " &
+                             String.Join(", ", backups.Select(Function(b) Path.GetFileName(b)))
+            RaiseEvent CharacterSaved()
+        Catch ex As Exception
+            ErrorLog.Report("CharacterEditor.Delete: " & entry.FilePath, ex)
+        End Try
     End Sub
 
     Private Sub cmdSave_Click(ByVal sender As Object, ByVal e As EventArgs) Handles cmdSave.Click
