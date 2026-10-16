@@ -24,38 +24,75 @@ Public Class MainEditor
     Private _findMapsEnabled As Boolean
     Private _dropColumnsReady As Boolean
 
-    ' Vista do mapa no editor de NPC: origem/escala convertem coordenadas do jogo em pixels da imagem 256x256.
+    ' Vista do mapa no editor de NPC: como no minimapa do jogo, a imagem inteira cobre o retangulo do cenario,
+    ' entao (x, z) viram pixels por regra de tres, seja a imagem 256x256 ou 512x512.
     Private _mapImagePath As String = ""
     Private _mapImage As Bitmap
-    Private _mapOriginX As Double, _mapOriginY As Double
-    Private _mapScaleX As Double, _mapScaleY As Double
+    Private _mapRect As MapRect = DefaultMapRect
     Private _lastMouseX As Integer, _lastMouseY As Integer
 
-    Private Structure MapView
-        Public OriginX As Double, OriginY As Double, ScaleX As Double, ScaleY As Double
-        Public Sub New(ByVal originX As Double, ByVal originY As Double, ByVal scaleX As Double, ByVal scaleY As Double)
-            Me.OriginX = originX : Me.OriginY = originY : Me.ScaleX = scaleX : Me.ScaleY = scaleY
+    ''' <summary>StageMapRect do cenario em coordenadas do jogo (a mesma unidade de X/Z do .spc).</summary>
+    Private Structure MapRect
+        Public Left As Double, Top As Double, Right As Double, Bottom As Double
+        Public Sub New(ByVal left As Double, ByVal top As Double, ByVal right As Double, ByVal bottom As Double)
+            Me.Left = left : Me.Top = top : Me.Right = right : Me.Bottom = bottom
         End Sub
+        Public ReadOnly Property Width As Double
+            Get
+                Return Right - Left
+            End Get
+        End Property
+        Public ReadOnly Property Height As Double
+            Get
+                Return Bottom - Top
+            End Get
+        End Property
     End Structure
 
-    Private Shared ReadOnly DefaultMapView As New MapView(-14100, -10400, 44, 42)
-    Private Shared ReadOnly MapViews As New Dictionary(Of String, MapView) From {
-        {"FORE-3.ASE.SPC", New MapView(-14100, -10400, 44, 42)},
-        {"FORE-2.ASE.SPC", New MapView(-4350, -11050, 33, 33)},
-        {"FORE-1.ASE.SPC", New MapView(3700, -10700, 32, 35)},
-        {"CASTLE.ASE.SPC", New MapView(34760, -27455, 28, 50)},
-        {"DE-3.ASE.SPC", New MapView(32040, -300, 40, 36)},
-        {"DUN-5.ASE.SPC", New MapView(-3650, -39500, 34, 40)},
-        {"FOREVER-FALL-03.ASE.SPC", New MapView(-2660, 45140, 36, 37)},
-        {"ICE_URA.ASE.SPC", New MapView(31255, 24400, 19, 27)},
-        {"IRON-1.ASE.SPC", New MapView(47800, 16900, 32, 45)},
-        {"IRON-2.ASE.SPC", New MapView(40150, 24350, 52, 45)},
-        {"PILAI.ASE.SPC", New MapView(2050, 74350, 31, 40)},
-        {"RUIN-1.ASE.SPC", New MapView(14150, 12800, 39, 49)},
-        {"RUIN-2.ASE.SPC", New MapView(7270, 22200, 45, 44)},
-        {"RUIN-3.ASE.SPC", New MapView(2200, 10800, 44, 48)},
-        {"VILLAGE-1.ASE.SPC", New MapView(23780, -1050, 28, 21)},
-        {"VILLAGE-2.ASE.SPC", New MapView(1470, -17800, 35, 34)}}
+    ' Extraidos de image\GuideMap\StageInfo.dat do cliente (>> 8), indexados pelo nome do mapa sem ".ASE.SPC".
+    Private Shared ReadOnly DefaultMapRect As New MapRect(-19847, -15714, -8376, -5083)
+    Private Shared ReadOnly MapRects As New Dictionary(Of String, MapRect) From {
+        {"FORE-3", New MapRect(-19847, -15714, -8376, -5083)},
+        {"FORE-2", New MapRect(-8575, -15235, -157, -6926)},
+        {"FORE-1", New MapRect(-399, -15123, 7767, -6223)},
+        {"VILLAGE-2", New MapRect(-3499, -22374, 5584, -13195)},
+        {"RUIN-4", New MapRect(-4403, -7059, 6439, 5728)},
+        {"RUIN-3", New MapRect(-3583, 4559, 7860, 16882)},
+        {"RUIN-2", New MapRect(1504, 16564, 13119, 27826)},
+        {"RUIN-1", New MapRect(9049, 6338, 19339, 19168)},
+        {"DE-1", New MapRect(11036, -6021, 21272, 6882)},
+        {"VILLAGE-1", New MapRect(20265, -3714, 27129, 1627)},
+        {"DE-2", New MapRect(9680, -17470, 19384, -5746)},
+        {"DE-3", New MapRect(27070, -4873, 37071, 4280)},
+        {"DE-4", New MapRect(30961, 3676, 45045, 14557)},
+        {"DUN-1", New MapRect(-17123, -29223, -11101, -24016)},
+        {"DUN-2", New MapRect(-8970, -29724, -2955, -24053)},
+        {"DUN-3", New MapRect(-2481, -29159, 2213, -22816)},
+        {"FOREVER-FALL-04", New MapRect(-4708, 26542, 7395, 41169)},
+        {"FOREVER-FALL-03", New MapRect(-7270, 40442, 1933, 49871)},
+        {"FOREVER-FALL-02", New MapRect(-5810, 49693, 3568, 59548)},
+        {"FOREVER-FALL-01", New MapRect(-2516, 59370, 8107, 73163)},
+        {"PILAI", New MapRect(-1879, 69251, 5981, 79459)},
+        {"DUN-4", New MapRect(-16293, -45550, -8090, -37438)},
+        {"DUN-5", New MapRect(-7947, -44601, 616, -34442)},
+        {"TCAVE", New MapRect(118601, 21375, 126576, 27314)},
+        {"MCAVE", New MapRect(118598, 32606, 125177, 37901)},
+        {"DCAVE", New MapRect(157686, 16639, 165501, 22734)},
+        {"IRON-1", New MapRect(43785, 11191, 51828, 22560)},
+        {"IRON-2", New MapRect(33517, 18556, 46803, 30132)},
+        {"ICE_URA", New MapRect(28868, 20896, 33642, 27932)},
+        {"SOD-1", New MapRect(18611, 874, 26337, 7771)},
+        {"ICE1", New MapRect(25247, 26747, 36190, 41286)},
+        {"CASTLE", New MapRect(31095, -33925, 38460, -21011)},
+        {"GREEDY", New MapRect(12706, 17322, 23889, 30287)},
+        {"ICE_2", New MapRect(31245, 35747, 45722, 52827)},
+        {"BOSS", New MapRect(31827, 49591, 34226, 53408)},
+        {"LOSTISLAND", New MapRect(-19067, -5517, -6867, 7735)},
+        {"LOST_TEMPLE", New MapRect(-17808, 7671, -6865, 16563)}}
+
+    ' .spc cujo nome da imagem difere do nome do mapa.
+    Private Shared ReadOnly MapImageNames As New Dictionary(Of String, String) From {
+        {"ICE_2", "ICE2"}}
 
     Public Sub New()
         InitializeComponent()
@@ -1495,14 +1532,11 @@ Public Class MainEditor
     Private Sub lbNPCMapFileList_SelectedIndexChanged(ByVal sender As Object, ByVal e As EventArgs) Handles lbNPCMapFileList.SelectedIndexChanged
         Dim spc = SelectedSpc()
         If spc Is Nothing Then Return
-        Dim upper As String = spc.FileName.ToUpper()
-        _mapImagePath = AppState.MapImagePath(upper.Replace("ASE.SPC", "BMP"))
-        Dim view As MapView
-        If Not MapViews.TryGetValue(upper, view) Then view = DefaultMapView
-        _mapOriginX = view.OriginX
-        _mapOriginY = view.OriginY
-        _mapScaleX = view.ScaleX
-        _mapScaleY = view.ScaleY
+        Dim mapName As String = spc.FileName.ToUpper().Replace(".ASE.SPC", "")
+        Dim imageName As String = Nothing
+        If Not MapImageNames.TryGetValue(mapName, imageName) Then imageName = mapName
+        _mapImagePath = AppState.MapImagePath(imageName & ".BMP")
+        If Not MapRects.TryGetValue(mapName, _mapRect) Then _mapRect = DefaultMapRect
         LoadMapImage()
         ShowNpcList(spc)
     End Sub
@@ -1555,15 +1589,19 @@ Public Class MainEditor
         Next
     End Sub
 
-    ''' <summary>Marca (x, z) do jogo na imagem; dx/dy desenham a direcao do NPC.</summary>
+    ''' <summary>Marca (x, z) do jogo na imagem; dx/dy desenham a direcao do NPC (em pixels de uma imagem 256).</summary>
     Private Sub DrawPoint(ByVal x As Integer, ByVal z As Integer, ByVal brush As Brush, ByVal dx As Double, ByVal dy As Double)
-        If PictureBox1.Image Is Nothing Then Return
-        Dim px As Integer = CInt(Math.Round(128 + (x - _mapOriginX) / _mapScaleX))
-        Dim py As Integer = CInt(Math.Round(128 + (_mapOriginY - z) / _mapScaleY))
-        Using g As Graphics = Graphics.FromImage(PictureBox1.Image)
-            g.DrawLine(Pens.Red, px, py, px + CInt(Math.Round(dx)), py + CInt(Math.Round(dy)))
-            g.FillEllipse(brush, px - 2, py - 2, 4, 4)
-            g.DrawEllipse(Pens.White, px - 2, py - 2, 4, 4)
+        Dim image = PictureBox1.Image
+        If image Is Nothing Then Return
+        ' Posicao continua (sem arredondar) e dimensoes proporcionais ao tamanho real da imagem.
+        Dim px As Single = CSng((x - _mapRect.Left) / _mapRect.Width * image.Width)
+        Dim py As Single = CSng((_mapRect.Bottom - z) / _mapRect.Height * image.Height)
+        Dim unit As Single = image.Width / 256.0F
+        Dim radius As Single = 2 * unit
+        Using g As Graphics = Graphics.FromImage(image)
+            g.DrawLine(Pens.Red, px, py, px + CSng(dx * unit), py + CSng(dy * unit))
+            g.FillEllipse(brush, px - radius, py - radius, radius * 2, radius * 2)
+            g.DrawEllipse(Pens.White, px - radius, py - radius, radius * 2, radius * 2)
         End Using
     End Sub
 
@@ -1613,8 +1651,9 @@ Public Class MainEditor
         PictureBox1.Focus()
         If e.Button = MouseButtons.Left Then
             PictureBox1.Cursor = Cursors.Cross
-            tbNPCx.Text = CInt(Math.Round(CDbl(tbNPCx.Text) - (_lastMouseX - e.X) * (_mapScaleX / 2))).ToString()
-            tbNPCz.Text = CInt(Math.Round(CDbl(tbNPCz.Text) - (e.Y - _lastMouseY) * (_mapScaleY / 2))).ToString()
+            ' Mouse em pixels do PictureBox -> unidades do jogo.
+            tbNPCx.Text = CInt(Math.Round(CDbl(tbNPCx.Text) + (e.X - _lastMouseX) * _mapRect.Width / PictureBox1.ClientSize.Width)).ToString()
+            tbNPCz.Text = CInt(Math.Round(CDbl(tbNPCz.Text) - (e.Y - _lastMouseY) * _mapRect.Height / PictureBox1.ClientSize.Height)).ToString()
             tbNPCx.Refresh()
             tbNPCz.Refresh()
         Else
@@ -1647,8 +1686,8 @@ Public Class MainEditor
     End Sub
 
     Private Sub BringBackToMapToolStripMenuItem_Click(ByVal sender As Object, ByVal e As EventArgs) Handles BringBackToMapToolStripMenuItem.Click
-        tbNPCx.Text = (_mapOriginX + 100).ToString()
-        tbNPCz.Text = (_mapOriginY - 100).ToString()
+        tbNPCx.Text = CInt(Math.Round((_mapRect.Left + _mapRect.Right) / 2)).ToString()
+        tbNPCz.Text = CInt(Math.Round((_mapRect.Top + _mapRect.Bottom) / 2)).ToString()
     End Sub
 
     ''' <summary>Grava o registro do NPC no .spc e o nome/falas no .zhoon.</summary>

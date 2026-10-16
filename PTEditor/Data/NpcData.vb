@@ -238,7 +238,7 @@ Friend Module NpcData
     ''' <summary>Coordenada de 24 bits com sinal (3 bytes uteis).</summary>
     Private Function ReadCoordinate(ByVal data As Byte(), ByVal offset As Integer) As Integer
         Dim raw As Integer = ReadUInt24(data, offset)
-        Return If(raw > 8388608, raw - 16777216, raw)
+        Return If(raw >= 8388608, raw - 16777216, raw)
     End Function
 
     Private Function CoordinateBytes(ByVal value As Integer) As Byte()
