@@ -43,13 +43,34 @@ a..z em maiusculas, modulo 256 - `GetUserCode` em `Servidor\record.cpp`). A past
 DataServer-Path=C:\Servidor\DataServer
 ```
 
+### Perfis (`Profiles\*.ini`)
+
+Cada source e um fork com structs diferentes (tamanho do `sGAME_SAVE_INFO`, numero de skills, `sITEMINFO`,
+codigos de pacote, tabela de EXP, regras). O formato de cada uma fica num perfil, copiado para a saida:
+
+| Perfil | Source | Itens em | Codigo | Level max | Corrige level pela EXP |
+|--------|--------|----------|--------|-----------|------------------------|
+| `Classic` | PTClassic-master | `0x6F0` | `0x48470081` | 119 | sim |
+| `Happy` | source\Servidor (game.exe do Happy) | `0x718` | `0x48470081` | 170 | sim |
+| `Elemental` | Source Elemental (Source25) | `0x704` | `4` (`enum OpCode`) | 150 | nao |
+
+Na aba Characters o combo **Profile** fica em `Auto-detect` (cada arquivo e lido pelo primeiro perfil cujo codigo e
+`offset dos itens + DataSize = size` batem) ou fixo num perfil; a escolha fica em `Profiles\DataServers.txt` por pasta.
+Arquivos que nenhum perfil le aparecem em vermelho com o motivo e nao podem ser editados. Em Options, **Character
+profiles** lista os perfis, abre o `.ini` e testa cada perfil no DataServer carregado.
+
+Para outra source: copiar o perfil mais parecido, ajustar os offsets (calculados das structs do `record.h` /
+`sinItem.h` dela) e apontar `LevelTable=` para a tabela de EXP dela (aceita o proprio `LevelTable.h`).
+O numero de personagens por conta (6 ou 11) e deduzido do tamanho do arquivo de `userinfo`.
+
 | Arquivo | Conteudo |
 |---------|----------|
-| `RecordLayout.vb` | Offsets dos dois layouts conhecidos: `Servidor` (source atual, itens em `0x718`) e `Classic` (PTClassic, itens em `0x6F0`). Detectado pelo cabecalho de cada arquivo. |
+| `CharacterProfile.vb` / `ProfileStore.vb` | Leitura dos perfis, deteccao e escolha por DataServer. |
+| `LevelTable.vb` | Tabela de EXP do perfil (`CheckLevelExp` / `GetLevelFromExp`). |
 | `CharacterFile.vb` | `TRANS_RECORD_DATA`: nome, classe, level, EXP 64 bits (`Exp` + `Exp_High`), atributos, ouro, skills, itens; grava recomprimindo os itens. |
 | `ItemCompression.vb` | `EecodeCompress`/`DecodeCompress` (byte com bit 7 = sequencia de zeros, senao bytes literais). Recomprimir reproduz os bytes do jogo. |
 | `ItemChecksum.vb` | `dwChkSum` (conferido pelo cliente ao logar) e `dwTime` (`rsGetItem_ServerForm`, conferido pelo servidor ao vender/trocar). |
-| `CharacterRules.vb` | O que o servidor faz ao carregar: level corrigido pela EXP (`LevelTable.vb`, copia de `LevelTable.h`), pontos livres recalculados (`ReformCharStatePoint`), reset de atributos abaixo de -10. |
+| `CharacterRules.vb` | O que o servidor faz ao carregar: level corrigido pela EXP (se o perfil diz que corrige), pontos livres recalculados (`ReformCharStatePoint`), reset de atributos abaixo de -10. |
 | `WarehouseFile.vb` | `.war`: um bloco comprimido com 100 `sITEM`, ouro gravado como valor + 2023, checksum do bau. Somente leitura. |
 | `CharacterIndex.vb` | Varre o DataServer; arquivos ilegiveis entram na lista com o motivo, sem interromper a carga. |
 
@@ -57,8 +78,8 @@ Ao salvar: confirmacao com as diferencas e avisos, copia em `<DataServer>\PTEdit
 como o servidor calcularia e `LastMoeny` zerado (se > 0 o jogo usaria `LastMoeny - 1` como ouro). O personagem
 precisa estar deslogado: o servidor regrava o arquivo ao sair.
 
-Pendente: conferir o layout `Servidor` e o formato do bau com arquivos reais deste servidor (os testes usaram
-personagens do PTClassic e um bau gerado a partir do fonte).
+Validacao: `Classic` com personagens reais do PTClassic; `Elemental` com 10 personagens, 3 contas e 1 bau reais;
+`Happy` so com um arquivo convertido e um bau gerado a partir do fonte (falta conferir com arquivos reais do Happy).
 
 ## Encoding dos arquivos do servidor
 

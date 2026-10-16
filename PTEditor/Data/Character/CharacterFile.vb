@@ -8,57 +8,63 @@
 Friend Class CharacterFile
 
     Public ReadOnly Property FilePath As String
-    Public ReadOnly Property Layout As RecordLayout
+    Public ReadOnly Property Profile As CharacterProfile
     Public ReadOnly Property Items As New List(Of GameItem)()
 
     Private ReadOnly _data As Byte()
 
-    Private Sub New(ByVal filePath As String, ByVal data As Byte(), ByVal layout As RecordLayout)
+    Private Sub New(ByVal filePath As String, ByVal data As Byte(), ByVal profile As CharacterProfile)
         Me.FilePath = filePath
         _data = data
-        Me.Layout = layout
+        Me.Profile = profile
     End Sub
 
-    ''' <summary>Le o arquivo. Lanca InvalidDataException com a explicacao quando o arquivo nao e reconhecido.</summary>
-    Public Shared Function Load(ByVal filePath As String) As CharacterFile
-        Return Parse(filePath, File.ReadAllBytes(filePath))
+    ''' <summary>
+    ''' Le o arquivo com o primeiro perfil que o reconhece. Lanca InvalidDataException com a explicacao quando
+    ''' nenhum dos perfis serve.
+    ''' </summary>
+    Public Shared Function Load(ByVal filePath As String, ByVal candidates As IEnumerable(Of CharacterProfile)) As CharacterFile
+        Return Parse(filePath, File.ReadAllBytes(filePath), candidates)
     End Function
 
-    Public Shared Function Parse(ByVal filePath As String, ByVal data As Byte()) As CharacterFile
+    Public Shared Function Parse(ByVal filePath As String, ByVal data As Byte(), ByVal candidates As IEnumerable(Of CharacterProfile)) As CharacterFile
         If data.Length < CharOffsets.GameSaveInfo Then
             Throw New InvalidDataException("File too small (" & data.Length & " bytes).")
         End If
         Dim size As Integer = BitConverter.ToInt32(data, CharOffsets.Size)
         If size = 0 Then Throw New InvalidDataException("Empty file (size = 0): character was never saved.")
-        If BitConverter.ToInt32(data, CharOffsets.Code) <> CharOffsets.RecordCode Then
-            Throw New InvalidDataException("Not a character file (code 0x" &
-                                           BitConverter.ToInt32(data, CharOffsets.Code).ToString("X8") & ").")
+        Dim profile = CharacterProfile.DetectCharacter(data, candidates)
+        If profile Is Nothing Then
+            Dim code As Integer = BitConverter.ToInt32(data, CharOffsets.Code)
+            Dim sameCode = candidates.Where(Function(p) p.RecordCode = code).Select(Function(p) p.Name).ToList()
+            If sameCode.Count = 0 Then
+                Throw New InvalidDataException("No profile uses record code 0x" & code.ToString("X") & " (" &
+                                               String.Join(", ", candidates.Select(Function(p) p.Name)) & " tested).")
+            End If
+            Throw New InvalidDataException("Record code matches " & String.Join(", ", sameCode) &
+                                           " but the item data does not fit (size = " & size & ").")
         End If
-        Dim layout As RecordLayout = RecordLayout.Detect(data)
-        If layout Is Nothing Then
-            Throw New InvalidDataException("Unknown layout: size = " & size & " does not match any known version.")
-        End If
-        Dim result As New CharacterFile(filePath, data, layout)
+        Dim result As New CharacterFile(filePath, data, profile)
         result.ReadItems()
         Return result
     End Function
 
     Private Sub ReadItems()
-        Dim count As Integer = ReadInt(Layout.ItemCountOffset)
-        Dim subStart As Integer = ReadInt(Layout.ItemSubStartOffset)
-        Dim dataSize As Integer = ReadInt(Layout.DataSizeOffset)
+        Dim count As Integer = ReadInt(Profile.ItemCountOffset)
+        Dim subStart As Integer = ReadInt(Profile.ItemSubStartOffset)
+        Dim dataSize As Integer = ReadInt(Profile.DataSizeOffset)
         Dim position As Integer = 0
         For i = 0 To count - 1
             If position + 4 > dataSize Then
                 Throw New InvalidDataException("Item list ends early (item " & i & " of " & count & ").")
             End If
-            Dim offset As Integer = Layout.DataOffset + position
+            Dim offset As Integer = Profile.DataOffset + position
             Dim length As Integer = ItemCompression.BlockLength(_data, offset)
             If length <= 4 OrElse position + length > dataSize Then
                 Throw New InvalidDataException("Item " & i & " has an invalid size (" & length & ").")
             End If
-            Dim record As Byte() = ItemCompression.Decode(_data, offset, Layout.RecordItemSize)
-            Dim item As New GameItem(record, 16, Layout, ItemContainer.Inventory) With {
+            Dim record As Byte() = ItemCompression.Decode(_data, offset, Profile.RecordItemSize)
+            Dim item As New GameItem(record, 16, Profile, ItemContainer.Inventory) With {
                 .Slot = BitConverter.ToInt32(record, 0),
                 .X = BitConverter.ToInt32(record, 4),
                 .Y = BitConverter.ToInt32(record, 8),
@@ -123,7 +129,7 @@ Friend Class CharacterFile
     ''' <summary>Conta dona gravada no personagem (GameSaveInfo.szMasterID).</summary>
     Public ReadOnly Property MasterId As String
         Get
-            Return ReadText(Layout.MasterIdOffset, 32)
+            Return ReadText(Profile.MasterIdOffset, Profile.MasterIdLength)
         End Get
     End Property
 
@@ -237,7 +243,7 @@ Friend Class CharacterFile
 
     Public ReadOnly Property LevelQuestLog As UInteger
         Get
-            Return BitConverter.ToUInt32(_data, Layout.LevelQuestLogOffset)
+            Return BitConverter.ToUInt32(_data, Profile.LevelQuestLogOffset)
         End Get
     End Property
 
@@ -295,11 +301,11 @@ Friend Class CharacterFile
     End Function
 
     Public Function SkillMastery(ByVal index As Integer) As Integer
-        Return BitConverter.ToUInt16(_data, Layout.SkillMasteryOffset + index * 2)
+        Return BitConverter.ToUInt16(_data, Profile.SkillMasteryOffset + index * 2)
     End Function
 
     Public Function SkillShortKey(ByVal index As Integer) As Integer
-        Return _data(Layout.ShortKeyOffset + index)
+        Return _data(Profile.ShortKeyOffset + index)
     End Function
 
 #End Region
@@ -332,14 +338,14 @@ Friend Class CharacterFile
         For Each item In Items.Where(Function(i) i.SecondInventory)
             blob.AddRange(ItemCompression.Encode(item.Raw))
         Next
-        Dim size As Integer = Layout.DataOffset + blob.Count
+        Dim size As Integer = Profile.DataOffset + blob.Count
         Dim result(Math.Max(Math.Max(_data.Length, size), CharOffsets.MinFileLength) - 1) As Byte
-        Array.Copy(_data, result, Layout.DataOffset)
-        blob.CopyTo(result, Layout.DataOffset)
+        Array.Copy(_data, result, Profile.DataOffset)
+        blob.CopyTo(result, Profile.DataOffset)
         BitConverter.GetBytes(size).CopyTo(result, CharOffsets.Size)
-        BitConverter.GetBytes(Items.Count).CopyTo(result, Layout.ItemCountOffset)
-        BitConverter.GetBytes(subStart).CopyTo(result, Layout.ItemSubStartOffset)
-        BitConverter.GetBytes(blob.Count).CopyTo(result, Layout.DataSizeOffset)
+        BitConverter.GetBytes(Items.Count).CopyTo(result, Profile.ItemCountOffset)
+        BitConverter.GetBytes(subStart).CopyTo(result, Profile.ItemSubStartOffset)
+        BitConverter.GetBytes(blob.Count).CopyTo(result, Profile.DataSizeOffset)
         Return result
     End Function
 

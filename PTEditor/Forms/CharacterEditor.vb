@@ -20,7 +20,16 @@ Public Class CharacterEditor
     Private _filling As Boolean
     Private _initialized As Boolean
 
+    Private _setupDone As Boolean
+
     Private Sub CharacterEditor_Load(ByVal sender As Object, ByVal e As EventArgs) Handles MyBase.Load
+        EnsureSetup()
+    End Sub
+
+    ''' <summary>Colunas, filtros e perfis. A aba pode chamar EnsureLoaded antes do evento Load do controle.</summary>
+    Private Sub EnsureSetup()
+        If _setupDone Then Return
+        _setupDone = True
         SetupItemColumns(lvInventory, True)
         SetupItemColumns(lvWarehouse, False)
         cbClassFilter.Items.Add(AllClasses)
@@ -28,7 +37,7 @@ Public Class CharacterEditor
             cbClassFilter.Items.Add(pair.Value)
         Next
         cbClassFilter.SelectedIndex = 0
-        nudLevel.Maximum = LevelTable.MaxLevel
+        FillProfiles()
         ShowCharacter(Nothing)
     End Sub
 
@@ -52,8 +61,10 @@ Public Class CharacterEditor
     Friend Sub EnsureLoaded()
         If _initialized Then Return
         _initialized = True
+        EnsureSetup()
         tbDataServer.Text = DefaultDataServerPath()
-        If CharacterIndex.IsDataServer(tbDataServer.Text) Then
+        SelectProfileFor(tbDataServer.Text)
+        If CharacterIndex.ResolveDataServer(tbDataServer.Text) IsNot Nothing Then
             LoadIndex()
         Else
             lblStatus.Text = "Select the DataServer folder and click Load."
@@ -77,6 +88,7 @@ Public Class CharacterEditor
         If Directory.Exists(tbDataServer.Text) Then dlgFolder.SelectedPath = tbDataServer.Text
         If dlgFolder.ShowDialog() = DialogResult.OK Then
             tbDataServer.Text = dlgFolder.SelectedPath
+            SelectProfileFor(tbDataServer.Text)
             LoadIndex()
         End If
     End Sub
@@ -87,27 +99,44 @@ Public Class CharacterEditor
 
     Private Sub LoadIndex()
         If Not ConfirmDiscard() Then Return
-        Dim folder As String = tbDataServer.Text.Trim()
-        If Not CharacterIndex.IsDataServer(folder) Then
-            MsgBox("This folder is not a DataServer: the userdata subfolder is missing." & vbCrLf & folder, MsgBoxStyle.Exclamation)
+        Dim typed As String = tbDataServer.Text.Trim()
+        Dim folder As String = CharacterIndex.ResolveDataServer(typed)
+        If folder Is Nothing Then
+            MsgBox("No DataServer found in this folder." & vbCrLf & typed & vbCrLf & vbCrLf &
+                   "Select the DataServer folder (the one containing userdata, userinfo and warehouse) " &
+                   "or the server folder that contains it.", MsgBoxStyle.Exclamation)
             Return
         End If
+        If folder <> typed Then
+            tbDataServer.Text = folder
+            SelectProfileFor(folder)
+        End If
+        If ProfileStore.Profiles.Count = 0 Then
+            MsgBox("No character profile found in " & ProfileStore.Folder & "." & vbCrLf &
+                   "The profiles (*.ini) describe the file format of each server source.", MsgBoxStyle.Exclamation)
+            Return
+        End If
+        Dim chosen As String = SelectedProfileName()
+        Dim candidates As List(Of CharacterProfile) =
+            If(chosen = ProfileStore.AutoDetect, ProfileStore.Profiles, New List(Of CharacterProfile) From {ProfileStore.Find(chosen)})
         Cursor = Cursors.WaitCursor
         Try
-            Dim index = CharacterIndex.Build(folder, Sub(i, n)
-                                                         If i Mod 25 = 0 OrElse i = n Then
-                                                             lblStatus.Text = "Reading characters: " & i & " of " & n
-                                                             lblStatus.Refresh()
-                                                         End If
-                                                     End Sub)
+            Dim index = CharacterIndex.Build(folder, candidates, Sub(i, n)
+                                                                     If i Mod 25 = 0 OrElse i = n Then
+                                                                         lblStatus.Text = "Reading characters: " & i & " of " & n
+                                                                         lblStatus.Refresh()
+                                                                     End If
+                                                                 End Sub)
             AppState.CharacterIndex = index
             If Not String.Equals(AppState.DataServerPath, folder, StringComparison.OrdinalIgnoreCase) Then
                 AppState.DataServerPath = folder
                 ConfigFile.SaveValues(New Dictionary(Of String, String) From {{ConfigFile.KeyDataServerPath, folder}})
             End If
+            ProfileStore.SaveSelection(folder, chosen)
             Dim failed As Integer = index.Characters.Where(Function(c) c.LoadError <> "").Count()
             lblStatus.Text = index.Characters.Count & " characters, " & index.Accounts.Count & " accounts" &
                              If(failed > 0, " | " & failed & " file(s) could not be read (marked with !)", "")
+            ShowDetectedProfiles(index, chosen)
             ShowCharacter(Nothing)
             FillTree()
         Catch ex As Exception
@@ -116,6 +145,74 @@ Public Class CharacterEditor
         Finally
             Cursor = Cursors.Default
         End Try
+    End Sub
+
+#End Region
+
+#Region "Perfis"
+
+    Private _fillingProfiles As Boolean
+
+    ''' <summary>Combo de perfis: "Auto-detect" + perfis de Profiles\*.ini.</summary>
+    Friend Sub FillProfiles()
+        _fillingProfiles = True
+        Dim current As String = SelectedProfileName()
+        cbProfile.Items.Clear()
+        cbProfile.Items.Add(AutoDetectText)
+        For Each p In ProfileStore.Profiles
+            cbProfile.Items.Add(p.Name)
+        Next
+        SelectProfileName(current)
+        _fillingProfiles = False
+    End Sub
+
+    Private Const AutoDetectText As String = "Auto-detect"
+
+    Private Function SelectedProfileName() As String
+        If cbProfile.SelectedIndex <= 0 Then Return ProfileStore.AutoDetect
+        Return CStr(cbProfile.SelectedItem)
+    End Function
+
+    Private Sub SelectProfileName(ByVal name As String)
+        Dim index As Integer = If(name = ProfileStore.AutoDetect, -1, cbProfile.Items.IndexOf(name))
+        cbProfile.SelectedIndex = Math.Max(0, index)
+    End Sub
+
+    ''' <summary>Seleciona o perfil gravado para a pasta (ou Auto-detect).</summary>
+    Private Sub SelectProfileFor(ByVal folder As String)
+        _fillingProfiles = True
+        SelectProfileName(ProfileStore.SelectionFor(folder))
+        _fillingProfiles = False
+    End Sub
+
+    Private Sub cbProfile_SelectedIndexChanged(ByVal sender As Object, ByVal e As EventArgs) Handles cbProfile.SelectedIndexChanged
+        If _fillingProfiles OrElse AppState.CharacterIndex Is Nothing Then Return
+        LoadIndex()
+    End Sub
+
+    ''' <summary>Resultado da deteccao: qual perfil leu quantos arquivos.</summary>
+    Private Sub ShowDetectedProfiles(ByVal index As CharacterIndex, ByVal chosen As String)
+        Dim counts = index.ProfileCounts()
+        Dim read As Integer = counts.Sum(Function(p) p.Value)
+        Dim total As Integer = index.Characters.Count
+        Dim files As String = " (" & read & "/" & total & " files)"
+        If total = 0 Then
+            lblDetected.Text = "No character files in userdata."
+            lblDetected.ForeColor = SystemColors.GrayText
+        ElseIf read = 0 Then
+            lblDetected.Text = If(chosen = ProfileStore.AutoDetect, "No profile matches these files", "Profile " & chosen & " does not match these files") &
+                               files & " - read-only"
+            lblDetected.ForeColor = Color.Firebrick
+        ElseIf counts.Count = 1 Then
+            lblDetected.Text = If(chosen = ProfileStore.AutoDetect, "Detected: ", "Profile: ") & counts(0).Key & files
+            lblDetected.ForeColor = If(read = total, Color.DarkGreen, Color.DarkOrange)
+        Else
+            lblDetected.Text = "Detected: " & String.Join(", ", counts.Select(Function(p) p.Key & " " & p.Value)) & files &
+                               " - mixed formats in this DataServer"
+            lblDetected.ForeColor = Color.DarkOrange
+        End If
+        Dim broken As Integer = ProfileStore.Errors.Count
+        If broken > 0 Then lblDetected.Text &= " | " & broken & " profile file(s) with errors (see Options)"
     End Sub
 
 #End Region
@@ -218,8 +315,8 @@ Public Class CharacterEditor
                 cmdOpenFolder.Enabled = True
                 Return
             End If
-            _original = CharacterFile.Load(entry.FilePath)
-            _working = CharacterFile.Load(entry.FilePath)
+            _original = CharacterFile.Load(entry.FilePath, AppState.CharacterIndex.Candidates)
+            _working = CharacterFile.Load(entry.FilePath, AppState.CharacterIndex.Candidates)
             _loadedWriteTime = File.GetLastWriteTime(entry.FilePath)
             _entry = entry
             ShowCharacter(_working)
@@ -254,8 +351,10 @@ Public Class CharacterEditor
             End If
 
             lblTitle.Text = c.Name & "  -  " & c.ClassName & " Lv " & c.Level
-            lblSubtitle.Text = c.FilePath & "   |   layout " & c.Layout.Name & ", header '" & c.Header & "'"
+            lblSubtitle.Text = c.FilePath & "   |   profile " & c.Profile.Name & ", header '" & c.Header & "'"
             FillGeneral(c)
+            nudLevel.Maximum = c.Profile.LevelTable.MaxLevel
+            lblLevelNote.Text = LevelNote(c.Profile)
             nudLevel.Value = Math.Max(nudLevel.Minimum, Math.Min(nudLevel.Maximum, c.Level))
             tbExp.Text = c.Exp.ToString()
             nudStrength.Value = Clamp(nudStrength, c.Strength)
@@ -276,6 +375,17 @@ Public Class CharacterEditor
         End Try
         RefreshDerived()
     End Sub
+
+    Private Shared Function LevelNote(ByVal profile As CharacterProfile) As String
+        Dim text As String = "Changing the level moves the EXP to the start of the new level (" & profile.Name &
+                             " table, max level " & profile.LevelTable.MaxLevel & "). "
+        If profile.FixLevelFromExp Then
+            text &= "This server checks Level x EXP when loading the character and fixes the level if they do not match."
+        Else
+            text &= "This server does not check Level x EXP: the level is kept even if the EXP is outside its range."
+        End If
+        Return text & " Free stat points are recalculated on save."
+    End Function
 
     Private Shared Function Clamp(ByVal box As NumericUpDown, ByVal value As Integer) As Decimal
         Return Math.Max(box.Minimum, Math.Min(box.Maximum, value))
@@ -302,6 +412,7 @@ Public Class CharacterEditor
         AddField("Items", c.Items.Count.ToString())
         AddField("Folder (name hash)", "userdata\" & UserCode.Compute(c.Name))
         AddField("Save version (Head)", c.SaveHead.ToString())
+        AddField("Profile", c.Profile.Name & "  (" & c.Profile.FilePath & ")")
         AddField("File", c.FilePath)
         lvGeneral.EndUpdate()
     End Sub
@@ -353,7 +464,7 @@ Public Class CharacterEditor
                 lblWarehouse.ForeColor = SystemColors.GrayText
                 Return
             End If
-            Dim warehouse = WarehouseFile.Load(warehousePath)
+            Dim warehouse = WarehouseFile.Load(warehousePath, AppState.CharacterIndex.Candidates)
             If warehouse.IsEmpty Then
                 lblWarehouse.Text = "Empty warehouse: " & warehousePath
                 lblWarehouse.ForeColor = SystemColors.GrayText
@@ -378,7 +489,7 @@ Public Class CharacterEditor
     Private Sub FillSkills(ByVal c As CharacterFile)
         lvSkills.BeginUpdate()
         lvSkills.Items.Clear()
-        For i = 0 To c.Layout.SkillCount - 1
+        For i = 0 To c.Profile.SkillCount - 1
             Dim row = lvSkills.Items.Add((i + 1).ToString())
             row.SubItems.Add(c.SkillPoint(i).ToString())
             row.SubItems.Add(c.SkillMastery(i).ToString())
@@ -396,13 +507,14 @@ Public Class CharacterEditor
         If _filling OrElse _working Is Nothing Then Return
         Dim level As Integer = CInt(nudLevel.Value)
         _working.Level = level
-        If Not LevelTable.IsValid(level, _working.Exp) Then SetExp(LevelTable.ExpAtLevelStart(level))
+        Dim table As LevelTable = _working.Profile.LevelTable
+        If Not table.IsValid(level, _working.Exp) Then SetExp(table.ExpAtLevelStart(level))
         RefreshDerived()
     End Sub
 
     Private Sub cmdExpStart_Click(ByVal sender As Object, ByVal e As EventArgs) Handles cmdExpStart.Click
         If _working Is Nothing Then Return
-        SetExp(LevelTable.ExpAtLevelStart(CInt(nudLevel.Value)))
+        SetExp(_working.Profile.LevelTable.ExpAtLevelStart(CInt(nudLevel.Value)))
         RefreshDerived()
     End Sub
 
@@ -463,14 +575,18 @@ Public Class CharacterEditor
         If _working Is Nothing Then Return
         Dim c = _working
         Dim level As Integer = c.Level
-        lblExpRange.Text = "Accepted range for level " & level & ": " & LevelTable.ExpAtLevelStart(level).ToString("N0") &
-                           " to " & LevelTable.ExpAtLevelEnd(level).ToString("N0")
-        If c.Exp >= 0 AndAlso LevelTable.IsValid(level, c.Exp) Then
-            lblServerLevel.Text = "OK: the server keeps level " & level & "."
+        Dim table As LevelTable = c.Profile.LevelTable
+        lblExpRange.Text = "Level " & level & " range in the " & c.Profile.Name & " table: " &
+                           table.ExpAtLevelStart(level).ToString("N0") & " to " & table.ExpAtLevelEnd(level).ToString("N0")
+        If c.Exp >= 0 AndAlso table.IsValid(level, c.Exp) Then
+            lblServerLevel.Text = "OK: the EXP belongs to level " & level & "."
             lblServerLevel.ForeColor = Color.DarkGreen
-        Else
-            lblServerLevel.Text = "The server will change the level to " & LevelTable.LevelFromExp(c.Exp) & " because of the EXP."
+        ElseIf c.Profile.FixLevelFromExp Then
+            lblServerLevel.Text = "The server will change the level to " & table.LevelFromExp(c.Exp) & " because of the EXP."
             lblServerLevel.ForeColor = Color.Firebrick
+        Else
+            lblServerLevel.Text = "EXP outside the level range; this server does not correct the level, so it stays " & level & "."
+            lblServerLevel.ForeColor = Color.DarkOrange
         End If
 
         Dim bonus As Integer = CharacterRules.QuestBonusPoints(level, c.LevelQuestLog)
@@ -575,7 +691,7 @@ Public Class CharacterEditor
         Try
             Dim backup As String = BackupHelper.CreateDataServerBackup(AppState.CharacterIndex.DataServerPath, _entry.FilePath)
             _working.Save()
-            Dim saved = CharacterFile.Load(_entry.FilePath)
+            Dim saved = CharacterFile.Load(_entry.FilePath, AppState.CharacterIndex.Candidates)
             _entry.Level = saved.Level
             _entry.Exp = saved.Exp
             OpenCharacter(_entry)

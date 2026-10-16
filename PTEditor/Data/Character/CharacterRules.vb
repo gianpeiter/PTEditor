@@ -57,17 +57,22 @@ Friend Module CharacterRules
     ''' <summary>Confere o personagem como o servidor fara. Erros impedem a gravacao; avisos pedem confirmacao.</summary>
     Friend Function Validate(ByVal c As CharacterFile) As List(Of RuleMessage)
         Dim result As New List(Of RuleMessage)()
-        If c.Level < 1 OrElse c.Level > LevelTable.MaxLevel Then
-            result.Add(New RuleMessage(RuleSeverity.Error, "Level " & c.Level & " out of range 1.." & LevelTable.MaxLevel & "."))
+        Dim table As LevelTable = c.Profile.LevelTable
+        If c.Level < 1 OrElse c.Level > table.MaxLevel Then
+            result.Add(New RuleMessage(RuleSeverity.Error, "Level " & c.Level & " out of range 1.." & table.MaxLevel & "."))
         End If
         If c.Exp < 0 Then
             result.Add(New RuleMessage(RuleSeverity.Error, "Negative EXP: the server resets EXP to 0."))
-        ElseIf c.Level >= 1 AndAlso c.Level <= LevelTable.MaxLevel AndAlso Not LevelTable.IsValid(c.Level, c.Exp) Then
-            Dim serverLevel As Integer = LevelTable.LevelFromExp(c.Exp)
-            result.Add(New RuleMessage(RuleSeverity.Warning,
-                "EXP " & c.Exp.ToString("N0") & " does not belong to level " & c.Level & " (" &
-                LevelTable.ExpAtLevelStart(c.Level).ToString("N0") & " to " & LevelTable.ExpAtLevelEnd(c.Level).ToString("N0") &
-                "). The server will change the level to " & serverLevel & "."))
+        ElseIf c.Level >= 1 AndAlso c.Level <= table.MaxLevel AndAlso Not table.IsValid(c.Level, c.Exp) Then
+            Dim range As String = "EXP " & c.Exp.ToString("N0") & " does not belong to level " & c.Level & " (" &
+                table.ExpAtLevelStart(c.Level).ToString("N0") & " to " & table.ExpAtLevelEnd(c.Level).ToString("N0") & ")"
+            If c.Profile.FixLevelFromExp Then
+                result.Add(New RuleMessage(RuleSeverity.Warning,
+                    range & ". The server will change the level to " & table.LevelFromExp(c.Exp) & "."))
+            Else
+                result.Add(New RuleMessage(RuleSeverity.Info,
+                    range & ". This server (" & c.Profile.Name & ") does not correct the level from the EXP."))
+            End If
         End If
 
         Dim free As Integer = FreeStatPoints(c.Level, c.LevelQuestLog, c.Strength, c.Spirit, c.Talent, c.Dexterity, c.Health)

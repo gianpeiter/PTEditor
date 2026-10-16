@@ -61,7 +61,7 @@ Friend Module ItemChecksum
     End Function
 
     ''' <summary>rsGetItem_ServerForm: valor esperado em ItemHeader.dwTime.</summary>
-    Friend Function ServerForm(ByVal data As Byte(), ByVal infoOffset As Integer, ByVal layout As RecordLayout) As UInteger
+    Friend Function ServerForm(ByVal data As Byte(), ByVal infoOffset As Integer, ByVal profile As CharacterProfile) As UInteger
         Dim key As Long = U32(data, infoOffset + ChkSumOffset)
         Dim itemCode As Long = U32(data, infoOffset + CodeOffset)
         ' So os 16 bits baixos do produto sobrevivem a mascara.
@@ -78,7 +78,7 @@ Friend Module ItemChecksum
         Dim protect0 As Long = BitConverter.ToInt16(data, infoOffset + AgingProtectOffset)
         Dim protect1 As Long = BitConverter.ToInt16(data, infoOffset + AgingProtectOffset + 2)
         code = code Xor (((protect0 * 7) Xor (protect1 * 9)) And Mask)
-        Dim createTime As Long = U32(data, infoOffset + layout.CreateTimeOffset)
+        Dim createTime As Long = U32(data, infoOffset + profile.CreateTimeOffset)
         code = (code + ((createTime And &HFFFFL) << 2)) And Mask
         Dim head As Long = U32(data, infoOffset + HeadOffset)
         code = code Xor ((head Xor (((key + code) And Mask) << FormCodeShift)) And Mask)

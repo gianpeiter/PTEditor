@@ -12,11 +12,9 @@ End Enum
 ''' </summary>
 Friend Class GameItem
 
-    Private Shared ReadOnly NameEncoding As Encoding = Encoding.GetEncoding(949)
-
     Public ReadOnly Property Raw As Byte()
     Public ReadOnly Property InfoOffset As Integer
-    Public ReadOnly Property Layout As RecordLayout
+    Public ReadOnly Property Profile As CharacterProfile
     Public ReadOnly Property Container As ItemContainer
 
     ''' <summary>Indice do slot no inventario do jogo (sRECORD_ITEM.ItemCount) ou no bau.</summary>
@@ -28,10 +26,10 @@ Friend Class GameItem
     ''' <summary>Item do segundo inventario (indice &gt;= ItemSubStart no arquivo).</summary>
     Public Property SecondInventory As Boolean
 
-    Public Sub New(ByVal raw As Byte(), ByVal infoOffset As Integer, ByVal layout As RecordLayout, ByVal container As ItemContainer)
+    Public Sub New(ByVal raw As Byte(), ByVal infoOffset As Integer, ByVal profile As CharacterProfile, ByVal container As ItemContainer)
         Me.Raw = raw
         Me.InfoOffset = infoOffset
-        Me.Layout = layout
+        Me.Profile = profile
         Me.Container = container
     End Sub
 
@@ -48,7 +46,7 @@ Friend Class GameItem
         End Get
     End Property
 
-    ''' <summary>Nome gravado no proprio item (CP949).</summary>
+    ''' <summary>Nome gravado no proprio item (encoding do perfil: CP949 coreano, CP1252 nas sources traduzidas).</summary>
     Public ReadOnly Property StoredName As String
         Get
             Dim start As Integer = InfoOffset + &H1C
@@ -56,7 +54,7 @@ Friend Class GameItem
             Do While length < 32 AndAlso Raw(start + length) <> 0
                 length += 1
             Loop
-            Return NameEncoding.GetString(Raw, start, length)
+            Return Profile.NameEncoding.GetString(Raw, start, length)
         End Get
     End Property
 
@@ -137,7 +135,7 @@ Friend Class GameItem
 
     Public ReadOnly Property ServerFormOk As Boolean
         Get
-            Return ItemChecksum.ServerForm(Raw, InfoOffset, Layout) = FormCode
+            Return ItemChecksum.ServerForm(Raw, InfoOffset, Profile) = FormCode
         End Get
     End Property
 

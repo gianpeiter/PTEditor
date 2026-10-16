@@ -10,7 +10,7 @@ Friend Class CharacterEntry
     Public Property JobCode As Integer
     Public Property Level As Integer
     Public Property Exp As Long
-    Public Property LayoutName As String = ""
+    Public Property ProfileName As String = ""
     ''' <summary>Motivo quando o arquivo nao pode ser lido; vazio se ok.</summary>
     Public Property LoadError As String = ""
 
@@ -41,13 +41,16 @@ Friend Class CharacterIndex
     Friend Const NoAccount As String = "(no account)"
 
     Public ReadOnly Property DataServerPath As String
+    ''' <summary>Perfis testados nos arquivos (todos na deteccao automatica, ou so o escolhido).</summary>
+    Public ReadOnly Property Candidates As List(Of CharacterProfile)
     Public ReadOnly Property Characters As New List(Of CharacterEntry)()
     Public ReadOnly Property Accounts As New Dictionary(Of String, AccountFile)(StringComparer.OrdinalIgnoreCase)
     ''' <summary>Arquivos de conta ilegiveis (caminho -> motivo).</summary>
     Public ReadOnly Property AccountErrors As New Dictionary(Of String, String)()
 
-    Private Sub New(ByVal dataServerPath As String)
+    Private Sub New(ByVal dataServerPath As String, ByVal candidates As IEnumerable(Of CharacterProfile))
         Me.DataServerPath = dataServerPath
+        Me.Candidates = candidates.ToList()
     End Sub
 
     ''' <summary>True se a pasta parece um DataServer (tem userdata).</summary>
@@ -55,8 +58,21 @@ Friend Class CharacterIndex
         Return folder <> "" AndAlso Directory.Exists(Path.Combine(folder, UserDataFolder))
     End Function
 
-    Public Shared Function Build(ByVal dataServerPath As String, Optional ByVal progress As Action(Of Integer, Integer) = Nothing) As CharacterIndex
-        Dim index As New CharacterIndex(dataServerPath)
+    ''' <summary>
+    ''' A propria pasta, se for um DataServer; senao uma subpasta DataServer* que seja (quando o usuario escolhe a raiz
+    ''' do servidor). Nothing se nenhuma servir.
+    ''' </summary>
+    Public Shared Function ResolveDataServer(ByVal folder As String) As String
+        If IsDataServer(folder) Then Return folder
+        If folder = "" OrElse Not Directory.Exists(folder) Then Return Nothing
+        Return Directory.GetDirectories(folder, "DataServer*").
+            OrderBy(Function(d) d, StringComparer.OrdinalIgnoreCase).
+            FirstOrDefault(AddressOf IsDataServer)
+    End Function
+
+    Public Shared Function Build(ByVal dataServerPath As String, ByVal candidates As IEnumerable(Of CharacterProfile),
+                                 Optional ByVal progress As Action(Of Integer, Integer) = Nothing) As CharacterIndex
+        Dim index As New CharacterIndex(dataServerPath, candidates)
         index.LoadAccounts()
         Dim owners As New Dictionary(Of String, String)(StringComparer.OrdinalIgnoreCase)
         For Each account In index.Accounts.Values
@@ -67,7 +83,7 @@ Friend Class CharacterIndex
 
         Dim files = HashedFiles(Path.Combine(dataServerPath, UserDataFolder), "*.dat")
         For i = 0 To files.Count - 1
-            index.Characters.Add(ReadEntry(files(i), owners))
+            index.Characters.Add(index.ReadEntry(files(i), owners))
             If progress IsNot Nothing Then progress(i + 1, files.Count)
         Next
         index.Characters.Sort(Function(a, b) String.Compare(a.Name, b.Name, StringComparison.OrdinalIgnoreCase))
@@ -98,15 +114,15 @@ Friend Class CharacterIndex
         Return result
     End Function
 
-    Private Shared Function ReadEntry(ByVal filePath As String, ByVal owners As Dictionary(Of String, String)) As CharacterEntry
+    Private Function ReadEntry(ByVal filePath As String, ByVal owners As Dictionary(Of String, String)) As CharacterEntry
         Dim entry As New CharacterEntry With {.Name = Path.GetFileNameWithoutExtension(filePath), .FilePath = filePath}
         Try
-            Dim c = CharacterFile.Load(filePath)
+            Dim c = CharacterFile.Load(filePath, Candidates)
             entry.JobCode = c.JobCode
             entry.Level = c.Level
             entry.Exp = c.Exp
             entry.MasterId = c.MasterId
-            entry.LayoutName = c.Layout.Name
+            entry.ProfileName = c.Profile.Name
         Catch ex As Exception
             entry.LoadError = ex.Message
         End Try
@@ -119,6 +135,13 @@ Friend Class CharacterIndex
             entry.Account = NoAccount
         End If
         Return entry
+    End Function
+
+    ''' <summary>Quantos personagens cada perfil leu (perfil -> quantidade), do mais usado para o menos usado.</summary>
+    Public Function ProfileCounts() As List(Of KeyValuePair(Of String, Integer))
+        Return Characters.Where(Function(c) c.LoadError = "").GroupBy(Function(c) c.ProfileName).
+            Select(Function(g) New KeyValuePair(Of String, Integer)(g.Key, g.Count())).
+            OrderByDescending(Function(p) p.Value).ToList()
     End Function
 
     ''' <summary>Caminho do bau da conta: warehouse\&lt;code(conta)&gt;\&lt;conta&gt;.war; se nao existir, procura pelo nome nas subpastas.</summary>
@@ -159,7 +182,7 @@ Friend Class CharacterIndex
                 Continue For
             End If
             Try
-                For Each item In CharacterFile.Load(entry.FilePath).Items
+                For Each item In CharacterFile.Load(entry.FilePath, Candidates).Items
                     If item.IsTwoHandedCopy Then Continue For
                     result.Add(New ItemLocation With {.Owner = entry.Name, .Account = entry.Account, .FilePath = entry.FilePath, .Item = item})
                 Next
@@ -171,7 +194,7 @@ Friend Class CharacterIndex
         For Each pair In warehouses
             done += 1
             Try
-                For Each item In WarehouseFile.Load(pair.Value).Items
+                For Each item In WarehouseFile.Load(pair.Value, Candidates).Items
                     result.Add(New ItemLocation With {.Owner = "Warehouse of " & pair.Key, .Account = pair.Key, .FilePath = pair.Value, .Item = item})
                 Next
             Catch ex As Exception

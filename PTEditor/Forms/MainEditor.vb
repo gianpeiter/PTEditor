@@ -388,6 +388,10 @@ Public Class MainEditor
         CharacterEditor1.SelectCharacter(name, showWarehouse)
     End Sub
 
+    Private Sub ProfilePanel1_ProfilesReloaded() Handles ProfilePanel1.ProfilesReloaded
+        CharacterEditor1.FillProfiles()
+    End Sub
+
     Private Sub CharacterEditor1_CharacterSaved() Handles CharacterEditor1.CharacterSaved
         ItemFinder1.ClearCache()
     End Sub

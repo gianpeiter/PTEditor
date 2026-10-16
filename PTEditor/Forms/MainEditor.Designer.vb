@@ -381,6 +381,7 @@ Partial Class MainEditor
         Me.TabPageItemFinder = New System.Windows.Forms.TabPage()
         Me.ItemFinder1 = New PTEditor.ItemFinder()
         Me.TabPage4 = New System.Windows.Forms.TabPage()
+        Me.ProfilePanel1 = New PTEditor.ProfilePanel()
         Me.GroupBox7 = New System.Windows.Forms.GroupBox()
         Me.Label100 = New System.Windows.Forms.Label()
         Me.cmdDelBackup = New System.Windows.Forms.Button()
@@ -3658,6 +3659,7 @@ Partial Class MainEditor
         '
         'TabPage4
         '
+        Me.TabPage4.Controls.Add(Me.ProfilePanel1)
         Me.TabPage4.Controls.Add(Me.GroupBox7)
         Me.TabPage4.Controls.Add(Me.gbSettings)
         Me.TabPage4.Location = New System.Drawing.Point(4, 22)
@@ -3667,6 +3669,13 @@ Partial Class MainEditor
         Me.TabPage4.TabIndex = 3
         Me.TabPage4.Text = "Options"
         Me.TabPage4.UseVisualStyleBackColor = True
+        '
+        'ProfilePanel1
+        '
+        Me.ProfilePanel1.Location = New System.Drawing.Point(6, 207)
+        Me.ProfilePanel1.Name = "ProfilePanel1"
+        Me.ProfilePanel1.Size = New System.Drawing.Size(703, 260)
+        Me.ProfilePanel1.TabIndex = 2
         '
         'GroupBox7
         '
@@ -4453,6 +4462,7 @@ Partial Class MainEditor
     Friend WithEvents CharacterEditor1 As PTEditor.CharacterEditor
     Friend WithEvents TabPageItemFinder As System.Windows.Forms.TabPage
     Friend WithEvents ItemFinder1 As PTEditor.ItemFinder
+    Friend WithEvents ProfilePanel1 As PTEditor.ProfilePanel
     Friend WithEvents TabPage5 As System.Windows.Forms.TabPage
     Friend WithEvents tbDroprate As System.Windows.Forms.TextBox
     Friend WithEvents tbDrops As System.Windows.Forms.TextBox

@@ -18,6 +18,9 @@ Partial Class CharacterEditor
     <System.Diagnostics.DebuggerStepThrough()>
     Private Sub InitializeComponent()
         Me.pnlTop = New System.Windows.Forms.Panel()
+        Me.lblDetected = New System.Windows.Forms.Label()
+        Me.cbProfile = New System.Windows.Forms.ComboBox()
+        Me.lblProfile = New System.Windows.Forms.Label()
         Me.lblStatus = New System.Windows.Forms.Label()
         Me.cmdLoad = New System.Windows.Forms.Button()
         Me.cmdBrowse = New System.Windows.Forms.Button()
@@ -121,6 +124,9 @@ Partial Class CharacterEditor
         '
         'pnlTop
         '
+        Me.pnlTop.Controls.Add(Me.lblDetected)
+        Me.pnlTop.Controls.Add(Me.cbProfile)
+        Me.pnlTop.Controls.Add(Me.lblProfile)
         Me.pnlTop.Controls.Add(Me.lblStatus)
         Me.pnlTop.Controls.Add(Me.cmdLoad)
         Me.pnlTop.Controls.Add(Me.cmdBrowse)
@@ -129,7 +135,7 @@ Partial Class CharacterEditor
         Me.pnlTop.Dock = System.Windows.Forms.DockStyle.Top
         Me.pnlTop.Location = New System.Drawing.Point(0, 0)
         Me.pnlTop.Name = "pnlTop"
-        Me.pnlTop.Size = New System.Drawing.Size(1034, 34)
+        Me.pnlTop.Size = New System.Drawing.Size(1034, 60)
         Me.pnlTop.TabIndex = 0
         '
         'lblDataServer
@@ -176,11 +182,38 @@ Partial Class CharacterEditor
         Me.lblStatus.Size = New System.Drawing.Size(398, 16)
         Me.lblStatus.TabIndex = 4
         '
+        'lblProfile
+        '
+        Me.lblProfile.AutoSize = True
+        Me.lblProfile.Location = New System.Drawing.Point(6, 37)
+        Me.lblProfile.Name = "lblProfile"
+        Me.lblProfile.Size = New System.Drawing.Size(39, 13)
+        Me.lblProfile.TabIndex = 5
+        Me.lblProfile.Text = "Profile:"
+        '
+        'cbProfile
+        '
+        Me.cbProfile.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
+        Me.cbProfile.Location = New System.Drawing.Point(75, 33)
+        Me.cbProfile.Name = "cbProfile"
+        Me.cbProfile.Size = New System.Drawing.Size(180, 21)
+        Me.cbProfile.TabIndex = 6
+        '
+        'lblDetected
+        '
+        Me.lblDetected.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.lblDetected.AutoEllipsis = True
+        Me.lblDetected.Location = New System.Drawing.Point(265, 37)
+        Me.lblDetected.Name = "lblDetected"
+        Me.lblDetected.Size = New System.Drawing.Size(763, 16)
+        Me.lblDetected.TabIndex = 7
+        '
         'split
         '
         Me.split.Dock = System.Windows.Forms.DockStyle.Fill
         Me.split.FixedPanel = System.Windows.Forms.FixedPanel.Panel1
-        Me.split.Location = New System.Drawing.Point(0, 34)
+        Me.split.Location = New System.Drawing.Point(0, 60)
         Me.split.Name = "split"
         '
         'split.Panel1
@@ -195,7 +228,7 @@ Partial Class CharacterEditor
         Me.split.Panel2.Controls.Add(Me.pnlBottom)
         Me.split.Panel2.Controls.Add(Me.lblSubtitle)
         Me.split.Panel2.Controls.Add(Me.lblTitle)
-        Me.split.Size = New System.Drawing.Size(1034, 620)
+        Me.split.Size = New System.Drawing.Size(1034, 594)
         Me.split.SplitterDistance = 270
         Me.split.TabIndex = 1
         '
@@ -886,6 +919,9 @@ Partial Class CharacterEditor
     End Sub
 
     Friend WithEvents pnlTop As System.Windows.Forms.Panel
+    Friend WithEvents lblDetected As System.Windows.Forms.Label
+    Friend WithEvents cbProfile As System.Windows.Forms.ComboBox
+    Friend WithEvents lblProfile As System.Windows.Forms.Label
     Friend WithEvents lblStatus As System.Windows.Forms.Label
     Friend WithEvents cmdLoad As System.Windows.Forms.Button
     Friend WithEvents cmdBrowse As System.Windows.Forms.Button
