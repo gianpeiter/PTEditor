@@ -1,4 +1,3 @@
-; ExpLevelTable de source\Servidor\Gameplay\Character\LevelTable.h (linha N = EXP no inicio do level N)
 0
 1000
 2500
