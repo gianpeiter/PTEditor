@@ -134,6 +134,7 @@ Public Class MainEditor
     Private Sub MainEditor_Load(ByVal sender As Object, ByVal e As EventArgs) Handles MyBase.Load
         AppState.EditorExe = tbEditorPath.Text
         AppState.ServerPath = NormalizeServerPath(tbServerPath.Text)
+        AddHandler ServerDatabase.StatusChanged, AddressOf ShowDatabase
         LoadConfig()
         If tbEditorPath.Text = "" Then
             Dim notepad As String = Path.Combine(Environment.GetEnvironmentVariable("windir"), "Notepad.exe")
@@ -214,6 +215,7 @@ Public Class MainEditor
         Catch ex As Exception
             ErrorLog.Report("LoadConfig", ex)
         End Try
+        ServerDatabase.Reload()
     End Sub
 
     Private Sub SaveConfig()
@@ -286,7 +288,43 @@ Public Class MainEditor
         LoadAllData()
         lbItemFiles.Items.Clear()
         RefreshMonsterList()
+        ServerDatabase.Reload()
         CharacterEditor1.FollowServerPath()
+    End Sub
+
+    ''' <summary>Linha Database de Options: conexao lida do server.ini e status do ultimo teste/operacao.</summary>
+    Private Sub ShowDatabase()
+        Dim config = ServerDatabase.Config
+        tbDatabase.Text = If(config Is Nothing, "(not configured)", config.Description)
+        lblDbStatus.Text = ServerDatabase.StatusText
+        lblDbStatus.ForeColor = ServerDatabase.StatusColor
+    End Sub
+
+    ''' <summary>Abre o server.ini (secao [Database]) no editor de texto.</summary>
+    Private Sub cmdDatabase_Click(ByVal sender As Object, ByVal e As EventArgs) Handles cmdDatabase.Click
+        Dim path As String = System.IO.Path.Combine(AppState.ServerPath, DatabaseConfig.FileName)
+        If Not File.Exists(path) Then
+            MsgBox(DatabaseConfig.FileName & " not found in the server folder:" & vbCrLf & path & vbCrLf & vbCrLf &
+                   "Check the Server Path.", MsgBoxStyle.Exclamation, "Database")
+            Return
+        End If
+        ProcessHelper.Open(AppState.EditorExe, path)
+    End Sub
+
+    Private Sub cmdTestDb_Click(ByVal sender As Object, ByVal e As EventArgs) Handles cmdTestDb.Click
+        Cursor = Cursors.WaitCursor
+        lblDbStatus.Text = "Testing..."
+        lblDbStatus.ForeColor = SystemColors.GrayText
+        lblDbStatus.Refresh()
+        Try
+            ServerDatabase.Test()
+        Finally
+            Cursor = Cursors.Default
+        End Try
+    End Sub
+
+    Private Sub AwardItemsPanel1_OptionsRequested() Handles AwardItemsPanel1.OptionsRequested
+        TabControl1.SelectedTab = TabPage4
     End Sub
 
     Private Sub cmdReload_Click(ByVal sender As Object, ByVal e As EventArgs) Handles cmdReload.Click, cmdReload1.Click, cmdMapReload.Click

@@ -61,7 +61,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Data\AwardItems\AwardItemRepository.vb" />
-    <Compile Include="Data\AwardItems\DatabaseConfig.vb" />
+    <Compile Include="Data\Database\DatabaseConfig.vb" />
+    <Compile Include="Data\Database\ServerDatabase.vb" />
     <Compile Include="Data\BackupHelper.vb" />
     <Compile Include="Data\Character\AccountFile.vb" />
     <Compile Include="Data\Character\ClanMembership.vb" />

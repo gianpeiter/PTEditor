@@ -57,7 +57,7 @@ Friend NotInheritable Class DatabaseConfig
     ''' <summary>Texto para a interface (sem a senha).</summary>
     Public ReadOnly Property Description As String
         Get
-            Return Host & "  (" & If(User = "", "Windows login", "user " & User) & ", from " & FilePath & ")"
+            Return Host & "  (" & If(User = "", "Windows login", "user " & User) & ")"
         End Get
     End Property
 

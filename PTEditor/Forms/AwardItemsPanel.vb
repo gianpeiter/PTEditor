@@ -1,6 +1,6 @@
 ﻿''' <summary>
 ''' Aba Award Items: envia itens para a fila do NPC com *AwardItem ([PristonDB].[dbo].[AwardItem_List]), mostra e
-''' remove os pendentes de um personagem. A conexao vem do server.ini da pasta do servidor.
+''' remove os pendentes de um personagem. A conexao e a de ServerDatabase (server.ini, configurada em Options).
 ''' Substitui o antigo ItemDistributor, que gravava no PostBox (o NPC do servidor nao le o PostBox).
 ''' </summary>
 Public Class AwardItemsPanel
@@ -8,8 +8,9 @@ Public Class AwardItemsPanel
     ''' <summary>Fornece o indice de personagens (para a lista de nomes e classe/level).</summary>
     Friend Property IndexProvider As Func(Of CharacterIndex)
 
-    Private _config As DatabaseConfig
-    Private _repository As AwardItemRepository
+    ''' <summary>Pede para abrir a aba Options (onde o banco e configurado).</summary>
+    Friend Event OptionsRequested()
+
     Private _setupDone As Boolean
     ''' <summary>Personagem cujos pendentes estao na lista.</summary>
     Private _pendingFor As String = ""
@@ -33,55 +34,46 @@ Public Class AwardItemsPanel
         lvPending.Columns.Add("Code", 60)
         lvPending.Columns.Add("Item name", 180)
         UpdateSendInfo()
+        AddHandler ServerDatabase.StatusChanged, AddressOf ServerDatabase_StatusChanged
     End Sub
 
-    ''' <summary>Chamado ao abrir a aba: le o server.ini e a lista de personagens.</summary>
+    ''' <summary>Chamado ao abrir a aba: mostra o banco e a lista de personagens.</summary>
     Friend Sub EnsureLoaded()
         EnsureSetup()
-        LoadConfig()
+        ShowDatabase()
         FillCharacters()
     End Sub
 
 #Region "Banco"
 
-    Private Sub LoadConfig()
-        Try
-            _config = DatabaseConfig.Load(AppState.ServerPath)
-            _repository = New AwardItemRepository(_config)
-            lblDbInfo.Text = _config.Description
-            If lblDbStatus.Text = "" Then SetStatus("Not tested yet. Click 'Test connection'.", SystemColors.GrayText)
-        Catch ex As Exception
-            _config = Nothing
-            _repository = Nothing
-            lblDbInfo.Text = "(not configured)"
-            SetStatus(ex.Message & "  Set the server folder in Options.", Color.Firebrick)
-        End Try
+    ''' <summary>Mostra a conexao configurada em Options e o status mais recente do banco.</summary>
+    Private Sub ShowDatabase()
+        Dim config = ServerDatabase.Config
+        lblDbInfo.Text = If(config Is Nothing, "(not configured)", config.Description) & "   -   set and tested in Options"
+        lblDbStatus.Text = ServerDatabase.StatusText
+        lblDbStatus.ForeColor = ServerDatabase.StatusColor
+    End Sub
+
+    Private Sub ServerDatabase_StatusChanged()
+        If IsHandleCreated Then ShowDatabase()
     End Sub
 
     Private Sub SetStatus(ByVal text As String, ByVal color As Color)
-        lblDbStatus.Text = text
-        lblDbStatus.ForeColor = color
+        ServerDatabase.SetStatus(text, color)
     End Sub
 
     ''' <summary>Repositorio pronto, ou Nothing com a mensagem ja mostrada.</summary>
     Private Function Repository() As AwardItemRepository
-        If _repository Is Nothing Then LoadConfig()
-        If _repository Is Nothing Then MsgBox(lblDbStatus.Text, MsgBoxStyle.Exclamation, "Award Items")
-        Return _repository
+        Dim config = ServerDatabase.Config
+        If config Is Nothing Then
+            MsgBox(ServerDatabase.LoadError & vbCrLf & vbCrLf & "Check the database in Options.", MsgBoxStyle.Exclamation, "Award Items")
+            Return Nothing
+        End If
+        Return New AwardItemRepository(config)
     End Function
 
-    Private Sub cmdTest_Click(ByVal sender As Object, ByVal e As EventArgs) Handles cmdTest.Click
-        LoadConfig()
-        If _repository Is Nothing Then Return
-        Cursor = Cursors.WaitCursor
-        Try
-            _repository.Test()
-            SetStatus("Connected: database " & AwardItemRepository.DatabaseName & ", table AwardItem_List OK.", Color.DarkGreen)
-        Catch ex As Exception
-            SetStatus("Connection failed: " & ex.Message, Color.Firebrick)
-        Finally
-            Cursor = Cursors.Default
-        End Try
+    Private Sub cmdOptions_Click(ByVal sender As Object, ByVal e As EventArgs) Handles cmdOptions.Click
+        RaiseEvent OptionsRequested()
     End Sub
 
     ''' <summary>Executa uma operacao no banco mostrando o erro de forma legivel. False se falhou.</summary>

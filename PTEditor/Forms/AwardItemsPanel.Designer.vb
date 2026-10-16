@@ -19,7 +19,7 @@ Partial Class AwardItemsPanel
     Private Sub InitializeComponent()
         Me.pnlTop = New System.Windows.Forms.Panel()
         Me.lblDbStatus = New System.Windows.Forms.Label()
-        Me.cmdTest = New System.Windows.Forms.Button()
+        Me.cmdOptions = New System.Windows.Forms.Button()
         Me.lblDbInfo = New System.Windows.Forms.Label()
         Me.lblDatabase = New System.Windows.Forms.Label()
         Me.gbRecipient = New System.Windows.Forms.GroupBox()
@@ -51,7 +51,7 @@ Partial Class AwardItemsPanel
         'pnlTop
         '
         Me.pnlTop.Controls.Add(Me.lblDbStatus)
-        Me.pnlTop.Controls.Add(Me.cmdTest)
+        Me.pnlTop.Controls.Add(Me.cmdOptions)
         Me.pnlTop.Controls.Add(Me.lblDbInfo)
         Me.pnlTop.Controls.Add(Me.lblDatabase)
         Me.pnlTop.Dock = System.Windows.Forms.DockStyle.Top
@@ -79,15 +79,15 @@ Partial Class AwardItemsPanel
         Me.lblDbInfo.Size = New System.Drawing.Size(830, 16)
         Me.lblDbInfo.TabIndex = 1
         '
-        'cmdTest
+        'cmdOptions
         '
-        Me.cmdTest.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.cmdTest.Location = New System.Drawing.Point(904, 5)
-        Me.cmdTest.Name = "cmdTest"
-        Me.cmdTest.Size = New System.Drawing.Size(124, 23)
-        Me.cmdTest.TabIndex = 2
-        Me.cmdTest.Text = "Test connection"
-        Me.cmdTest.UseVisualStyleBackColor = True
+        Me.cmdOptions.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.cmdOptions.Location = New System.Drawing.Point(904, 5)
+        Me.cmdOptions.Name = "cmdOptions"
+        Me.cmdOptions.Size = New System.Drawing.Size(124, 23)
+        Me.cmdOptions.TabIndex = 2
+        Me.cmdOptions.Text = "Database options..."
+        Me.cmdOptions.UseVisualStyleBackColor = True
         '
         'lblDbStatus
         '
@@ -342,7 +342,7 @@ Partial Class AwardItemsPanel
 
     Friend WithEvents pnlTop As System.Windows.Forms.Panel
     Friend WithEvents lblDbStatus As System.Windows.Forms.Label
-    Friend WithEvents cmdTest As System.Windows.Forms.Button
+    Friend WithEvents cmdOptions As System.Windows.Forms.Button
     Friend WithEvents lblDbInfo As System.Windows.Forms.Label
     Friend WithEvents lblDatabase As System.Windows.Forms.Label
     Friend WithEvents gbRecipient As System.Windows.Forms.GroupBox

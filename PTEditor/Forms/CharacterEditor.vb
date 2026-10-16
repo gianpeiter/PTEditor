@@ -697,7 +697,7 @@ Public Class CharacterEditor
         Dim clanError As String = ""
         Cursor = Cursors.WaitCursor
         Try
-            clan = ClanMembership.Lookup(DatabaseConfig.Load(AppState.ServerPath), entry.Name)
+            clan = ClanMembership.Lookup(ServerDatabase.RequireConfig(), entry.Name)
         Catch ex As Exception
             clanError = ex.Message
         Finally

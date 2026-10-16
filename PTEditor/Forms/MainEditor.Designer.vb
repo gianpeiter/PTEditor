@@ -410,6 +410,10 @@ Partial Class MainEditor
         Me.tbServerPath = New System.Windows.Forms.TextBox()
         Me.tbEditorPath = New System.Windows.Forms.TextBox()
         Me.cmdPath = New System.Windows.Forms.Button()
+        Me.cmdDatabase = New System.Windows.Forms.Button()
+        Me.tbDatabase = New System.Windows.Forms.TextBox()
+        Me.cmdTestDb = New System.Windows.Forms.Button()
+        Me.lblDbStatus = New System.Windows.Forms.Label()
         Me.pbWorking = New System.Windows.Forms.ProgressBar()
         Me.Mapsfound = New System.Windows.Forms.Label()
         Me.ItemFound = New System.Windows.Forms.Label()
@@ -3694,7 +3698,7 @@ Partial Class MainEditor
         '
         'ProfilePanel1
         '
-        Me.ProfilePanel1.Location = New System.Drawing.Point(6, 207)
+        Me.ProfilePanel1.Location = New System.Drawing.Point(6, 265)
         Me.ProfilePanel1.Name = "ProfilePanel1"
         Me.ProfilePanel1.Size = New System.Drawing.Size(703, 260)
         Me.ProfilePanel1.TabIndex = 2
@@ -3717,7 +3721,7 @@ Partial Class MainEditor
         Me.GroupBox7.Controls.Add(Me.Label41)
         Me.GroupBox7.Location = New System.Drawing.Point(453, 6)
         Me.GroupBox7.Name = "GroupBox7"
-        Me.GroupBox7.Size = New System.Drawing.Size(256, 195)
+        Me.GroupBox7.Size = New System.Drawing.Size(256, 253)
         Me.GroupBox7.TabIndex = 6
         Me.GroupBox7.TabStop = False
         Me.GroupBox7.Text = "Monster value warnings"
@@ -3867,16 +3871,20 @@ Partial Class MainEditor
         Me.gbSettings.Controls.Add(Me.tbServerPath)
         Me.gbSettings.Controls.Add(Me.tbEditorPath)
         Me.gbSettings.Controls.Add(Me.cmdPath)
+        Me.gbSettings.Controls.Add(Me.cmdDatabase)
+        Me.gbSettings.Controls.Add(Me.tbDatabase)
+        Me.gbSettings.Controls.Add(Me.cmdTestDb)
+        Me.gbSettings.Controls.Add(Me.lblDbStatus)
         Me.gbSettings.Location = New System.Drawing.Point(6, 6)
         Me.gbSettings.Name = "gbSettings"
-        Me.gbSettings.Size = New System.Drawing.Size(441, 195)
+        Me.gbSettings.Size = New System.Drawing.Size(441, 253)
         Me.gbSettings.TabIndex = 5
         Me.gbSettings.TabStop = False
         Me.gbSettings.Text = "Settings"
         '
         'cmdTestLog
         '
-        Me.cmdTestLog.Location = New System.Drawing.Point(346, 143)
+        Me.cmdTestLog.Location = New System.Drawing.Point(346, 201)
         Me.cmdTestLog.Name = "cmdTestLog"
         Me.cmdTestLog.Size = New System.Drawing.Size(89, 23)
         Me.cmdTestLog.TabIndex = 10
@@ -3885,7 +3893,7 @@ Partial Class MainEditor
         '
         'cmdSaveConfig
         '
-        Me.cmdSaveConfig.Location = New System.Drawing.Point(87, 108)
+        Me.cmdSaveConfig.Location = New System.Drawing.Point(87, 166)
         Me.cmdSaveConfig.Name = "cmdSaveConfig"
         Me.cmdSaveConfig.Size = New System.Drawing.Size(75, 23)
         Me.cmdSaveConfig.TabIndex = 9
@@ -3894,7 +3902,7 @@ Partial Class MainEditor
         '
         'cmdShowLog
         '
-        Me.cmdShowLog.Location = New System.Drawing.Point(360, 108)
+        Me.cmdShowLog.Location = New System.Drawing.Point(360, 166)
         Me.cmdShowLog.Name = "cmdShowLog"
         Me.cmdShowLog.Size = New System.Drawing.Size(75, 23)
         Me.cmdShowLog.TabIndex = 8
@@ -3903,7 +3911,7 @@ Partial Class MainEditor
         '
         'cmdDefaultConfig
         '
-        Me.cmdDefaultConfig.Location = New System.Drawing.Point(87, 78)
+        Me.cmdDefaultConfig.Location = New System.Drawing.Point(87, 136)
         Me.cmdDefaultConfig.Name = "cmdDefaultConfig"
         Me.cmdDefaultConfig.Size = New System.Drawing.Size(75, 23)
         Me.cmdDefaultConfig.TabIndex = 7
@@ -3912,7 +3920,7 @@ Partial Class MainEditor
         '
         'cmdLoadConfig
         '
-        Me.cmdLoadConfig.Location = New System.Drawing.Point(7, 108)
+        Me.cmdLoadConfig.Location = New System.Drawing.Point(7, 166)
         Me.cmdLoadConfig.Name = "cmdLoadConfig"
         Me.cmdLoadConfig.Size = New System.Drawing.Size(75, 23)
         Me.cmdLoadConfig.TabIndex = 6
@@ -3921,7 +3929,7 @@ Partial Class MainEditor
         '
         'cmdConfigEdit
         '
-        Me.cmdConfigEdit.Location = New System.Drawing.Point(7, 78)
+        Me.cmdConfigEdit.Location = New System.Drawing.Point(7, 136)
         Me.cmdConfigEdit.Name = "cmdConfigEdit"
         Me.cmdConfigEdit.Size = New System.Drawing.Size(75, 23)
         Me.cmdConfigEdit.TabIndex = 5
@@ -3963,6 +3971,40 @@ Partial Class MainEditor
         Me.cmdPath.TabIndex = 3
         Me.cmdPath.Text = "Server Path"
         Me.cmdPath.UseVisualStyleBackColor = True
+        '
+        'cmdDatabase
+        '
+        Me.cmdDatabase.Location = New System.Drawing.Point(6, 77)
+        Me.cmdDatabase.Name = "cmdDatabase"
+        Me.cmdDatabase.Size = New System.Drawing.Size(75, 23)
+        Me.cmdDatabase.TabIndex = 11
+        Me.cmdDatabase.Text = "Database"
+        Me.cmdDatabase.UseVisualStyleBackColor = True
+        '
+        'tbDatabase
+        '
+        Me.tbDatabase.Location = New System.Drawing.Point(87, 79)
+        Me.tbDatabase.Name = "tbDatabase"
+        Me.tbDatabase.ReadOnly = True
+        Me.tbDatabase.Size = New System.Drawing.Size(224, 20)
+        Me.tbDatabase.TabIndex = 12
+        '
+        'cmdTestDb
+        '
+        Me.cmdTestDb.Location = New System.Drawing.Point(317, 77)
+        Me.cmdTestDb.Name = "cmdTestDb"
+        Me.cmdTestDb.Size = New System.Drawing.Size(75, 23)
+        Me.cmdTestDb.TabIndex = 13
+        Me.cmdTestDb.Text = "Test"
+        Me.cmdTestDb.UseVisualStyleBackColor = True
+        '
+        'lblDbStatus
+        '
+        Me.lblDbStatus.ForeColor = System.Drawing.SystemColors.GrayText
+        Me.lblDbStatus.Location = New System.Drawing.Point(87, 103)
+        Me.lblDbStatus.Name = "lblDbStatus"
+        Me.lblDbStatus.Size = New System.Drawing.Size(348, 28)
+        Me.lblDbStatus.TabIndex = 14
         '
         'pbWorking
         '
@@ -4242,6 +4284,10 @@ Partial Class MainEditor
     Friend WithEvents cmdNPCSave As System.Windows.Forms.Button
     Friend WithEvents CMDNPCShopSave As System.Windows.Forms.Button
     Friend WithEvents cmdPath As System.Windows.Forms.Button
+    Friend WithEvents cmdDatabase As System.Windows.Forms.Button
+    Friend WithEvents tbDatabase As System.Windows.Forms.TextBox
+    Friend WithEvents cmdTestDb As System.Windows.Forms.Button
+    Friend WithEvents lblDbStatus As System.Windows.Forms.Label
     Friend WithEvents cmdReload As System.Windows.Forms.Button
     Friend WithEvents cmdReload1 As System.Windows.Forms.Button
     Friend WithEvents cmdSave As System.Windows.Forms.Button

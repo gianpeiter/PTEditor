@@ -20,6 +20,26 @@ Friend NotInheritable Class ClanMembership
     Public Property Role As ClanRole
     Public Property MemberCount As Integer
 
+    ''' <summary>Conecta e confere se as tabelas UL e CL existem. Lanca excecao com o motivo.</summary>
+    Public Shared Sub Test(ByVal config As DatabaseConfig)
+        Using connection As New SqlConnection(config.ConnectionString(DatabaseName))
+            connection.Open()
+            Using command As New SqlCommand(
+                "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'dbo' AND TABLE_NAME IN ('UL', 'CL')", connection)
+                Dim tables As New HashSet(Of String)(StringComparer.OrdinalIgnoreCase)
+                Using reader = command.ExecuteReader()
+                    Do While reader.Read()
+                        tables.Add(reader.GetString(0))
+                    Loop
+                End Using
+                Dim missing = {"UL", "CL"}.Where(Function(t) Not tables.Contains(t)).ToList()
+                If missing.Count > 0 Then
+                    Throw New InvalidOperationException("table(s) " & String.Join(", ", missing) & " not found in " & DatabaseName & ".")
+                End If
+            End Using
+        End Using
+    End Sub
+
     ''' <summary>Clan do personagem; Nothing se nao estiver em nenhum. Lanca excecao se nao conseguir consultar.</summary>
     Public Shared Function Lookup(ByVal config As DatabaseConfig, ByVal character As String) As ClanMembership
         Using connection As New SqlConnection(config.ConnectionString(DatabaseName))
