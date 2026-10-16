@@ -410,7 +410,6 @@ Partial Class MainEditor
         Me.tbServerPath = New System.Windows.Forms.TextBox()
         Me.tbEditorPath = New System.Windows.Forms.TextBox()
         Me.cmdPath = New System.Windows.Forms.Button()
-        Me.Label31 = New System.Windows.Forms.Label()
         Me.pbWorking = New System.Windows.Forms.ProgressBar()
         Me.Mapsfound = New System.Windows.Forms.Label()
         Me.ItemFound = New System.Windows.Forms.Label()
@@ -3965,15 +3964,6 @@ Partial Class MainEditor
         Me.cmdPath.Text = "Server Path"
         Me.cmdPath.UseVisualStyleBackColor = True
         '
-        'Label31
-        '
-        Me.Label31.AutoSize = True
-        Me.Label31.Location = New System.Drawing.Point(790, 710)
-        Me.Label31.Name = "Label31"
-        Me.Label31.Size = New System.Drawing.Size(68, 13)
-        Me.Label31.TabIndex = 52
-        Me.Label31.Text = "Progressing :"
-        '
         'pbWorking
         '
         Me.pbWorking.Location = New System.Drawing.Point(864, 710)
@@ -4079,7 +4069,7 @@ Partial Class MainEditor
         Me.Label117.Name = "Label117"
         Me.Label117.Size = New System.Drawing.Size(65, 13)
         Me.Label117.TabIndex = 54
-        Me.Label117.Text = "Progressing:"
+        Me.Label117.Text = "Status:"
         '
         'lblProg
         '
@@ -4098,7 +4088,6 @@ Partial Class MainEditor
         Me.Controls.Add(Me.lblProg)
         Me.Controls.Add(Me.Label117)
         Me.Controls.Add(Me.Mapsfound)
-        Me.Controls.Add(Me.Label31)
         Me.Controls.Add(Me.lblTextCoding)
         Me.Controls.Add(Me.ItemFound)
         Me.Controls.Add(Me.MoFound)
@@ -4356,7 +4345,6 @@ Partial Class MainEditor
     Friend WithEvents Label29 As System.Windows.Forms.Label
     Friend WithEvents Label3 As System.Windows.Forms.Label
     Friend WithEvents Label30 As System.Windows.Forms.Label
-    Friend WithEvents Label31 As System.Windows.Forms.Label
     Friend WithEvents Label32 As System.Windows.Forms.Label
     Friend WithEvents Label33 As System.Windows.Forms.Label
     Friend WithEvents Label34 As System.Windows.Forms.Label

@@ -334,15 +334,19 @@ Public Class MainEditor
             NpcData.LoadNpcFiles(Sub(i, n) pbWorking.Value = 75 + CInt(25 * i / n))
             RefreshNpcCombos()
 
-            pbWorking.Value = 100
-            lblProg.Text = "Finished loading"
+            pbWorking.Value = 0
+            Label117.Text = "Status:"
+            lblProg.Text = "Done"
         Catch ex As Exception
+            Label117.Text = "Status:"
             lblProg.Text = "Error loading"
             ErrorLog.Report("LoadAllData", ex)
         End Try
     End Sub
 
     Private Sub SetProgress(ByVal text As String, ByVal percent As Integer)
+        Label117.Text = "Progressing:"
+        Label117.Refresh()
         lblProg.Text = text
         lblProg.Refresh()
         pbWorking.Value = percent
