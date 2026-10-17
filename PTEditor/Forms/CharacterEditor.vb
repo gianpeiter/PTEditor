@@ -2,7 +2,7 @@
 
 ''' <summary>
 ''' Aba Characters: lista contas/personagens do DataServer, mostra ficha, inventario, bau e skills e edita
-''' level/EXP, atributos, ouro e remocao de itens. Toda leitura/gravacao fica em Data\Character.
+''' level/EXP, atributos, ouro, remocao de itens, rank de classe e quests. Toda leitura/gravacao fica em Data\Character.
 ''' </summary>
 Public Class CharacterEditor
 
@@ -37,8 +37,28 @@ Public Class CharacterEditor
             cbClassFilter.Items.Add(pair.Value)
         Next
         cbClassFilter.SelectedIndex = 0
+        CreateLevelQuestChecks()
         FillProfiles()
         ShowCharacter(Nothing)
+    End Sub
+
+    ''' <summary>Checkbox de cada quest de level (CharacterRules.LevelQuests), em duas colunas.</summary>
+    Private ReadOnly _questChecks As New List(Of CheckBox)()
+
+    Private Sub CreateLevelQuestChecks()
+        Dim quests = CharacterRules.LevelQuests
+        Dim perColumn As Integer = (quests.Length + 1) \ 2
+        For i = 0 To quests.Length - 1
+            Dim check As New CheckBox With {
+                .Text = quests(i).Name & ":  " & quests(i).Reward,
+                .Tag = quests(i),
+                .AutoSize = False,
+                .Size = New Size(360, 20),
+                .Location = New Point(If(i < perColumn, 10, 378), 20 + (i Mod perColumn) * 22)}
+            AddHandler check.CheckedChanged, AddressOf LevelQuest_CheckedChanged
+            gbLevelQuests.Controls.Add(check)
+            _questChecks.Add(check)
+        Next
     End Sub
 
     Private Shared Sub SetupItemColumns(ByVal list As ListView, ByVal withPlace As Boolean)
@@ -375,6 +395,14 @@ Public Class CharacterEditor
                 lvMessages.Items.Clear()
                 lblWarehouse.Text = ""
                 lblInventory.Text = ""
+                cbRank.Items.Clear()
+                lblRankNote.Text = ""
+                lblQuest.Text = ""
+                lblSkillNormal.Text = ""
+                lblSkillElite.Text = ""
+                For Each check In _questChecks
+                    check.Checked = False
+                Next
                 UpdateDirtyState()
                 Return
             End If
@@ -398,7 +426,6 @@ Public Class CharacterEditor
                 "On save, gold is written to Money and LastMoeny is set to 0 (if LastMoeny > 0 the game would use it instead).")
             FillInventory(c)
             FillWarehouse(c)
-            FillSkills(c)
         Finally
             _filling = False
         End Try
@@ -515,17 +542,94 @@ Public Class CharacterEditor
         End Try
     End Sub
 
-    Private Sub FillSkills(ByVal c As CharacterFile)
-        lvSkills.BeginUpdate()
-        lvSkills.Items.Clear()
-        For i = 0 To c.Profile.SkillCount - 1
-            Dim row = lvSkills.Items.Add((i + 1).ToString())
-            row.SubItems.Add(c.SkillPoint(i).ToString())
-            row.SubItems.Add(c.SkillMastery(i).ToString())
-            row.SubItems.Add(c.SkillShortKey(i).ToString())
-            If c.SkillPoint(i) = 0 Then row.ForeColor = SystemColors.GrayText
-        Next
-        lvSkills.EndUpdate()
+    ''' <summary>Aba Skills &amp; Quests: depende de level, rank e quests, por isso e refeita em RefreshDerived.</summary>
+    Private Sub FillSkillsAndQuests(ByVal c As CharacterFile)
+        Dim wasFilling As Boolean = _filling
+        _filling = True
+        Try
+            Dim level As Integer = c.Level
+            Dim rank As Integer = c.ChangeJob
+            Dim levelRank As Integer = CharacterRules.MaxRankForLevel(level)
+
+            ' Rank: so os que o level permite, mais o atual se estiver acima
+            cbRank.Items.Clear()
+            For r = 0 To Math.Max(levelRank, Math.Max(0, rank))
+                cbRank.Items.Add(CharacterRules.RankText(r))
+            Next
+            cbRank.SelectedIndex = Math.Max(0, Math.Min(cbRank.Items.Count - 1, rank))
+            cmdPromote.Enabled = rank < levelRank
+            lblRankNote.Text = "Level " & level & " allows rank " & levelRank & ". The Skill Master sells skills 1-" &
+                               Math.Min(c.Profile.SkillCount, CharacterRules.SkillsForRank(rank)) & " at this rank."
+
+            ' Quest em andamento
+            Dim code As Integer = c.QuestCode
+            If Not c.HasQuestInfo Then
+                lblQuest.Text = "Not available: profile " & c.Profile.Name & " has no QuestInfoOffset."
+                lblQuest.ForeColor = SystemColors.GrayText
+            ElseIf code = 0 Then
+                lblQuest.Text = "None"
+                lblQuest.ForeColor = SystemColors.ControlText
+            Else
+                lblQuest.Text = CharacterRules.QuestName(code) & "  (code 0x" & code.ToString("X") & ", state " & c.QuestState & ")" &
+                                vbCrLf & "Clearing abandons it; quest items stay in the inventory."
+                lblQuest.ForeColor = Color.DarkOrange
+            End If
+            cmdClearQuest.Enabled = code <> 0
+
+            ' Quests de level: so habilita quando o level alcanca a quest (desmarcar fica sempre possivel)
+            For Each check In _questChecks
+                Dim quest = DirectCast(check.Tag, LevelQuest)
+                check.Checked = (c.LevelQuestLog And quest.Bit) <> 0
+                check.Enabled = level >= quest.Level OrElse check.Checked
+            Next
+
+            ' Pontos de skill (mesma conta de RestoreSkill / CheckSkillPoint)
+            Dim normalTotal As Integer = CharacterRules.NormalSkillPoints(level, c.LevelQuestLog)
+            Dim normalQuest As Integer = If(level >= 10, CharacterRules.QuestSkillPoints(level, c.LevelQuestLog), 0)
+            Dim normalUsed As Integer = CharacterRules.UsedSkillPoints(c, False)
+            lblSkillNormal.Text = "Skills 1-" & CharacterRules.NormalSkillCount & ": " & normalTotal & " total" &
+                                  If(normalQuest > 0, " (" & normalQuest & " from quests)", "") & ", " & normalUsed & " used, " &
+                                  (normalTotal - normalUsed) & " free"
+            lblSkillNormal.ForeColor = If(normalUsed > normalTotal, Color.Firebrick, SystemColors.ControlText)
+            If c.Profile.SkillCount > CharacterRules.NormalSkillCount Then
+                Dim eliteTotal As Integer = CharacterRules.EliteSkillPoints(level)
+                Dim eliteUsed As Integer = CharacterRules.UsedSkillPoints(c, True)
+                lblSkillElite.Text = "Skills " & (CharacterRules.NormalSkillCount + 1) & "-" & c.Profile.SkillCount & " (elite, Lv 60+): " &
+                                     eliteTotal & " total, " & eliteUsed & " used, " & (eliteTotal - eliteUsed) & " free"
+                lblSkillElite.ForeColor = If(eliteUsed > eliteTotal, Color.Firebrick, SystemColors.ControlText)
+            Else
+                lblSkillElite.Text = ""
+            End If
+
+            ' Lista de skills: grupo de 4 por rank
+            Dim unlocked As Integer = CharacterRules.SkillsForRank(rank)
+            lvSkills.BeginUpdate()
+            lvSkills.Items.Clear()
+            For i = 0 To c.Profile.SkillCount - 1
+                Dim points As Integer = c.SkillPoint(i)
+                Dim row = lvSkills.Items.Add((i + 1).ToString())
+                row.SubItems.Add((i \ 4 + 1).ToString())
+                row.SubItems.Add(points.ToString())
+                row.SubItems.Add(c.SkillMastery(i).ToString())
+                row.SubItems.Add(c.SkillShortKey(i).ToString())
+                Dim status As String
+                If i >= unlocked Then
+                    status = "Locked: needs rank " & (i \ 4) &
+                             If(i \ 4 > CharacterRules.MaxGameRank, " (not reachable in the game)", "")
+                ElseIf points > 0 Then
+                    status = "Learned"
+                ElseIf i > 0 AndAlso c.SkillPoint(i - 1) = 0 Then
+                    status = "Skill Master, after skill " & i & " is learned"
+                Else
+                    status = "Can be learned at the Skill Master"
+                End If
+                row.SubItems.Add(status)
+                If i >= unlocked OrElse points = 0 Then row.ForeColor = SystemColors.GrayText
+            Next
+            lvSkills.EndUpdate()
+        Finally
+            _filling = wasFilling
+        End Try
     End Sub
 
 #End Region
@@ -599,6 +703,40 @@ Public Class CharacterEditor
         RefreshDerived()
     End Sub
 
+    Private Sub cbRank_SelectedIndexChanged(ByVal sender As Object, ByVal e As EventArgs) Handles cbRank.SelectedIndexChanged
+        If _filling OrElse _working Is Nothing OrElse cbRank.SelectedIndex < 0 Then Return
+        _working.ChangeJob = cbRank.SelectedIndex
+        RefreshDerived()
+    End Sub
+
+    ''' <summary>Rank que o jogo daria pelo level (quests de troca de classe / promocao do AddExp).</summary>
+    Private Sub cmdPromote_Click(ByVal sender As Object, ByVal e As EventArgs) Handles cmdPromote.Click
+        If _working Is Nothing Then Return
+        _working.ChangeJob = Math.Max(_working.ChangeJob, CharacterRules.MaxRankForLevel(_working.Level))
+        RefreshDerived()
+    End Sub
+
+    Private Sub cmdClearQuest_Click(ByVal sender As Object, ByVal e As EventArgs) Handles cmdClearQuest.Click
+        If _working Is Nothing OrElse _working.QuestCode = 0 Then Return
+        Dim text As String = "Clear the quest in progress '" & CharacterRules.QuestName(_working.QuestCode) & "'?" & vbCrLf & vbCrLf &
+                             "The player can take it again from the start. Quest items stay in the inventory." & vbCrLf & vbCrLf &
+                             "This only takes effect after 'Save changes'."
+        If Not Dialogs.Confirm("Clear quest", text) Then Return
+        _working.ClearQuest()
+        RefreshDerived()
+    End Sub
+
+    ''' <summary>Marcar conclui tambem as anteriores da cadeia; desmarcar desfaz as seguintes.</summary>
+    Private Sub LevelQuest_CheckedChanged(ByVal sender As Object, ByVal e As EventArgs)
+        If _filling OrElse _working Is Nothing Then Return
+        Dim check = DirectCast(sender, CheckBox)
+        Dim quest = DirectCast(check.Tag, LevelQuest)
+        _working.LevelQuestLog = If(check.Checked,
+                                    CharacterRules.CompleteLevelQuest(_working.LevelQuestLog, quest),
+                                    CharacterRules.UndoLevelQuest(_working.LevelQuestLog, quest))
+        RefreshDerived()
+    End Sub
+
     ''' <summary>Atualiza faixas de EXP, pontos livres, verificacoes e o estado dos botoes.</summary>
     Private Sub RefreshDerived()
         If _working Is Nothing Then Return
@@ -633,6 +771,8 @@ Public Class CharacterEditor
             lblStatFree.Text = "Free points: " & free
             lblStatFree.ForeColor = Color.DarkGreen
         End If
+
+        FillSkillsAndQuests(c)
 
         Dim messages = CharacterRules.Validate(c)
         If messages.Count = 0 Then messages.Add(New RuleMessage(RuleSeverity.Info, "No problems: the server loads the character as it is."))

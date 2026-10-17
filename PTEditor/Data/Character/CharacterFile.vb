@@ -209,10 +209,14 @@ Friend Class CharacterFile
         End Set
     End Property
 
-    Public ReadOnly Property ChangeJob As Integer
+    ''' <summary>Rank de classe (smCHAR_INFO.ChangeJob): libera os grupos de 4 skills no Skill Master.</summary>
+    Public Property ChangeJob As Integer
         Get
             Return ReadInt(CharOffsets.ChangeJob)
         End Get
+        Set(ByVal value As Integer)
+            WriteInt(CharOffsets.ChangeJob, value)
+        End Set
     End Property
 
     Public Property Money As Integer
@@ -241,11 +245,48 @@ Friend Class CharacterFile
         End Get
     End Property
 
-    Public ReadOnly Property LevelQuestLog As UInteger
+    ''' <summary>Quests de level concluidas (GameSaveInfo.dwLevelQuestLog): pontos extras de atributo e de skill.</summary>
+    Public Property LevelQuestLog As UInteger
         Get
             Return BitConverter.ToUInt32(_data, Profile.LevelQuestLogOffset)
         End Get
+        Set(ByVal value As UInteger)
+            BitConverter.GetBytes(value).CopyTo(_data, Profile.LevelQuestLogOffset)
+        End Set
     End Property
+
+    ''' <summary>sQUEST_INFO: wQuestCode[2] + Data[7].</summary>
+    Private Const QuestInfoSize As Integer = 32
+    ''' <summary>Data[] comeca com CODE, BackUpCode, Kind, State (sQUEST_CHANGEJOB / sQUEST_CHANGEJOB3 / sQUEST_ELEMENTARY).</summary>
+    Private Const QuestStateOffset As Integer = 4 + 12
+
+    ''' <summary>O perfil informa onde fica a quest em andamento.</summary>
+    Public ReadOnly Property HasQuestInfo As Boolean
+        Get
+            Return Profile.QuestInfoOffset >= 0
+        End Get
+    End Property
+
+    ''' <summary>Codigo da quest em andamento (QuestInfo.wQuestCode[0]); 0 = nenhuma.</summary>
+    Public ReadOnly Property QuestCode As Integer
+        Get
+            If Not HasQuestInfo Then Return 0
+            Return BitConverter.ToUInt16(_data, Profile.QuestInfoOffset)
+        End Get
+    End Property
+
+    Public ReadOnly Property QuestState As Integer
+        Get
+            If Not HasQuestInfo Then Return 0
+            Return ReadInt(Profile.QuestInfoOffset + QuestStateOffset)
+        End Get
+    End Property
+
+    ''' <summary>Abandona a quest em andamento (o jogo carrega a quest so se wQuestCode[0] &lt;&gt; 0).</summary>
+    Public Sub ClearQuest()
+        If Not HasQuestInfo Then Return
+        Array.Clear(_data, Profile.QuestInfoOffset, QuestInfoSize)
+    End Sub
 
     Public ReadOnly Property MapCode As Integer
         Get

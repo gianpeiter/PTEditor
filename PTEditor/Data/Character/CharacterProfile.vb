@@ -31,6 +31,8 @@ Friend NotInheritable Class CharacterProfile
     Public ReadOnly Property SkillMasteryOffset As Integer
     Public ReadOnly Property ShortKeyOffset As Integer
     Public ReadOnly Property LevelQuestLogOffset As Integer
+    ''' <summary>GameSaveInfo.QuestInfo (sQUEST_INFO, quest em andamento); -1 se o perfil nao informa.</summary>
+    Public ReadOnly Property QuestInfoOffset As Integer
     Public ReadOnly Property MasterIdOffset As Integer
     Public ReadOnly Property MasterIdLength As Integer
 
@@ -64,6 +66,7 @@ Friend NotInheritable Class CharacterProfile
         SkillMasteryOffset = CharOffsets.SkillInfo + SkillCount
         ShortKeyOffset = SkillMasteryOffset + SkillCount * 2
         LevelQuestLogOffset = Number(v, "LevelQuestLogOffset")
+        QuestInfoOffset = If(v.ContainsKey("QuestInfoOffset"), Number(v, "QuestInfoOffset"), -1)
         MasterIdOffset = Number(v, "MasterIdOffset")
         MasterIdLength = Number(v, "MasterIdLength")
         WarehouseItemSize = Number(v, "WarehouseItemSize")

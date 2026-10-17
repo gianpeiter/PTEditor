@@ -84,6 +84,21 @@ Partial Class CharacterEditor
         Me.colSkillPoint = CType(New System.Windows.Forms.ColumnHeader(), System.Windows.Forms.ColumnHeader)
         Me.colSkillMastery = CType(New System.Windows.Forms.ColumnHeader(), System.Windows.Forms.ColumnHeader)
         Me.colSkillKey = CType(New System.Windows.Forms.ColumnHeader(), System.Windows.Forms.ColumnHeader)
+        Me.colSkillTier = CType(New System.Windows.Forms.ColumnHeader(), System.Windows.Forms.ColumnHeader)
+        Me.colSkillStatus = CType(New System.Windows.Forms.ColumnHeader(), System.Windows.Forms.ColumnHeader)
+        Me.pnlSkillsTop = New System.Windows.Forms.Panel()
+        Me.gbRank = New System.Windows.Forms.GroupBox()
+        Me.lblRankNote = New System.Windows.Forms.Label()
+        Me.cmdPromote = New System.Windows.Forms.Button()
+        Me.cbRank = New System.Windows.Forms.ComboBox()
+        Me.lblRank = New System.Windows.Forms.Label()
+        Me.gbQuest = New System.Windows.Forms.GroupBox()
+        Me.cmdClearQuest = New System.Windows.Forms.Button()
+        Me.lblQuest = New System.Windows.Forms.Label()
+        Me.gbLevelQuests = New System.Windows.Forms.GroupBox()
+        Me.gbSkillPoints = New System.Windows.Forms.GroupBox()
+        Me.lblSkillElite = New System.Windows.Forms.Label()
+        Me.lblSkillNormal = New System.Windows.Forms.Label()
         Me.pnlBottom = New System.Windows.Forms.Panel()
         Me.lvMessages = New System.Windows.Forms.ListView()
         Me.colMessage = CType(New System.Windows.Forms.ColumnHeader(), System.Windows.Forms.ColumnHeader)
@@ -119,6 +134,10 @@ Partial Class CharacterEditor
         Me.pnlInventory.SuspendLayout()
         Me.tpWarehouse.SuspendLayout()
         Me.tpSkills.SuspendLayout()
+        Me.pnlSkillsTop.SuspendLayout()
+        Me.gbRank.SuspendLayout()
+        Me.gbQuest.SuspendLayout()
+        Me.gbSkillPoints.SuspendLayout()
         Me.pnlBottom.SuspendLayout()
         Me.pnlButtons.SuspendLayout()
         Me.SuspendLayout()
@@ -765,31 +784,163 @@ Partial Class CharacterEditor
         'tpSkills
         '
         Me.tpSkills.Controls.Add(Me.lvSkills)
+        Me.tpSkills.Controls.Add(Me.pnlSkillsTop)
         Me.tpSkills.Location = New System.Drawing.Point(4, 22)
         Me.tpSkills.Name = "tpSkills"
         Me.tpSkills.Padding = New System.Windows.Forms.Padding(3)
         Me.tpSkills.Size = New System.Drawing.Size(752, 428)
         Me.tpSkills.TabIndex = 6
-        Me.tpSkills.Text = "Skills"
+        Me.tpSkills.Text = "Skills & Quests"
         Me.tpSkills.UseVisualStyleBackColor = True
+        '
+        'pnlSkillsTop
+        '
+        Me.pnlSkillsTop.Controls.Add(Me.gbSkillPoints)
+        Me.pnlSkillsTop.Controls.Add(Me.gbLevelQuests)
+        Me.pnlSkillsTop.Controls.Add(Me.gbQuest)
+        Me.pnlSkillsTop.Controls.Add(Me.gbRank)
+        Me.pnlSkillsTop.Dock = System.Windows.Forms.DockStyle.Top
+        Me.pnlSkillsTop.Location = New System.Drawing.Point(3, 3)
+        Me.pnlSkillsTop.Name = "pnlSkillsTop"
+        Me.pnlSkillsTop.Size = New System.Drawing.Size(746, 266)
+        Me.pnlSkillsTop.TabIndex = 0
+        '
+        'gbRank
+        '
+        Me.gbRank.Controls.Add(Me.lblRankNote)
+        Me.gbRank.Controls.Add(Me.cmdPromote)
+        Me.gbRank.Controls.Add(Me.cbRank)
+        Me.gbRank.Controls.Add(Me.lblRank)
+        Me.gbRank.Location = New System.Drawing.Point(0, 0)
+        Me.gbRank.Name = "gbRank"
+        Me.gbRank.Size = New System.Drawing.Size(370, 100)
+        Me.gbRank.TabIndex = 0
+        Me.gbRank.TabStop = False
+        Me.gbRank.Text = "Class rank"
+        '
+        'lblRank
+        '
+        Me.lblRank.AutoSize = True
+        Me.lblRank.Location = New System.Drawing.Point(10, 24)
+        Me.lblRank.Name = "lblRank"
+        Me.lblRank.Size = New System.Drawing.Size(36, 13)
+        Me.lblRank.TabIndex = 0
+        Me.lblRank.Text = "Rank:"
+        '
+        'cbRank
+        '
+        Me.cbRank.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
+        Me.cbRank.FormattingEnabled = True
+        Me.cbRank.Location = New System.Drawing.Point(52, 20)
+        Me.cbRank.Name = "cbRank"
+        Me.cbRank.Size = New System.Drawing.Size(308, 21)
+        Me.cbRank.TabIndex = 1
+        '
+        'cmdPromote
+        '
+        Me.cmdPromote.Location = New System.Drawing.Point(52, 46)
+        Me.cmdPromote.Name = "cmdPromote"
+        Me.cmdPromote.Size = New System.Drawing.Size(130, 24)
+        Me.cmdPromote.TabIndex = 2
+        Me.cmdPromote.Text = "Promote by level"
+        Me.cmdPromote.UseVisualStyleBackColor = True
+        '
+        'lblRankNote
+        '
+        Me.lblRankNote.ForeColor = System.Drawing.SystemColors.GrayText
+        Me.lblRankNote.Location = New System.Drawing.Point(10, 76)
+        Me.lblRankNote.Name = "lblRankNote"
+        Me.lblRankNote.Size = New System.Drawing.Size(352, 18)
+        Me.lblRankNote.TabIndex = 3
+        '
+        'gbQuest
+        '
+        Me.gbQuest.Controls.Add(Me.cmdClearQuest)
+        Me.gbQuest.Controls.Add(Me.lblQuest)
+        Me.gbQuest.Location = New System.Drawing.Point(376, 0)
+        Me.gbQuest.Name = "gbQuest"
+        Me.gbQuest.Size = New System.Drawing.Size(370, 100)
+        Me.gbQuest.TabIndex = 1
+        Me.gbQuest.TabStop = False
+        Me.gbQuest.Text = "Quest in progress"
+        '
+        'lblQuest
+        '
+        Me.lblQuest.Location = New System.Drawing.Point(10, 20)
+        Me.lblQuest.Name = "lblQuest"
+        Me.lblQuest.Size = New System.Drawing.Size(350, 46)
+        Me.lblQuest.TabIndex = 0
+        '
+        'cmdClearQuest
+        '
+        Me.cmdClearQuest.Location = New System.Drawing.Point(10, 70)
+        Me.cmdClearQuest.Name = "cmdClearQuest"
+        Me.cmdClearQuest.Size = New System.Drawing.Size(110, 24)
+        Me.cmdClearQuest.TabIndex = 1
+        Me.cmdClearQuest.Text = "Clear quest"
+        Me.cmdClearQuest.UseVisualStyleBackColor = True
+        '
+        'gbLevelQuests
+        '
+        Me.gbLevelQuests.Location = New System.Drawing.Point(0, 104)
+        Me.gbLevelQuests.Name = "gbLevelQuests"
+        Me.gbLevelQuests.Size = New System.Drawing.Size(746, 112)
+        Me.gbLevelQuests.TabIndex = 2
+        Me.gbLevelQuests.TabStop = False
+        Me.gbLevelQuests.Text = "Level quests (completed)"
+        '
+        'gbSkillPoints
+        '
+        Me.gbSkillPoints.Controls.Add(Me.lblSkillElite)
+        Me.gbSkillPoints.Controls.Add(Me.lblSkillNormal)
+        Me.gbSkillPoints.Location = New System.Drawing.Point(0, 220)
+        Me.gbSkillPoints.Name = "gbSkillPoints"
+        Me.gbSkillPoints.Size = New System.Drawing.Size(746, 42)
+        Me.gbSkillPoints.TabIndex = 3
+        Me.gbSkillPoints.TabStop = False
+        Me.gbSkillPoints.Text = "Skill points"
+        '
+        'lblSkillNormal
+        '
+        Me.lblSkillNormal.Location = New System.Drawing.Point(10, 19)
+        Me.lblSkillNormal.Name = "lblSkillNormal"
+        Me.lblSkillNormal.Size = New System.Drawing.Size(362, 16)
+        Me.lblSkillNormal.TabIndex = 0
+        '
+        'lblSkillElite
+        '
+        Me.lblSkillElite.Location = New System.Drawing.Point(378, 19)
+        Me.lblSkillElite.Name = "lblSkillElite"
+        Me.lblSkillElite.Size = New System.Drawing.Size(362, 16)
+        Me.lblSkillElite.TabIndex = 1
         '
         'lvSkills
         '
-        Me.lvSkills.Columns.AddRange(New System.Windows.Forms.ColumnHeader() {Me.colSkill, Me.colSkillPoint, Me.colSkillMastery, Me.colSkillKey})
+        Me.lvSkills.Columns.AddRange(New System.Windows.Forms.ColumnHeader() {Me.colSkill, Me.colSkillTier, Me.colSkillPoint, Me.colSkillMastery, Me.colSkillKey, Me.colSkillStatus})
         Me.lvSkills.Dock = System.Windows.Forms.DockStyle.Fill
         Me.lvSkills.FullRowSelect = True
         Me.lvSkills.GridLines = True
-        Me.lvSkills.Location = New System.Drawing.Point(3, 3)
+        Me.lvSkills.Location = New System.Drawing.Point(3, 269)
         Me.lvSkills.Name = "lvSkills"
-        Me.lvSkills.Size = New System.Drawing.Size(746, 422)
-        Me.lvSkills.TabIndex = 0
+        Me.lvSkills.Size = New System.Drawing.Size(746, 156)
+        Me.lvSkills.TabIndex = 1
         Me.lvSkills.UseCompatibleStateImageBehavior = False
         Me.lvSkills.View = System.Windows.Forms.View.Details
         '
         'colSkill
         '
         Me.colSkill.Text = "Skill #"
-        Me.colSkill.Width = 70
+        Me.colSkill.Width = 60
+        '
+        'colSkillTier
+        '
+        Me.colSkillTier.Text = "Tier"
+        Me.colSkillTier.Width = 45
+        '
+        'colSkillStatus
+        '
+        Me.colSkillStatus.Text = "Status"
+        Me.colSkillStatus.Width = 300
         '
         'colSkillPoint
         '
@@ -925,6 +1076,11 @@ Partial Class CharacterEditor
         Me.pnlInventory.PerformLayout()
         Me.tpWarehouse.ResumeLayout(False)
         Me.tpSkills.ResumeLayout(False)
+        Me.pnlSkillsTop.ResumeLayout(False)
+        Me.gbRank.ResumeLayout(False)
+        Me.gbRank.PerformLayout()
+        Me.gbQuest.ResumeLayout(False)
+        Me.gbSkillPoints.ResumeLayout(False)
         Me.pnlBottom.ResumeLayout(False)
         Me.pnlButtons.ResumeLayout(False)
         Me.ResumeLayout(False)
@@ -998,6 +1154,21 @@ Partial Class CharacterEditor
     Friend WithEvents colSkillPoint As System.Windows.Forms.ColumnHeader
     Friend WithEvents colSkillMastery As System.Windows.Forms.ColumnHeader
     Friend WithEvents colSkillKey As System.Windows.Forms.ColumnHeader
+    Friend WithEvents colSkillTier As System.Windows.Forms.ColumnHeader
+    Friend WithEvents colSkillStatus As System.Windows.Forms.ColumnHeader
+    Friend WithEvents pnlSkillsTop As System.Windows.Forms.Panel
+    Friend WithEvents gbRank As System.Windows.Forms.GroupBox
+    Friend WithEvents lblRankNote As System.Windows.Forms.Label
+    Friend WithEvents cmdPromote As System.Windows.Forms.Button
+    Friend WithEvents cbRank As System.Windows.Forms.ComboBox
+    Friend WithEvents lblRank As System.Windows.Forms.Label
+    Friend WithEvents gbQuest As System.Windows.Forms.GroupBox
+    Friend WithEvents cmdClearQuest As System.Windows.Forms.Button
+    Friend WithEvents lblQuest As System.Windows.Forms.Label
+    Friend WithEvents gbLevelQuests As System.Windows.Forms.GroupBox
+    Friend WithEvents gbSkillPoints As System.Windows.Forms.GroupBox
+    Friend WithEvents lblSkillElite As System.Windows.Forms.Label
+    Friend WithEvents lblSkillNormal As System.Windows.Forms.Label
     Friend WithEvents pnlBottom As System.Windows.Forms.Panel
     Friend WithEvents lvMessages As System.Windows.Forms.ListView
     Friend WithEvents colMessage As System.Windows.Forms.ColumnHeader
