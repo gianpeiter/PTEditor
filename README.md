@@ -11,7 +11,7 @@ Visual Studio 2022 / .NET Framework 4.8 / VB.NET.
 | Items | Edita os itens (`GameServer\OpenItem\*.txt`). |
 | Maps | Edita spawns e chefes dos mapas (`GameServer\Field\*.spm`). |
 | NPC Editor | Edita NPCs: nome, falas, loja e posicao no mapa. |
-| Characters | Lista contas e personagens do `DataServer`, edita level, EXP, atributos, ouro e inventario e exclui personagens. |
+| Characters | Lista contas e personagens do `DataServer`, edita level, EXP, atributos, ouro, inventario, rank de classe (libera as skills no Skill Master) e quests, e exclui personagens. |
 | Item Finder | Busca itens em todos os personagens e baus, lista itens duplicados e com checksum invalido. |
 | Award Items | Envia itens para o NPC de entrega (tabela `AwardItem_List` do SQL Server). |
 | Options | Pasta do servidor, banco de dados, editor de texto e perfis de personagem. |
