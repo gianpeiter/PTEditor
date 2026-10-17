@@ -83,19 +83,21 @@ Public Class ItemFinder
 
     Private Sub Search()
         Dim query As String = tbQuery.Text.Trim()
-        If query = "" Then
-            MsgBox("Enter a code or part of the name.", MsgBoxStyle.Information)
-            Return
-        End If
         If Not LoadItems() Then Return
-        Dim byCode As Boolean = cbMode.SelectedIndex = 0
-        Dim found = _items.Where(Function(l)
-                                     If byCode Then Return l.Item.CodeText.StartsWith(query, StringComparison.OrdinalIgnoreCase)
-                                     Return l.Item.DisplayName.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0 OrElse
-                                            l.Item.StoredName.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0
-                                 End Function).ToList()
+        Dim found As List(Of ItemLocation)
+        If query = "" Then
+            found = _items.ToList()
+        Else
+            Dim byCode As Boolean = cbMode.SelectedIndex = 0
+            found = _items.Where(Function(l)
+                                      If byCode Then Return l.Item.CodeText.StartsWith(query, StringComparison.OrdinalIgnoreCase)
+                                      Return l.Item.DisplayName.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0 OrElse
+                                             l.Item.StoredName.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0
+                                  End Function).ToList()
+        End If
         ShowResults(found, Nothing)
-        ReportStatus(found.Count & " item(s) found for '" & query & "' in " & found.Select(Function(l) l.Owner).Distinct().Count() & " owner(s).")
+        Dim suffix As String = If(query = "", "(all items)", "for '" & query & "'")
+        ReportStatus(found.Count & " item(s) found " & suffix & " in " & found.Select(Function(l) l.Owner).Distinct().Count() & " owner(s).")
     End Sub
 
     Private Sub cmdDuplicates_Click(ByVal sender As Object, ByVal e As EventArgs) Handles cmdDuplicates.Click
