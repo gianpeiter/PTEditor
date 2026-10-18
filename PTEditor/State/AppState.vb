@@ -30,7 +30,7 @@ Friend Module AppState
     Friend Const SpcPattern As String = "*.spc"
     Friend Const SppPattern As String = "*.spp"
 
-    Friend Const BackupFolder As String = "Backup"
+    Friend Const BackupFolder As String = "backup"
     Friend Const BackupTag As String = "_Backup_"
     Friend Const DefaultBackupPrefix As String = "Default_"
 
