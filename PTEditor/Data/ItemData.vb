@@ -6,13 +6,21 @@ Friend Module ItemData
     Friend Sub LoadAll(ByVal warnMissingZhoon As Boolean, Optional ByVal progress As Action(Of Integer, Integer) = Nothing)
         AppState.Items.Clear()
         Dim files = FileHelper.ListFiles(AppState.ServerPath & AppState.ItemFolder, AppState.ItemPattern)
+        Dim missingZhoon As New List(Of String)()
         For i = 0 To files.Count - 1
             Dim item As New ItemFile(files(i))
             item.LoadFrom(AppState.ItemPath(item.FileName))
-            RefreshInfo(item, warnMissingZhoon)
+            RefreshInfo(item, warnMissingZhoon, missingZhoon)
             AppState.Items.Add(item)
             If progress IsNot Nothing Then progress(i + 1, files.Count)
         Next
+        If missingZhoon.Count > 0 Then
+            ErrorLog.Write("In ItemData.LoadAll: Warn" & vbCrLf & missingZhoon.Count & " .zhoon file(s) not found:" & vbCrLf &
+                           String.Join(vbCrLf, missingZhoon))
+            If warnMissingZhoon Then
+                MsgBox(missingZhoon.Count & " item(s) with no .zhoon file found." & vbCrLf & "Check the error log for details.")
+            End If
+        End If
     End Sub
 
     ''' <summary>Carrega um backup (OpenItem\Backup\nome) para a memoria, sem gravar.</summary>
@@ -63,12 +71,12 @@ Friend Module ItemData
         Return line.Substring(key.Length).Trim().Replace(ChrW(9), " "c)
     End Function
 
-    Private Sub RefreshInfo(ByVal item As ItemFile, ByVal warnMissingZhoon As Boolean)
+    Private Sub RefreshInfo(ByVal item As ItemFile, ByVal warnMissingZhoon As Boolean, Optional ByVal missingZhoon As List(Of String) = Nothing)
         item.Name = ItemFile.NoName
         item.ZhoonFile = ""
         For Each line In item.Lines
             If line.Contains(GameFields.LinkedFile) Then
-                ReadZhoon(item, line.Substring(GameFields.LinkedFile.Length).Trim().Trim(""""c), warnMissingZhoon)
+                ReadZhoon(item, line.Substring(GameFields.LinkedFile.Length).Trim().Trim(""""c), warnMissingZhoon, missingZhoon)
             End If
             If line.StartsWith(GameFields.Item.Code) Then item.Code = GetValue(line, GameFields.Item.Code).ToUpper()
             If line.StartsWith(GameFields.Item.Weight) Then item.Weight = GetValue(line, GameFields.Item.Weight)
@@ -76,14 +84,19 @@ Friend Module ItemData
         Next
     End Sub
 
-    ''' <summary>Nome in-game: linha "*X_NAME" do .zhoon referenciado em *연결파일.</summary>
-    Private Sub ReadZhoon(ByVal item As ItemFile, ByVal zhoonReference As String, ByVal warnMissing As Boolean)
+    ''' <summary>Nome in-game: linha "*X_NAME" do .zhoon referenciado em *연결파일.
+    ''' Se missingZhoon for informado, arquivos ausentes sao acumulados nele em vez de abrir um MsgBox por item.</summary>
+    Private Sub ReadZhoon(ByVal item As ItemFile, ByVal zhoonReference As String, ByVal warnMissing As Boolean, Optional ByVal missingZhoon As List(Of String) = Nothing)
         Dim path As String = If(zhoonReference.Contains(":"), zhoonReference, AppState.ItemPath(zhoonReference))
         If Not File.Exists(path) Then
             item.ZhoonFile = ItemFile.NoZhoon
-            If warnMissing Then MsgBox("No .zhoon File Found! " & path)
-            ErrorLog.Write("In ItemData.LoadAll: Warn" & vbCrLf & "No .zhoon file found! " & vbCrLf &
-                           "Itemfile: " & item.FileName & vbCrLf & "Item zhoon Path: " & path)
+            Dim detail As String = "Itemfile: " & item.FileName & vbCrLf & "Item zhoon Path: " & path
+            If missingZhoon IsNot Nothing Then
+                missingZhoon.Add(detail)
+            Else
+                If warnMissing Then MsgBox("No .zhoon File Found! " & path)
+                ErrorLog.Write("In ItemData.LoadAll: Warn" & vbCrLf & "No .zhoon file found! " & vbCrLf & detail)
+            End If
             Return
         End If
         item.ZhoonFile = path

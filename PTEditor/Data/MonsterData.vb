@@ -11,13 +11,21 @@ Friend Module MonsterData
         AppState.Monsters.Clear()
         ZhoonFile.ResetDetection()
         Dim files = FileHelper.ListFiles(AppState.ServerPath & AppState.MonsterFolder, AppState.MonsterPattern)
+        Dim missingZhoon As New List(Of String)()
         For i = 0 To files.Count - 1
             Dim monster As New MonsterFile(files(i))
             monster.LoadFrom(AppState.MonsterPath(monster.FileName))
-            RefreshInfo(monster, warnMissingZhoon)
+            RefreshInfo(monster, warnMissingZhoon, missingZhoon)
             AppState.Monsters.Add(monster)
             If progress IsNot Nothing Then progress(i + 1, files.Count)
         Next
+        If missingZhoon.Count > 0 Then
+            ErrorLog.Write("In MonsterData.LoadAll: Warn" & vbCrLf & missingZhoon.Count & " .zhoon file(s) not found:" & vbCrLf & vbCrLf &
+                           String.Join(vbCrLf, missingZhoon))
+            If warnMissingZhoon Then
+                MsgBox(missingZhoon.Count & " monster(s) with no .zhoon file found." & vbCrLf & "Check the error log for details.")
+            End If
+        End If
     End Sub
 
     ''' <summary>Relê o arquivo do disco, descartando alteracoes em memoria.</summary>
@@ -62,7 +70,7 @@ Friend Module MonsterData
     End Function
 
     ''' <summary>Atualiza nome in-game, level, nome de mapa e .zhoon a partir das linhas.</summary>
-    Private Sub RefreshInfo(ByVal monster As MonsterFile, ByVal warnMissingZhoon As Boolean)
+    Private Sub RefreshInfo(ByVal monster As MonsterFile, ByVal warnMissingZhoon As Boolean, Optional ByVal missingZhoon As List(Of String) = Nothing)
         monster.Name = ""
         monster.MapName = ""
         monster.Level = ""
@@ -71,7 +79,7 @@ Friend Module MonsterData
             If line.Contains(GameFields.LinkedFile) Then
                 Dim zhoon As String = line.Substring(GameFields.LinkedFile.Length).Trim()
                 monster.ZhoonFile = ZhoonFullPath(zhoon)
-                monster.Name = ReadInGameName(zhoon, warnMissingZhoon)
+                monster.Name = ReadInGameName(zhoon, warnMissingZhoon, missingZhoon)
             End If
             If line.StartsWith(GameFields.Level) Then
                 Dim level As Long
@@ -90,15 +98,20 @@ Friend Module MonsterData
         Return AppState.MonsterPath(relative)
     End Function
 
-    ''' <summary>Nome in-game: linha "*X_NAME" do .zhoon referenciado em *연결파일.</summary>
-    Friend Function ReadInGameName(ByVal zhoonReference As String, ByVal warnMissing As Boolean) As String
+    ''' <summary>Nome in-game: linha "*X_NAME" do .zhoon referenciado em *연결파일.
+    ''' Se missingZhoon for informado, arquivos ausentes sao acumulados nele em vez de abrir um MsgBox por monstro.</summary>
+    Friend Function ReadInGameName(ByVal zhoonReference As String, ByVal warnMissing As Boolean, Optional ByVal missingZhoon As List(Of String) = Nothing) As String
         Dim path As String = ZhoonFullPath(zhoonReference)
         Try
             If File.Exists(path) Then
                 Return If(ZhoonFile.ReadName(path), "")
             End If
-            If warnMissing Then MsgBox("No .zhoon file found! " & vbCrLf & path)
-            ErrorLog.Write("In ReadInGameName:" & vbCrLf & "Cant find path:" & path)
+            If missingZhoon IsNot Nothing Then
+                missingZhoon.Add(path)
+            Else
+                If warnMissing Then MsgBox("No .zhoon file found! " & vbCrLf & path)
+                ErrorLog.Write("In ReadInGameName:" & vbCrLf & "Cant find path:" & path)
+            End If
             Return NameNotFound
         Catch ex As Exception
             ErrorLog.Report("MonsterData.ReadInGameName", ex)
