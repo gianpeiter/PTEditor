@@ -1,7 +1,7 @@
 ﻿''' <summary>
 ''' Aba Award Items: envia itens para a fila do NPC com *AwardItem ([PristonDB].[dbo].[AwardItem_List]), mostra e
 ''' remove os pendentes de um personagem. A conexao e a de ServerDatabase (server.ini, configurada em Options).
-''' Substitui o antigo ItemDistributor, que gravava no PostBox (o NPC do servidor nao le o PostBox).
+''' So funciona se algum NPC tiver *AwardItem; o NPC com *경품배달 usa o PostBox (aba PostBox).
 ''' </summary>
 Public Class AwardItemsPanel
 

@@ -279,6 +279,7 @@ Partial Class MainEditor
         Me.LoadBackupToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.DeleteItemBackupToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.AwardItemsToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.PostBoxToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.SearchItemNameToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.SendToItemSearcherToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.lbItemsListCount = New System.Windows.Forms.Label()
@@ -382,6 +383,8 @@ Partial Class MainEditor
         Me.ItemFinder1 = New PTEditor.ItemFinder()
         Me.TabPageAwardItems = New System.Windows.Forms.TabPage()
         Me.AwardItemsPanel1 = New PTEditor.AwardItemsPanel()
+        Me.TabPagePostBox = New System.Windows.Forms.TabPage()
+        Me.PostBoxPanel1 = New PTEditor.PostBoxPanel()
         Me.TabPage4 = New System.Windows.Forms.TabPage()
         Me.ProfilePanel1 = New PTEditor.ProfilePanel()
         Me.GroupBox7 = New System.Windows.Forms.GroupBox()
@@ -473,6 +476,7 @@ Partial Class MainEditor
         Me.TabPageCharacters.SuspendLayout()
         Me.TabPageItemFinder.SuspendLayout()
         Me.TabPageAwardItems.SuspendLayout()
+        Me.TabPagePostBox.SuspendLayout()
         Me.TabPage4.SuspendLayout()
         Me.GroupBox7.SuspendLayout()
         Me.gbSettings.SuspendLayout()
@@ -1253,6 +1257,7 @@ Partial Class MainEditor
         Me.TabControl1.Controls.Add(Me.TabPageCharacters)
         Me.TabControl1.Controls.Add(Me.TabPageItemFinder)
         Me.TabControl1.Controls.Add(Me.TabPageAwardItems)
+        Me.TabControl1.Controls.Add(Me.TabPagePostBox)
         Me.TabControl1.Controls.Add(Me.TabPage4)
         Me.TabControl1.Location = New System.Drawing.Point(4, 5)
         Me.TabControl1.Name = "TabControl1"
@@ -2788,7 +2793,7 @@ Partial Class MainEditor
         '
         'cmFileListItems
         '
-        Me.cmFileListItems.Items.AddRange(New System.Windows.Forms.ToolStripItem() { Me.LoadBackupToolStripMenuItem, Me.DeleteItemBackupToolStripMenuItem, Me.AwardItemsToolStripMenuItem, Me.SearchItemNameToolStripMenuItem, Me.SendToItemSearcherToolStripMenuItem })
+        Me.cmFileListItems.Items.AddRange(New System.Windows.Forms.ToolStripItem() { Me.LoadBackupToolStripMenuItem, Me.DeleteItemBackupToolStripMenuItem, Me.AwardItemsToolStripMenuItem, Me.PostBoxToolStripMenuItem, Me.SearchItemNameToolStripMenuItem, Me.SendToItemSearcherToolStripMenuItem })
         Me.cmFileListItems.Name = "cmFileListItems"
         Me.cmFileListItems.Size = New System.Drawing.Size(190, 114)
         '
@@ -2809,6 +2814,12 @@ Partial Class MainEditor
         Me.AwardItemsToolStripMenuItem.Name = "AwardItemsToolStripMenuItem"
         Me.AwardItemsToolStripMenuItem.Size = New System.Drawing.Size(189, 22)
         Me.AwardItemsToolStripMenuItem.Text = "Send to Award Items"
+        '
+        'PostBoxToolStripMenuItem
+        '
+        Me.PostBoxToolStripMenuItem.Name = "PostBoxToolStripMenuItem"
+        Me.PostBoxToolStripMenuItem.Size = New System.Drawing.Size(189, 22)
+        Me.PostBoxToolStripMenuItem.Text = "Send to PostBox"
         '
         'SearchItemNameToolStripMenuItem
         '
@@ -3683,6 +3694,25 @@ Partial Class MainEditor
         Me.AwardItemsPanel1.Size = New System.Drawing.Size(1034, 654)
         Me.AwardItemsPanel1.TabIndex = 0
         '
+        'TabPagePostBox
+        '
+        Me.TabPagePostBox.Controls.Add(Me.PostBoxPanel1)
+        Me.TabPagePostBox.Location = New System.Drawing.Point(4, 22)
+        Me.TabPagePostBox.Name = "TabPagePostBox"
+        Me.TabPagePostBox.Padding = New System.Windows.Forms.Padding(3)
+        Me.TabPagePostBox.Size = New System.Drawing.Size(1040, 660)
+        Me.TabPagePostBox.TabIndex = 8
+        Me.TabPagePostBox.Text = "PostBox"
+        Me.TabPagePostBox.UseVisualStyleBackColor = True
+        '
+        'PostBoxPanel1
+        '
+        Me.PostBoxPanel1.Dock = System.Windows.Forms.DockStyle.Fill
+        Me.PostBoxPanel1.Location = New System.Drawing.Point(3, 3)
+        Me.PostBoxPanel1.Name = "PostBoxPanel1"
+        Me.PostBoxPanel1.Size = New System.Drawing.Size(1034, 654)
+        Me.PostBoxPanel1.TabIndex = 0
+        '
         'TabPage4
         '
         Me.TabPage4.Controls.Add(Me.ProfilePanel1)
@@ -4214,6 +4244,7 @@ Partial Class MainEditor
         Me.TabPageCharacters.ResumeLayout(False)
         Me.TabPageItemFinder.ResumeLayout(False)
         Me.TabPageAwardItems.ResumeLayout(False)
+        Me.TabPagePostBox.ResumeLayout(False)
         Me.TabPage4.ResumeLayout(False)
         Me.GroupBox7.ResumeLayout(False)
         Me.GroupBox7.PerformLayout()
@@ -4351,6 +4382,7 @@ Partial Class MainEditor
     Friend WithEvents GroupBox8 As System.Windows.Forms.GroupBox
     Friend WithEvents GroupBox9 As System.Windows.Forms.GroupBox
     Friend WithEvents AwardItemsToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
+    Friend WithEvents PostBoxToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
     Friend WithEvents ItemFound As System.Windows.Forms.Label
     Friend WithEvents SearchItemToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
     Friend WithEvents Label1 As System.Windows.Forms.Label
@@ -4523,6 +4555,8 @@ Partial Class MainEditor
     Friend WithEvents ProfilePanel1 As PTEditor.ProfilePanel
     Friend WithEvents TabPageAwardItems As System.Windows.Forms.TabPage
     Friend WithEvents AwardItemsPanel1 As PTEditor.AwardItemsPanel
+    Friend WithEvents TabPagePostBox As System.Windows.Forms.TabPage
+    Friend WithEvents PostBoxPanel1 As PTEditor.PostBoxPanel
     Friend WithEvents TabPage5 As System.Windows.Forms.TabPage
     Friend WithEvents tbDroprate As System.Windows.Forms.TextBox
     Friend WithEvents tbDrops As System.Windows.Forms.TextBox

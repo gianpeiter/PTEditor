@@ -10,6 +10,7 @@ Public Class MainEditor
     Private Const TabNpc As String = "NPC Editor"
     Private Const TabCharacters As String = "Characters"
     Private Const TabAwardItems As String = "Award Items"
+    Private Const TabPostBox As String = "PostBox"
 
     ''' <summary>Conversao do angulo do NPC (0..4096) para radianos: 2*PI/4096.</summary>
     Private Const AngleToRadians As Double = 0.0015339807878856412
@@ -99,6 +100,7 @@ Public Class MainEditor
         BuildFieldMaps()
         ItemFinder1.IndexProvider = AddressOf CharacterEditor1.GetIndex
         AwardItemsPanel1.IndexProvider = AddressOf CharacterEditor1.GetIndex
+        PostBoxPanel1.IndexProvider = AddressOf CharacterEditor1.GetIndex
     End Sub
 
     ''' <summary>Chave do arquivo -> TextBox. A ordem importa so para *유니크색상 antes de *유니크 (prefixo).</summary>
@@ -360,7 +362,7 @@ Public Class MainEditor
         End Try
     End Sub
 
-    Private Sub AwardItemsPanel1_OptionsRequested() Handles AwardItemsPanel1.OptionsRequested
+    Private Sub AwardItemsPanel1_OptionsRequested() Handles AwardItemsPanel1.OptionsRequested, PostBoxPanel1.OptionsRequested
         TabControl1.SelectedTab = TabPage4
     End Sub
 
@@ -460,6 +462,8 @@ Public Class MainEditor
                     CharacterEditor1.EnsureLoaded()
                 Case TabAwardItems
                     AwardItemsPanel1.EnsureLoaded()
+                Case TabPostBox
+                    PostBoxPanel1.EnsureLoaded()
             End Select
         Catch ex As Exception
             ErrorLog.Report("TabControl1_Selected", ex)
@@ -1225,14 +1229,23 @@ Public Class MainEditor
     End Sub
 
     Private Sub AwardItemsToolStripMenuItem_Click(ByVal sender As Object, ByVal e As EventArgs) Handles AwardItemsToolStripMenuItem.Click
+        TabControl1.SelectedTab = TabPageAwardItems
+        AwardItemsPanel1.AddItems(SelectedListItems())
+    End Sub
+
+    Private Sub PostBoxToolStripMenuItem_Click(ByVal sender As Object, ByVal e As EventArgs) Handles PostBoxToolStripMenuItem.Click
+        TabControl1.SelectedTab = TabPagePostBox
+        PostBoxPanel1.AddItems(SelectedListItems())
+    End Sub
+
+    Private Function SelectedListItems() As List(Of ItemFile)
         Dim items As New List(Of ItemFile)()
         For Each name As Object In lbFileListItems.SelectedItems
             Dim item = ItemData.Find(name.ToString())
             If item IsNot Nothing Then items.Add(item)
         Next
-        TabControl1.SelectedTab = TabPageAwardItems
-        AwardItemsPanel1.AddItems(items)
-    End Sub
+        Return items
+    End Function
 
     Private Sub SearchItemNameToolStripMenuItem_Click(ByVal sender As Object, ByVal e As EventArgs) Handles SearchItemNameToolStripMenuItem.Click, AddItemsToolStripMenuItem.Click
         ShowItemSearch()

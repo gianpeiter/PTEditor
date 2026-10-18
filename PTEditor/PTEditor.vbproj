@@ -61,6 +61,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Data\AwardItems\AwardItemRepository.vb" />
+    <Compile Include="Data\PostBox\PostBoxRepository.vb" />
     <Compile Include="Data\Database\DatabaseConfig.vb" />
     <Compile Include="Data\Database\ServerDatabase.vb" />
     <Compile Include="Data\BackupHelper.vb" />
@@ -90,6 +91,12 @@
     </Compile>
     <Compile Include="Forms\AwardItemsPanel.Designer.vb">
       <DependentUpon>AwardItemsPanel.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\PostBoxPanel.vb">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Forms\PostBoxPanel.Designer.vb">
+      <DependentUpon>PostBoxPanel.vb</DependentUpon>
     </Compile>
     <Compile Include="Forms\CharacterEditor.vb">
       <SubType>UserControl</SubType>
