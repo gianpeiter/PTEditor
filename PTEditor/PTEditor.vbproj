@@ -85,6 +85,8 @@
     <Compile Include="Data\Models.vb" />
     <Compile Include="Data\MonsterData.vb" />
     <Compile Include="Data\NpcData.vb" />
+    <Compile Include="Data\SpawnPointFile.vb" />
+    <Compile Include="Data\StageMesh.vb" />
     <Compile Include="Data\ZhoonFile.vb" />
     <Compile Include="Forms\AwardItemsPanel.vb">
       <SubType>UserControl</SubType>
@@ -97,6 +99,15 @@
     </Compile>
     <Compile Include="Forms\PostBoxPanel.Designer.vb">
       <DependentUpon>PostBoxPanel.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\SpawnMapCanvas.vb">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Forms\SpawnPointPanel.vb">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Forms\SpawnPointPanel.Designer.vb">
+      <DependentUpon>SpawnPointPanel.vb</DependentUpon>
     </Compile>
     <Compile Include="Forms\CharacterEditor.vb">
       <SubType>UserControl</SubType>

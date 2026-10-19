@@ -17,6 +17,7 @@ Friend Module AppState
     Friend Const MonsterFolder As String = "GameServer\Monster\"
     Friend Const ItemFolder As String = "GameServer\OpenItem\"
     Friend Const FieldFolder As String = "GameServer\Field\"
+    Friend Const MeshFolder As String = "Field\"
     Friend Const NpcFolder As String = "GameServer\NPC\"
     Friend Const NpcNameFolder As String = "GameServer\NPC\name\"
     Friend Const CharFolder As String = "char"

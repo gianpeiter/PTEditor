@@ -10,6 +10,7 @@ Visual Studio 2022 / .NET Framework 4.8 / VB.NET.
 | Monsters | Edita os monstros (`GameServer\Monster\*.inf`): atributos, drops e ouro. |
 | Items | Edita os itens (`GameServer\OpenItem\*.txt`). |
 | Maps | Edita spawns e chefes dos mapas (`GameServer\Field\*.spm`). |
+| Spawn Point | Adiciona, move e remove os pontos de nascimento (`GameServer\Field\*.spp`) sobre a vista de cima do mapa (`Field\*.smd`). |
 | NPC Editor | Edita NPCs: nome, falas, loja e posicao no mapa. |
 | Characters | Lista contas e personagens do `DataServer`, edita level, EXP, atributos, ouro, inventario, rank de classe (libera as skills no Skill Master) e quests, e exclui personagens. |
 | Item Finder | Busca itens em todos os personagens e baus, lista itens duplicados e com checksum invalido. |
@@ -70,6 +71,19 @@ As duas linhas podem ficar no mesmo NPC: um clique atende os dois sistemas. O `.
 - **Show pending items** lista o arquivo da conta (em vermelho, linhas que o NPC nunca oferece) e **Remove selected**
   apaga so as linhas escolhidas, sem alterar as demais.
 - Os itens tambem podem ser enviados pela aba Items, botao direito > Send to PostBox.
+
+## Spawn Point
+
+- O `.spp` guarda ate 200 pontos (`state`, `x`, `z`, 12 bytes cada), a mesma "flag" que o GM poe no jogo. Nao tem altura
+  nem monstro: quem nasce, quantos e a que ritmo vem do `.spm` (aba Maps).
+- Clicar no mapa adiciona um ponto no primeiro slot livre (como o servidor); clicar num ponto o seleciona e arrastar o move.
+  Botao direito arrasta a vista, a roda da zoom e Delete remove o ponto selecionado. Nada e gravado ate clicar em Save.
+- Ctrl+Z desfaz e Ctrl+Y (ou Ctrl+Shift+Z) refaz, ate 100 passos por mapa; arrastar um ponto conta como um passo. A pilha
+  zera ao trocar de mapa ou recarregar, e desfazer ate o estado salvo tira o `*` do Save.
+- O mapa e lido do `.smd` em `<Server-Path>\Field\` (procurado pelo nome base, ex.: `ice_2.ASE.spp` usa `ice_2.smd`) e
+  desenhado de cima (so geometria, sem texturas), colorido por altura, com o norte (Z maior) para cima. Se o `.smd` nao estiver
+  la, use "Browse map file..." (o `.smd` do cliente serve) ou edite os pontos sem o fundo.
+- O servidor le o `.spp` ao iniciar: reinicie-o depois de salvar.
 
 ## Cuidados
 

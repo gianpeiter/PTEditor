@@ -11,6 +11,7 @@ Public Class MainEditor
     Private Const TabCharacters As String = "Characters"
     Private Const TabAwardItems As String = "Award Items"
     Private Const TabPostBox As String = "PostBox"
+    Private Const TabSpawn As String = "Spawn Point"
 
     ''' <summary>Conversao do angulo do NPC (0..4096) para radianos: 2*PI/4096.</summary>
     Private Const AngleToRadians As Double = 0.0015339807878856412
@@ -456,6 +457,8 @@ Public Class MainEditor
                 Case TabMaps
                     RefreshMapList()
                     RefreshMonsterSource()
+                Case TabSpawn
+                    SpawnPointPanel1.EnsureLoaded()
                 Case TabNpc
                     FillNpcMapList()
                 Case TabCharacters

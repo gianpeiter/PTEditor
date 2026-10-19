@@ -385,6 +385,8 @@ Partial Class MainEditor
         Me.AwardItemsPanel1 = New PTEditor.AwardItemsPanel()
         Me.TabPagePostBox = New System.Windows.Forms.TabPage()
         Me.PostBoxPanel1 = New PTEditor.PostBoxPanel()
+        Me.TabPageSpawn = New System.Windows.Forms.TabPage()
+        Me.SpawnPointPanel1 = New PTEditor.SpawnPointPanel()
         Me.TabPage4 = New System.Windows.Forms.TabPage()
         Me.ProfilePanel1 = New PTEditor.ProfilePanel()
         Me.GroupBox7 = New System.Windows.Forms.GroupBox()
@@ -477,6 +479,7 @@ Partial Class MainEditor
         Me.TabPageItemFinder.SuspendLayout()
         Me.TabPageAwardItems.SuspendLayout()
         Me.TabPagePostBox.SuspendLayout()
+        Me.TabPageSpawn.SuspendLayout()
         Me.TabPage4.SuspendLayout()
         Me.GroupBox7.SuspendLayout()
         Me.gbSettings.SuspendLayout()
@@ -1253,6 +1256,7 @@ Partial Class MainEditor
         Me.TabControl1.Controls.Add(Me.TabPage1)
         Me.TabControl1.Controls.Add(Me.TabPage2)
         Me.TabControl1.Controls.Add(Me.TabPage3)
+        Me.TabControl1.Controls.Add(Me.TabPageSpawn)
         Me.TabControl1.Controls.Add(Me.TabPage5)
         Me.TabControl1.Controls.Add(Me.TabPageCharacters)
         Me.TabControl1.Controls.Add(Me.TabPageItemFinder)
@@ -3132,7 +3136,7 @@ Partial Class MainEditor
         Me.Label36.Name = "Label36"
         Me.Label36.Size = New System.Drawing.Size(94, 13)
         Me.Label36.TabIndex = 50
-        Me.Label36.Text = "Unknown value 1:"
+        Me.Label36.Text = "Max monsters:"
         '
         'tbMapValue1
         '
@@ -3155,7 +3159,7 @@ Partial Class MainEditor
         Me.Label97.Name = "Label97"
         Me.Label97.Size = New System.Drawing.Size(94, 13)
         Me.Label97.TabIndex = 52
-        Me.Label97.Text = "Unknown value 2:"
+        Me.Label97.Text = "Spawn delay:"
         '
         'tbMapValue3
         '
@@ -3171,7 +3175,7 @@ Partial Class MainEditor
         Me.Label98.Name = "Label98"
         Me.Label98.Size = New System.Drawing.Size(94, 13)
         Me.Label98.TabIndex = 54
-        Me.Label98.Text = "Unknown value 3:"
+        Me.Label98.Text = "Max per point:"
         '
         'GroupBox21
         '
@@ -3693,6 +3697,25 @@ Partial Class MainEditor
         Me.AwardItemsPanel1.Name = "AwardItemsPanel1"
         Me.AwardItemsPanel1.Size = New System.Drawing.Size(1034, 654)
         Me.AwardItemsPanel1.TabIndex = 0
+        '
+        'TabPageSpawn
+        '
+        Me.TabPageSpawn.Controls.Add(Me.SpawnPointPanel1)
+        Me.TabPageSpawn.Location = New System.Drawing.Point(4, 22)
+        Me.TabPageSpawn.Name = "TabPageSpawn"
+        Me.TabPageSpawn.Padding = New System.Windows.Forms.Padding(3)
+        Me.TabPageSpawn.Size = New System.Drawing.Size(1040, 660)
+        Me.TabPageSpawn.TabIndex = 9
+        Me.TabPageSpawn.Text = "Spawn Point"
+        Me.TabPageSpawn.UseVisualStyleBackColor = True
+        '
+        'SpawnPointPanel1
+        '
+        Me.SpawnPointPanel1.Dock = System.Windows.Forms.DockStyle.Fill
+        Me.SpawnPointPanel1.Location = New System.Drawing.Point(3, 3)
+        Me.SpawnPointPanel1.Name = "SpawnPointPanel1"
+        Me.SpawnPointPanel1.Size = New System.Drawing.Size(1034, 654)
+        Me.SpawnPointPanel1.TabIndex = 0
         '
         'TabPagePostBox
         '
@@ -4245,6 +4268,7 @@ Partial Class MainEditor
         Me.TabPageItemFinder.ResumeLayout(False)
         Me.TabPageAwardItems.ResumeLayout(False)
         Me.TabPagePostBox.ResumeLayout(False)
+        Me.TabPageSpawn.ResumeLayout(False)
         Me.TabPage4.ResumeLayout(False)
         Me.GroupBox7.ResumeLayout(False)
         Me.GroupBox7.PerformLayout()
@@ -4557,6 +4581,8 @@ Partial Class MainEditor
     Friend WithEvents AwardItemsPanel1 As PTEditor.AwardItemsPanel
     Friend WithEvents TabPagePostBox As System.Windows.Forms.TabPage
     Friend WithEvents PostBoxPanel1 As PTEditor.PostBoxPanel
+    Friend WithEvents TabPageSpawn As System.Windows.Forms.TabPage
+    Friend WithEvents SpawnPointPanel1 As PTEditor.SpawnPointPanel
     Friend WithEvents TabPage5 As System.Windows.Forms.TabPage
     Friend WithEvents tbDroprate As System.Windows.Forms.TextBox
     Friend WithEvents tbDrops As System.Windows.Forms.TextBox
