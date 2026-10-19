@@ -92,8 +92,12 @@ As duas linhas podem ficar no mesmo NPC: um clique atende os dois sistemas. O `.
 - Cada NPC aparece com a seta de direcao e o nome (caixa **Names**). Clicar num NPC o seleciona na lista; escolher na lista
   centraliza o mapa nele. Arrastar move o NPC: X e Z mudam e o Y acompanha a altura do terreno (o Y gravado nos `.spc`
   e exatamente essa altura). PageUp/PageDown giram o NPC e Delete o apaga.
-- Marcando **Click map to add NPCs**, clicar num ponto vazio cria um NPC no primeiro slot livre, ja nessa posicao (pede o nome e
-  o `.NPC` a duplicar, como o menu Add new NPC). Desmarcado por padrao para nao abrir o pedido de nome sem querer.
+- Marcando **Click map to add NPCs**, clicar num ponto vazio abre a janela **Add NPC** (o menu Add new NPC da lista abre a
+  mesma) e o NPC ja nasce nessa posicao. Desmarcado por padrao para nao abrir a janela sem querer.
+- A janela **Add NPC** tem a lista de NPCs existentes (nome e arquivo) e o botao **Browse...**, que abre `GameServer\NPC`.
+  Duas opcoes: **Create a new NPC from it** (copia o `.NPC` e cria o `.zhoon`; o nome e validado na hora: sem caracteres
+  invalidos, caminho de ate 64 caracteres e sem sobrescrever arquivo existente) ou **Use it as is** (so cria o registro no
+  mapa, compartilhando o `.NPC` e as falas do original; nenhum arquivo novo).
 - Como no Spawn Point, as edicoes (mover, girar, editar os campos ID/X/Y/Z/Angle/Activated/arquivos, adicionar, apagar, Up/Down)
   ficam so em memoria ate **Save NPC**, que grava o `.spc` com backup em `Field\Backup` e o nome/falas no `.zhoon`. O botao
   mostra `*` quando ha alteracoes pendentes, e trocar de mapa ou recarregar com pendencias pede confirmacao.

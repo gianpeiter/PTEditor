@@ -2033,9 +2033,10 @@ Public Class MainEditor
     End Sub
 
     ''' <summary>
-    ''' Cria um NPC novo no primeiro slot livre duplicando um .NPC existente. Com hasPosition (clique no mapa) o NPC ja nasce
-    ''' em (x, z), com o Y do terreno; sem ele fica na posicao do registro-modelo. O registro entra so na copia em memoria
-    ''' (Desfazer/Save), mas o .NPC e o .zhoon novos sao gravados na hora e o Desfazer nao os apaga.
+    ''' Adiciona um NPC no primeiro slot livre. A janela Add NPC escolhe a origem e se ela e usada como esta (so o registro) ou
+    ''' copiada para um .NPC/.zhoon novo. Com hasPosition (clique no mapa) o NPC ja nasce em (x, z), com o Y do terreno; sem ele
+    ''' fica na posicao do registro-modelo. O registro entra so na copia em memoria (Desfazer/Save); os arquivos novos sao
+    ''' gravados na hora e o Desfazer nao os apaga.
     ''' </summary>
     Private Sub CreateNpc(ByVal hasPosition As Boolean, ByVal x As Integer, ByVal z As Integer)
         Dim spc = SelectedSpc()
@@ -2048,54 +2049,46 @@ Public Class MainEditor
             MsgBox("No empty NPC slot in this map")
             Return
         End If
-        Dim name As String = InputBox("NPC name", "Enter a name")
-        If name = "" Then
-            SetNpcStatus("Add NPC canceled.", False)
-            Return
-        End If
-        Dim newNpcPath As String = AppState.NpcPath(name & ".NPC")
-        If File.Exists(newNpcPath) AndAlso Not Dialogs.Confirm("Save warning!", "File exist already! Overwrite?", MsgBoxStyle.Exclamation) Then
-            name = InputBox("NPC name", "Enter a name")
-            If name = "" Then
+
+        Dim copy As Boolean, sourcePath As String, name As String
+        Using dialog As New AddNpcDialog(AppState.Npcs, If(hasPosition, "X " & x & ", Z " & z, "slot #" & slot))
+            If dialog.ShowDialog(Me) <> DialogResult.OK Then
                 SetNpcStatus("Add NPC canceled.", False)
                 Return
             End If
-            newNpcPath = AppState.NpcPath(name & ".NPC")
-        End If
+            copy = dialog.CreateCopy
+            sourcePath = dialog.SourcePath
+            name = dialog.NewName
+        End Using
 
-        dlgFile.Title = "Select a NPC file for dublicate"
-        Dim previousFilter As String = dlgFile.Filter
-        dlgFile.Filter = "NPC files|*.NPC|All files|*.*"
-        dlgFile.InitialDirectory = AppState.ServerPath & AppState.NpcFolder
-        Dim template As String = Nothing
         Try
-            If dlgFile.ShowDialog() <> DialogResult.Cancel Then template = dlgFile.FileName
-        Finally
-            dlgFile.Filter = previousFilter
-            dlgFile.Title = ""
-        End Try
-        If template Is Nothing Then
-            SetNpcStatus("Add NPC canceled.", False)
-            Return
-        End If
-        Try
-            File.Copy(template, newNpcPath, True)
-            NpcData.SetZhoonReference(newNpcPath, name)
-            Using writer As New StreamWriter(AppState.ServerPath & AppState.NpcNameFolder & name & ".zhoon", False, AppState.FileEncoding)
-                writer.WriteLine(ZhoonFile.NameLine(name) & vbCrLf & vbCrLf)
-                writer.WriteLine(ZhoonFile.ChatLine("""What im talking?!?"""))
-            End Using
+            Dim setupFile As String
+            If copy Then
+                Dim newNpcPath As String = AppState.NpcPath(name & ".NPC")
+                File.Copy(sourcePath, newNpcPath, False)
+                NpcData.SetZhoonReference(newNpcPath, name)
+                Using writer As New StreamWriter(AppState.ServerPath & AppState.NpcNameFolder & name & ".zhoon", False, AppState.FileEncoding)
+                    writer.WriteLine(ZhoonFile.NameLine(name) & vbCrLf & vbCrLf)
+                    writer.WriteLine(ZhoonFile.ChatLine("""What im talking?!?"""))
+                End Using
+                setupFile = "GameServer\npc\" & name & ".NPC"
+            Else
+                setupFile = "GameServer\npc\" & Path.GetFileName(sourcePath)
+            End If
             _npcHistory.Record(spc.Data, "Added NPC #" & slot)
-            NpcData.WriteTemplateRecord(spc, slot, "GameServer\npc\" & name & ".NPC")
+            NpcData.WriteTemplateRecord(spc, slot, setupFile)
             If hasPosition Then
                 Dim y As Integer = NpcData.ReadRecord(spc, slot).Y
                 Dim height As Single
                 If _npcMesh IsNot Nothing AndAlso _npcMesh.TryHeightAt(x, z, height) Then y = CInt(Math.Round(height))
                 NpcData.WritePosition(spc, slot, x, y, z)
             End If
-            NpcData.LoadNpcFiles()
-            RefreshNpcCombos()
-            AfterNpcListChange(spc, slot, "Added NPC #" & slot & " (" & name & ".NPC created; the record is not saved yet).")
+            If copy Then
+                NpcData.LoadNpcFiles()
+                RefreshNpcCombos()
+            End If
+            AfterNpcListChange(spc, slot, "Added NPC #" & slot & " (" & Path.GetFileName(setupFile) & If(copy, " created", "") &
+                               "; the record is not saved yet).")
         Catch ex As Exception
             ErrorLog.Report("AddNewNpc", ex)
         End Try

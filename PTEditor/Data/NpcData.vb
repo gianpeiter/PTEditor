@@ -309,6 +309,8 @@ Friend Module NpcData
             record(i) = Convert.ToByte(tokens(i), 16)
         Next
         Array.Copy(FileHelper.FixedBytes(setupFileRelativePath, TextFieldSize), 0, record, OffsetSetupFile, TextFieldSize)
+        ' O modelo traz lixo no campo de direcao (fora de 0..4096): comeca virado para o norte.
+        Array.Clear(record, OffsetAngle, 4)
         PutBytes(spc, index * RecordSize, record, RecordSize)
     End Sub
 
