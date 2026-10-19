@@ -94,6 +94,8 @@ As duas linhas podem ficar no mesmo NPC: um clique atende os dois sistemas. O `.
   e exatamente essa altura). PageUp/PageDown giram o NPC e Delete o apaga.
 - Marcando **Click map to add NPCs**, clicar num ponto vazio abre a janela **Add NPC** (o menu Add new NPC da lista abre a
   mesma) e o NPC ja nasce nessa posicao. Desmarcado por padrao para nao abrir a janela sem querer.
+- O NPC entra no slot **Empty** que estiver selecionado na lista (selecionar um slot vazio nao mexe na vista do mapa); sem
+  um slot vazio selecionado, entra no primeiro livre. O slot aparece no titulo da janela Add NPC.
 - A janela **Add NPC** tem a lista de NPCs existentes (nome e arquivo) e o botao **Browse...**, que abre `GameServer\NPC`.
   Duas opcoes: **Create a new NPC from it** (copia o `.NPC` e cria o `.zhoon`; o nome e validado na hora: sem caracteres
   invalidos, caminho de ate 64 caracteres e sem sobrescrever arquivo existente) ou **Use it as is** (so cria o registro no

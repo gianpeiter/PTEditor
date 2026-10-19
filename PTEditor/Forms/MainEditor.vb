@@ -1718,7 +1718,13 @@ Public Class MainEditor
 
         FillNpcShop()
         RefreshNpcCanvas()
-        If Not _npcFromCanvas Then NpcCanvas.CenterOn(rec.X, rec.Z)
+        If NpcData.IsRecordUsed(spc, lbNPCList.SelectedIndex) Then
+            ' Slot vazio tem posicao 0,0 (fora do mapa): so centraliza em NPC de verdade.
+            If Not _npcFromCanvas Then NpcCanvas.CenterOn(rec.X, rec.Z)
+        Else
+            SetNpcStatus("Slot #" & lbNPCList.SelectedIndex & " is empty: use Add new NPC (right-click the list) or click the map with " &
+                         "Click map to add NPCs to place an NPC here.", False)
+        End If
     End Sub
 
 #Region "Mapa do NPC Editor"
@@ -2047,14 +2053,16 @@ Public Class MainEditor
             MsgBox("Please select a map")
             Return
         End If
-        Dim slot As Integer = lbNPCList.Items.IndexOf(NpcData.Empty)
+        ' O slot vazio selecionado na lista e o escolhido; sem ele (ou se estiver ocupado), o primeiro livre.
+        Dim slot As Integer = lbNPCList.SelectedIndex
+        If slot < 0 OrElse NpcData.IsRecordUsed(spc, slot) Then slot = lbNPCList.Items.IndexOf(NpcData.Empty)
         If slot < 0 Then
             MsgBox("No empty NPC slot in this map")
             Return
         End If
 
         Dim copy As Boolean, sourcePath As String, name As String
-        Using dialog As New AddNpcDialog(AppState.Npcs, If(hasPosition, "X " & x & ", Z " & z, "slot #" & slot))
+        Using dialog As New AddNpcDialog(AppState.Npcs, "slot #" & slot & If(hasPosition, ", X " & x & ", Z " & z, ""))
             If dialog.ShowDialog(Me) <> DialogResult.OK Then
                 SetNpcStatus("Add NPC canceled.", False)
                 Return

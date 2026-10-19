@@ -27,6 +27,9 @@ cliente/servidor (PTClassic), não o comportamento observado em outros editores.
 | Retângulo de cada cenário | `bin/Client/image/GuideMap/StageInfo.dat` (28 bytes por campo: `RECT`, largura, altura, `float`) |
 | Lista e ordem dos campos | `src/field.cpp` → `InitField` (índice = índice no `StageInfo.dat`) |
 | Ponto fixo | `FLOATNS = 8` em `src/smLib3d/smType.h` (coordenada do jogo = valor `>> 8`) |
+| Registro do `.spc` (NPC fixo) | `smTRNAS_PLAYERINFO` em `Servidor/Network/smPacket.h` (504 bytes: `size`, `code`, `smCHAR_INFO`, `dwObjectSerial`, `x, y, z`, `ax, ay, az`, `state`); lido por `STG_AREA::LoadCharInfoFixed` em `Servidor/Legacy/SrcServer/OnSever.cpp` |
+| ID do NPC | É o `dwObjectSerial`. `STG_AREA::OpenNpc` o sobrescreve com `GetNewObjectSerial()` ao iniciar o mapa; o valor gravado no `.spc` não é usado (0 funciona) |
+| Posição e direção do NPC | `x, y, z` em ponto fixo (o editor lê os 3 bytes altos, `>> 8`); `ay` é a direção, de 0 a 4096. O `y` gravado é a altura do terreno do `.smd` no ponto (`StageMesh.TryHeightAt`) |
 
 ## Registro de erros
 
@@ -52,3 +55,31 @@ Modelo de entrada: **Sintoma**, **Causa**, **Correção**, **Como evitar**.
   `lost_temple` não tem BMP em `Maps` (aparece a imagem de erro).
 - **Como evitar:** não calibrar coordenadas "no olho". Derivar do `StageInfo.dat` e, ao
   adicionar um mapa, conferir se todos os NPCs do `.spc` caem dentro do retângulo.
+
+### 2026-10-19 — Mapa some ao selecionar um slot vazio (NPC Editor)
+
+- **Sintoma:** ao clicar em "Empty" na lista de NPCs, o mapa ficava vazio.
+- **Causa:** escolher um NPC na lista centraliza a vista nele; o slot vazio tem posição 0, 0,
+  fora do mapa.
+- **Correção:** só centraliza se o slot está em uso. Slot vazio mostra uma dica na linha de
+  status e não mexe na vista. O slot vazio selecionado também é onde o Add NPC cria o NPC.
+- **Como evitar:** não usar a posição de um registro sem checar se ele está em uso
+  (`NpcData.IsRecordUsed`).
+
+### 2026-10-19 — NPC novo nascia com direção inválida (NPC Editor)
+
+- **Sintoma:** o NPC adicionado mostrava Angle como 805592498 (o valor válido é 0 a 4096) e
+  ficava virado para uma direção qualquer.
+- **Causa:** o registro-modelo (`NpcData.TemplateHex`) traz lixo no campo de direção.
+- **Correção:** `WriteTemplateRecord` zera a direção (norte) ao criar o registro.
+- **Como evitar:** ao criar registros a partir de um modelo, definir explicitamente todos os
+  campos que o editor exibe.
+
+### 2026-10-19 — Barra de progresso cheia ao abrir o editor
+
+- **Sintoma:** com o programa recém-aberto e nada carregado, a barra de progresso aparecia
+  cheia.
+- **Causa:** `ShowItemsForDrop` usa a barra do carregamento (`pbWorking`) e a deixava em 100%.
+  Com o Item Info habilitado (valor salvo nas configurações) ela roda ao abrir.
+- **Correção:** a barra volta a 0 ao terminar a função.
+- **Como evitar:** quem mexe em `pbWorking` deve devolvê-la a 0 ao terminar.
