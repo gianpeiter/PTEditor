@@ -1,7 +1,7 @@
 ﻿Imports System.IO
 
 ''' <summary>
-''' Perfis em &lt;exe&gt;\Profiles\*.ini e a escolha de perfil de cada DataServer (Profiles\DataServers.txt,
+''' Perfis em &lt;exe&gt;\PTEditor\Profiles\*.ini e a escolha de perfil de cada DataServer (PTEditor\DataServers.txt,
 ''' uma linha "pasta|perfil"; sem linha = deteccao automatica).
 ''' </summary>
 Friend NotInheritable Class ProfileStore
@@ -19,7 +19,7 @@ Friend NotInheritable Class ProfileStore
 
     Public Shared ReadOnly Property Folder As String
         Get
-            Return Path.Combine(Application.StartupPath, FolderName)
+            Return Path.Combine(AppState.OutputDir, FolderName)
         End Get
     End Property
 
@@ -69,7 +69,7 @@ Friend NotInheritable Class ProfileStore
 
     Private Shared ReadOnly Property SelectionPath As String
         Get
-            Return Path.Combine(Folder, SelectionFileName)
+            Return Path.Combine(AppState.OutputDir, SelectionFileName)
         End Get
     End Property
 
@@ -99,7 +99,7 @@ Friend NotInheritable Class ProfileStore
             If selections.TryGetValue(key, current) AndAlso current = profileName Then Return
             selections(key) = profileName
         End If
-        Directory.CreateDirectory(Folder)
+        Directory.CreateDirectory(AppState.OutputDir)
         File.WriteAllLines(SelectionPath, selections.Select(Function(p) p.Key & "|" & p.Value))
     End Sub
 

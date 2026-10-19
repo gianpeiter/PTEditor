@@ -1,12 +1,12 @@
 ﻿Imports System.IO
 Imports System.Text
 
-''' <summary>Log de erros em PTEditor_Errors.log, ao lado do executavel.</summary>
+''' <summary>Log de erros em &lt;exe&gt;\PTEditor\Logs\PTEditor_Errors.log.</summary>
 Friend Module ErrorLog
 
     Friend ReadOnly Property LogPath As String
         Get
-            Return Path.Combine(Application.StartupPath, AppState.ErrorLogFileName)
+            Return Path.Combine(AppState.LogsDir, AppState.ErrorLogFileName)
         End Get
     End Property
 

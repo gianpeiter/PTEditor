@@ -132,7 +132,7 @@ Friend NotInheritable Class AwardItemRepository
 
 End Class
 
-''' <summary>Registro local dos envios (&lt;exe&gt;\AwardItems.log): o servidor nao registra esse fluxo.</summary>
+''' <summary>Registro local dos envios (&lt;exe&gt;\PTEditor\Logs\AwardItems.log): o servidor nao registra esse fluxo.</summary>
 Friend NotInheritable Class AwardLog
 
     Private Sub New()
@@ -140,7 +140,7 @@ Friend NotInheritable Class AwardLog
 
     Friend Shared ReadOnly Property FilePath As String
         Get
-            Return Path.Combine(Application.StartupPath, "AwardItems.log")
+            Return Path.Combine(AppState.LogsDir, "AwardItems.log")
         End Get
     End Property
 

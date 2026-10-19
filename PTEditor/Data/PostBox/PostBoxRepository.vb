@@ -181,7 +181,7 @@ Friend NotInheritable Class PostBoxRepository
 
 End Class
 
-''' <summary>Registro local dos envios (&lt;exe&gt;\PostBox.log).</summary>
+''' <summary>Registro local dos envios (&lt;exe&gt;\PTEditor\Logs\PostBox.log).</summary>
 Friend NotInheritable Class PostBoxLog
 
     Private Sub New()
@@ -189,7 +189,7 @@ Friend NotInheritable Class PostBoxLog
 
     Friend Shared ReadOnly Property FilePath As String
         Get
-            Return Path.Combine(Application.StartupPath, "PostBox.log")
+            Return Path.Combine(AppState.LogsDir, "PostBox.log")
         End Get
     End Property
 

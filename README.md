@@ -26,11 +26,11 @@ Abrir `PTEditor.sln` no Visual Studio 2022 (workload ".NET desktop development")
 MSBuild PTEditor.sln -p:Configuration=Release
 ```
 
-A saida fica em `PTEditor\bin\Release\`. Ao copiar o PTEditor para outro lugar, leve junto a pasta `Profiles`.
+A saida fica em `PTEditor\bin\Release\`. Ao copiar o PTEditor para outro lugar, leve junto a pasta `PTEditor` (com `Maps`, `Profiles` e `Logs`).
 
 ## Configuracao
 
-As opcoes ficam em `PTEditor.Config.txt`, ao lado do executavel. As principais:
+Tudo que o programa gera fica na pasta `PTEditor`, criada ao lado do executavel. As opcoes ficam em `PTEditor\PTEditor.Config.txt`. As principais:
 
 ```
 Server-Path=C:\Servidor\
@@ -39,7 +39,7 @@ DataServer-Path=C:\Servidor\DataServer
 
 - **Characters / Item Finder:** usam a pasta `DataServer` do Server Path. `DataServer-Path` so e gravado quando
   outra pasta e escolhida na aba Characters, e e descartado ao trocar o Server Path. O formato dos arquivos de cada
-  source fica em `Profiles\*.ini` (`Priston` e `Custom`); por padrao o perfil e detectado automaticamente.
+  source fica em `PTEditor\Profiles\*.ini` (`Priston` e `Custom`); por padrao o perfil e detectado automaticamente.
 - **Banco de dados:** a conexao vem da secao `[Database]` do `server.ini` da pasta do servidor. Em Options, o botao
   Database abre esse arquivo e Test confere `PristonDB.AwardItem_List` (Award Items) e `ClanDB` (verificacao de clan
   ao excluir personagem).
@@ -91,6 +91,6 @@ As duas linhas podem ficar no mesmo NPC: um clique atende os dois sistemas. O `.
 - Antes de gravar, o PTEditor cria um backup (`Backup\` nas pastas do GameServer e `PTEditor_Backup\` no DataServer).
 - A exclusao de personagem segue a do servidor: libera o slot da conta, guarda uma copia em `DataServer\deleted\`
   (Lv 10+) e apaga o arquivo. Personagem em clan (membro, subchefe ou lider) nao pode ser excluido, como no jogo.
-- Os envios do Award Items ficam registrados em `AwardItems.log` e os do PostBox em `PostBox.log`.
+- Os envios do Award Items ficam registrados em `PTEditor\Logs\AwardItems.log` e os do PostBox em `PTEditor\Logs\PostBox.log`.
 - PostBox: envie com o jogador deslogado. Se ele ja abriu a caixa na sessao, o logout regrava o arquivo e pode
   desfazer o envio. Itens unicos (Quest) nunca sao oferecidos pelo NPC, por isso a aba nao deixa envia-los.

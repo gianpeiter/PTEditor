@@ -1,6 +1,6 @@
 ﻿Imports System.IO
 
-''' <summary>PTEditor.Config.txt (ao lado do executavel): filtros dos combos e opcoes gerais.</summary>
+''' <summary>&lt;exe&gt;\PTEditor\PTEditor.Config.txt: filtros dos combos e opcoes gerais.</summary>
 Friend Module ConfigFile
 
     Private Const ItemSelectorSection As String = "ItemSelector:"

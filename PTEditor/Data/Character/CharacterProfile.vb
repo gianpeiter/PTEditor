@@ -3,7 +3,7 @@ Imports System.IO
 Imports System.Text
 
 ''' <summary>
-''' Perfil de um servidor (Profiles\*.ini ao lado do executavel): offsets que mudam entre sources, codigos de pacote,
+''' Perfil de um servidor (PTEditor\Profiles\*.ini ao lado do executavel): offsets que mudam entre sources, codigos de pacote,
 ''' tabela de EXP e regras do servidor. Cada source e um fork com structs diferentes; o perfil descreve uma delas.
 ''' </summary>
 Friend NotInheritable Class CharacterProfile
