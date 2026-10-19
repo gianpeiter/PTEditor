@@ -848,6 +848,9 @@ Public Class MainEditor
             Next
         Catch ex As Exception
             ErrorLog.Report("ShowItemsForDrop", ex)
+        Finally
+            ' A barra e a do carregamento: volta a vazia ao terminar (senao fica em 100% e parece que ja carregou).
+            pbWorking.Value = 0
         End Try
     End Sub
 
