@@ -93,7 +93,7 @@ Friend Module ConfigFile
         If IsNumeric(value) Then
             data.Values(key) = value
         Else
-            Warn("Error in loading config file at command: <" & key & ">" & vbCrLf & "Not numberic", value)
+            Warn("Error in loading config file at command: <" & key & ">" & vbCrLf & "Not numeric", value)
         End If
     End Sub
 
@@ -103,7 +103,7 @@ Friend Module ConfigFile
         If File.Exists(value) Then
             data.Values(KeyTextEditor) = value
         Else
-            Warn("Error in loading config file at command: <" & KeyTextEditor & ">" & vbCrLf & "Programm not found", value)
+            Warn("Error in loading config file at command: <" & KeyTextEditor & ">" & vbCrLf & "Program not found", value)
         End If
     End Sub
 

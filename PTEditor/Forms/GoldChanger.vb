@@ -22,8 +22,8 @@ Public Class GoldChanger
             Return
         End If
         If _monsters.Count > 0 AndAlso Not formula.Contains("GOLD") AndAlso Not formula.Contains("LVL") Then
-            If Not Dialogs.Confirm("Warning!", "Set all selected monsters to same Gold?", MsgBoxStyle.Exclamation) Then
-                MsgBox("canceled")
+            If Not Dialogs.Confirm("Warning!", "Set all selected monsters to the same Gold?", MsgBoxStyle.Exclamation) Then
+                MsgBox("Canceled")
                 Return
             End If
         End If
@@ -55,7 +55,7 @@ Public Class GoldChanger
                 MonsterData.SetGold(monster, newMin & vbTab & newMax)
             End If
         Next
-        If warnings > 0 Then MsgBox("Warning! Some monsters have to high Gold, please check options!", MsgBoxStyle.Exclamation)
+        If warnings > 0 Then MsgBox("Warning! Some monsters have too high Gold, please check Options!", MsgBoxStyle.Exclamation)
 
         If Dialogs.Confirm("Save", "Save all monsters?") Then
             Dim done As Integer = 0
@@ -68,9 +68,9 @@ Public Class GoldChanger
                 pbProgress.Refresh()
             Next
             lblSave.Text = ""
-            MsgBox(_monsters.Count & " monster Saved!")
+            MsgBox(_monsters.Count & " monster(s) saved!")
         Else
-            MsgBox("Warning: No monster saved! Press reload button")
+            MsgBox("Warning: no monster saved! Press the Reload button")
         End If
         Close()
     End Sub

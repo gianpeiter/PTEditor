@@ -111,11 +111,11 @@ Friend Module NpcData
 
     ''' <summary>Nome do NPC (*X_NAME do .zhoon, sem aspas).</summary>
     Friend Function ReadName(ByVal npcPath As String) As String
-        Dim failure As String = "Cant find " & Path.GetFileName(npcPath)
+        Dim failure As String = "Can't find " & Path.GetFileName(npcPath)
         Try
             Dim zhoon As String = ZhoonPath(npcPath)
             If zhoon Is Nothing Then Return NoNameFound
-            failure = "Cant find .zhoon file"
+            failure = "Can't find .zhoon file"
             Dim name As String = ZhoonFile.ReadName(zhoon)
             If name Is Nothing Then Return NoNameFound
             Return name.Replace("""", "").Trim()
@@ -127,14 +127,14 @@ Friend Module NpcData
     ''' <summary>Falas do NPC (*X_CHAT do .zhoon). Em erro retorna uma unica mensagem.</summary>
     Friend Function ReadChat(ByVal npcPath As String) As List(Of String)
         Dim result As New List(Of String)()
-        Dim failure As String = "Cant find " & Path.GetFileName(npcPath)
+        Dim failure As String = "Can't find " & Path.GetFileName(npcPath)
         Try
             Dim zhoon As String = ZhoonPath(npcPath)
             If zhoon Is Nothing Then
                 result.Add(NoNameFound)
                 Return result
             End If
-            failure = "Cant find .zhoon file"
+            failure = "Can't find .zhoon file"
             result.AddRange(ZhoonFile.ReadChat(zhoon))
             If result.Count = 0 Then result.Add("No chat found")
             Return result

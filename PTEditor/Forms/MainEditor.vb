@@ -192,7 +192,7 @@ Public Class MainEditor
                 tbEditorPath.Text = notepad
                 AppState.EditorExe = notepad
             Else
-                MsgBox("Please check options to assign an texteditor")
+                MsgBox("Please check Options to assign a text editor")
                 ErrorLog.Write("No texteditor found" & vbCrLf & notepad)
             End If
         End If
@@ -211,7 +211,7 @@ Public Class MainEditor
 
     Private Sub LoadConfig()
         Try
-            If ConfigFile.EnsureExists() Then MsgBox("No config File found!" & vbCrLf & "Created default config File")
+            If ConfigFile.EnsureExists() Then MsgBox("No config file found!" & vbCrLf & "Created a default config file")
             Dim cfg = ConfigFile.Load()
             cbItemSelector.Items.Clear()
             cbItemSelector.Items.AddRange(cfg.ItemSelectors.ToArray())
@@ -294,14 +294,14 @@ Public Class MainEditor
 
     Private Sub cmdDefaultConfig_Click(ByVal sender As Object, ByVal e As EventArgs) Handles cmdDefaultConfig.Click
         ConfigFile.WriteDefault()
-        MsgBox("Created default config File")
+        MsgBox("Created a default config file")
         LoadConfig()
     End Sub
 
     Private Sub cmdConfigEdit_Click(ByVal sender As Object, ByVal e As EventArgs) Handles cmdConfigEdit.Click
         If Not File.Exists(AppState.ConfigFilePath) Then
             LoadConfig()
-            MsgBox("No Config file found! Default file created")
+            MsgBox("No config file found! A default file was created")
         End If
         ProcessHelper.Open(AppState.EditorExe, AppState.ConfigFilePath)
     End Sub
@@ -467,7 +467,7 @@ Public Class MainEditor
     End Sub
 
     Private Sub SetProgress(ByVal text As String, ByVal percent As Integer)
-        Label117.Text = "Progressing:"
+        Label117.Text = "Loading:"
         lblProg.Text = text
         pbWorking.Value = percent
     End Sub
@@ -803,7 +803,7 @@ Public Class MainEditor
 
     Private Sub lwItems_ItemSelectionChanged(ByVal sender As Object, ByVal e As ListViewItemSelectionChangedEventArgs) Handles lwItems.ItemSelectionChanged
         If lbFiles.SelectedItems.Count = 0 Then
-            MsgBox("please select an monster")
+            MsgBox("Please select a monster")
             Return
         End If
         If lwItems.SelectedItems.Count <> 0 Then
@@ -814,7 +814,7 @@ Public Class MainEditor
 
     Private Sub lwItems_SelectedIndexChanged(ByVal sender As Object, ByVal e As EventArgs) Handles lwItems.SelectedIndexChanged
         If lbFiles.SelectedItems.Count = 0 Then
-            MsgBox("please select an monster")
+            MsgBox("Please select a monster")
             Return
         End If
         If lwItems.SelectedItems.Count <> 0 AndAlso chItemInfo.Checked Then
@@ -840,13 +840,13 @@ Public Class MainEditor
     Private Sub AddDroplineToolStripMenuItem_Click(ByVal sender As Object, ByVal e As EventArgs) Handles AddDroplineToolStripMenuItem.Click
         Dim monster = SelectedMonster()
         If monster Is Nothing Then
-            MsgBox("please select an monster")
+            MsgBox("Please select a monster")
             Return
         End If
         Dim entry As MonsterData.DropEntry = Nothing
         If lwItems.SelectedItems.Count > 0 Then entry = TryCast(lwItems.SelectedItems(0).Tag, MonsterData.DropEntry)
         If entry Is Nothing Then
-            MsgBox("please select a drop line")
+            MsgBox("Please select a drop line")
             Return
         End If
         Try
@@ -863,7 +863,7 @@ Public Class MainEditor
 
     Private Sub DeleteLineToolStripMenuItem_Click(ByVal sender As Object, ByVal e As EventArgs) Handles DeleteLineToolStripMenuItem.Click
         If lbFiles.SelectedItems.Count = 0 Then
-            MsgBox("please select an monster")
+            MsgBox("Please select a monster")
             Return
         End If
         tbDroprate.Clear()
@@ -1052,9 +1052,9 @@ Public Class MainEditor
                 For Each monster In monsters
                     MonsterData.Save(monster, True)
                 Next
-                MsgBox("Dropcount changed to " & count)
+                MsgBox("Drop count changed to " & count)
             Else
-                MsgBox("No Monster Saved! Please press Reload!")
+                MsgBox("No monster saved! Please press Reload!")
             End If
         Catch ex As Exception
             ErrorLog.Report("DropCount", ex)
@@ -1178,7 +1178,7 @@ Public Class MainEditor
     ''' <summary>Grava os campos no .txt do item.</summary>
     Private Sub SaveItem(ByVal item As ItemFile)
         If item Is Nothing Then
-            MsgBox("please select a item")
+            MsgBox("Please select an item")
             Return
         End If
         Try
@@ -1225,7 +1225,7 @@ Public Class MainEditor
     Private Sub cmdItemRealName_Click(ByVal sender As Object, ByVal e As EventArgs) Handles cmdItemRealName.Click
         Dim item = SelectedItemFile()
         If item Is Nothing Then
-            MsgBox("please select a item")
+            MsgBox("Please select an item")
         Else
             ProcessHelper.Open(AppState.EditorExe, item.ZhoonFile)
         End If
@@ -1254,7 +1254,7 @@ Public Class MainEditor
         Dim item = SelectedItemFile()
         If item Is Nothing Then Return
         If Not Dialogs.Confirm("Save Monster", "Do you want remove this Item in all selected monsters?") Then
-            MsgBox("Monster not saved! Press reload")
+            MsgBox("Monster not saved! Press Reload!")
             Return
         End If
         For Each name As Object In lbItemMo.SelectedItems
@@ -1263,7 +1263,7 @@ Public Class MainEditor
             MonsterData.RemoveItem(monster, item.PlainCode)
             MonsterData.Save(monster, True)
         Next
-        MsgBox("Item " & item.PlainCode & " removed in all selected monsters!")
+        MsgBox("Item " & item.PlainCode & " removed from all selected monsters!")
         RefreshItemList()
         lbFileListItems.SelectedItem = item.FileName
         ShowItem(item)
@@ -1443,9 +1443,9 @@ Public Class MainEditor
                     row = lvMapMonsters.Items.Add(monster.FileName)
                     row.SubItems.Add(monster.Name)
                 Else
-                    row = lvMapMonsters.Items.Add("Monster:<" & spawn.MapName & "> dont exist")
+                    row = lvMapMonsters.Items.Add("Monster <" & spawn.MapName & "> doesn't exist")
                     row.ForeColor = Color.Red
-                    row.SubItems.Add("Monster dont exist")
+                    row.SubItems.Add("Monster doesn't exist")
                 End If
                 row.SubItems.Add(spawn.Rate)
                 row.Tag = spawn
@@ -1453,10 +1453,10 @@ Public Class MainEditor
             For Each boss In MapData.GetBosses(map)
                 Dim bossMonster = MonsterData.FindByMapName(boss.BossMapName)
                 Dim guardMonster = MonsterData.FindByMapName(boss.GuardMapName)
-                Dim row = lvMapBosses.Items.Add(If(bossMonster IsNot Nothing, bossMonster.FileName, "Monster <" & boss.BossMapName & "> dont exist"))
-                row.SubItems.Add(If(bossMonster IsNot Nothing, bossMonster.Name, "Monster <" & boss.BossMapName & "> dont exist"))
-                row.SubItems.Add(If(guardMonster IsNot Nothing, guardMonster.FileName, "Monster <" & boss.GuardMapName & "> dont exist"))
-                row.SubItems.Add(If(guardMonster IsNot Nothing, guardMonster.Name, "Monster <" & boss.GuardMapName & "> dont exist"))
+                Dim row = lvMapBosses.Items.Add(If(bossMonster IsNot Nothing, bossMonster.FileName, "Monster <" & boss.BossMapName & "> doesn't exist"))
+                row.SubItems.Add(If(bossMonster IsNot Nothing, bossMonster.Name, "Monster <" & boss.BossMapName & "> doesn't exist"))
+                row.SubItems.Add(If(guardMonster IsNot Nothing, guardMonster.FileName, "Monster <" & boss.GuardMapName & "> doesn't exist"))
+                row.SubItems.Add(If(guardMonster IsNot Nothing, guardMonster.Name, "Monster <" & boss.GuardMapName & "> doesn't exist"))
                 row.SubItems.Add(boss.GuardCount)
                 row.SubItems.Add(boss.SpawnTimes)
                 If bossMonster Is Nothing OrElse guardMonster Is Nothing Then row.ForeColor = Color.Red
@@ -1478,7 +1478,7 @@ Public Class MainEditor
 
     Private Sub SaveMap(ByVal map As MapFile)
         If map Is Nothing Then
-            MsgBox("Please select a Map")
+            MsgBox("Please select a map")
             Return
         End If
         Try
@@ -1521,7 +1521,7 @@ Public Class MainEditor
             Return
         End If
         If Not IsNumeric(tbMapSpawnRate.Text) Then
-            MsgBox("Spawnrate is not numeric!")
+            MsgBox("Spawn rate is not numeric!")
             Return
         End If
         tbMapSpawnRate.Text = Math.Abs(CInt(tbMapSpawnRate.Text)).ToString()
@@ -1735,7 +1735,7 @@ Public Class MainEditor
                 If NpcData.IsRecordUsed(spc, i) Then
                     Dim rec = NpcData.ReadRecord(spc, i)
                     Dim npc = NpcData.FindNpc(Path.GetFileName(rec.SetupFile))
-                    lbNPCList.Items.Add(If(npc Is Nothing, "NPC File not found!", npc.Name))
+                    lbNPCList.Items.Add(If(npc Is Nothing, "NPC file not found!", npc.Name))
                 Else
                     lbNPCList.Items.Add(NpcData.Empty)
                 End If
@@ -1875,7 +1875,7 @@ Public Class MainEditor
             Return
         End If
         If Not File.Exists(AppState.FieldPath(spc.FileName)) Then
-            MsgBox("No NPC File found! Cant save NPC")
+            MsgBox("No NPC file found! Can't save the NPC")
             Return
         End If
         Dim index As Integer = lbNPCList.SelectedIndex
@@ -1925,7 +1925,7 @@ Public Class MainEditor
                 End If
                 Dim item = ItemData.FindByCode("""" & code.ToUpper() & """")
                 If item Is Nothing Then
-                    LWNPCshop.Items.Add("no code").SubItems.Add("item dont exist")
+                    LWNPCshop.Items.Add("No code").SubItems.Add("Item doesn't exist")
                 Else
                     LWNPCshop.Items.Add(item.Code).SubItems.Add(item.Name)
                 End If
@@ -1948,13 +1948,13 @@ Public Class MainEditor
     Private Sub CMDNPCShopSave_Click(ByVal sender As Object, ByVal e As EventArgs) Handles CMDNPCShopSave.Click
         Dim npcPath As String = AppState.ServerPath & tbNPCSetupfile.Text
         If Not File.Exists(npcPath) Then
-            MsgBox("File dont exist: " & npcPath)
+            MsgBox("File doesn't exist: " & npcPath)
             Return
         End If
         If CBShopItem.SelectedIndex < 0 Then Return
         Dim codes As New List(Of String)()
         For Each row As ListViewItem In LWNPCshop.Items
-            If row.Text <> NpcData.Empty AndAlso row.Text <> "no code" AndAlso row.Text <> "" Then codes.Add(row.Text.Replace("""", ""))
+            If row.Text <> NpcData.Empty AndAlso row.Text <> "No code" AndAlso row.Text <> "" Then codes.Add(row.Text.Replace("""", ""))
         Next
         Dim index As Integer = lbNPCList.SelectedIndex
         Try
@@ -2018,7 +2018,7 @@ Public Class MainEditor
             Return False
         End If
         If id < 0 OrElse id > NpcData.MaxId Then
-            problem = "Error: ID value is to high!"
+            problem = "Error: ID value is too high!"
             Return False
         End If
         rec.Active = cbNPCAktivated.Checked

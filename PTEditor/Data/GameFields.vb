@@ -29,7 +29,7 @@ Friend Module GameFields
         Friend Shared ReadOnly Boss As String = Key("*두목")
         Friend Shared ReadOnly ModelSize As String = Key("*모델크기")
         Friend Shared ReadOnly SpecialCode As String = Key("*구별코드")
-        Friend Shared ReadOnly Organization As String = Key("*조직")       ' UI: "Appering"
+        Friend Shared ReadOnly Organization As String = Key("*조직")       ' UI: "Organization"
         Friend Shared ReadOnly Intelligence As String = Key("*지능")
         Friend Shared ReadOnly Character As String = Key("*품성")
         Friend Shared ReadOnly Vision As String = Key("*시야")             ' UI: "Range"

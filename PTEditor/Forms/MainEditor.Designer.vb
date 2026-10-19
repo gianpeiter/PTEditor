@@ -581,7 +581,7 @@ Partial Class MainEditor
         Me.lbFound.Name = "lbFound"
         Me.lbFound.Size = New System.Drawing.Size(39, 13)
         Me.lbFound.TabIndex = 4
-        Me.lbFound.Text = "Label1"
+        Me.lbFound.Text = "0/0"
         '
         'GroupBox1
         '
@@ -639,7 +639,7 @@ Partial Class MainEditor
         Me.Label27.Name = "Label27"
         Me.Label27.Size = New System.Drawing.Size(72, 13)
         Me.Label27.TabIndex = 33
-        Me.Label27.Text = "Sound Effekt:"
+        Me.Label27.Text = "Sound Effect:"
         '
         'tbMoSnd
         '
@@ -655,7 +655,7 @@ Partial Class MainEditor
         Me.Label26.Name = "Label26"
         Me.Label26.Size = New System.Drawing.Size(28, 13)
         Me.Label26.TabIndex = 31
-        Me.Label26.Text = "Typ:"
+        Me.Label26.Text = "Type:"
         '
         'cbMoTyp
         '
@@ -769,7 +769,7 @@ Partial Class MainEditor
         Me.Label4.Name = "Label4"
         Me.Label4.Size = New System.Drawing.Size(52, 13)
         Me.Label4.TabIndex = 7
-        Me.Label4.Text = "Appering:"
+        Me.Label4.Text = "Organization:"
         '
         'tbMoApp
         '
@@ -1231,7 +1231,7 @@ Partial Class MainEditor
         Me.GroupBox4.Size = New System.Drawing.Size(177, 595)
         Me.GroupBox4.TabIndex = 45
         Me.GroupBox4.TabStop = False
-        Me.GroupBox4.Text = "Files Monsters"
+        Me.GroupBox4.Text = "Monster files"
         '
         'cbSelectAll
         '
@@ -1629,7 +1629,7 @@ Partial Class MainEditor
         Me.Label85.Name = "Label85"
         Me.Label85.Size = New System.Drawing.Size(47, 13)
         Me.Label85.TabIndex = 138
-        Me.Label85.Text = "Strengh:"
+        Me.Label85.Text = "Strength:"
         '
         'tbItmSpirit
         '
@@ -2321,7 +2321,7 @@ Partial Class MainEditor
         Me.Label46.Name = "Label46"
         Me.Label46.Size = New System.Drawing.Size(79, 13)
         Me.Label46.TabIndex = 52
-        Me.Label46.Text = "In game Name:"
+        Me.Label46.Text = "In-game Name:"
         '
         'GroupBox12
         '
@@ -2483,7 +2483,7 @@ Partial Class MainEditor
         Me.Label55.Name = "Label55"
         Me.Label55.Size = New System.Drawing.Size(44, 13)
         Me.Label55.TabIndex = 72
-        Me.Label55.Text = "Poision:"
+        Me.Label55.Text = "Poison:"
         '
         'GroupBox10
         '
@@ -2696,7 +2696,7 @@ Partial Class MainEditor
         Me.GroupBox8.Size = New System.Drawing.Size(194, 192)
         Me.GroupBox8.TabIndex = 59
         Me.GroupBox8.TabStop = False
-        Me.GroupBox8.Text = "Item infomation"
+        Me.GroupBox8.Text = "Item information"
         '
         'Label44
         '
@@ -2705,7 +2705,7 @@ Partial Class MainEditor
         Me.Label44.Name = "Label44"
         Me.Label44.Size = New System.Drawing.Size(58, 13)
         Me.Label44.TabIndex = 48
-        Me.Label44.Text = "Jap Name:"
+        Me.Label44.Text = "Zhoon Name:"
         '
         'Label49
         '
@@ -2787,7 +2787,7 @@ Partial Class MainEditor
         Me.GroupBox6.Size = New System.Drawing.Size(177, 595)
         Me.GroupBox6.TabIndex = 46
         Me.GroupBox6.TabStop = False
-        Me.GroupBox6.Text = "Files Items"
+        Me.GroupBox6.Text = "Item files"
         '
         'lbFileListItems
         '
@@ -2833,7 +2833,7 @@ Partial Class MainEditor
         '
         Me.SearchItemNameToolStripMenuItem.Name = "SearchItemNameToolStripMenuItem"
         Me.SearchItemNameToolStripMenuItem.Size = New System.Drawing.Size(189, 22)
-        Me.SearchItemNameToolStripMenuItem.Text = "Seach for item name"
+        Me.SearchItemNameToolStripMenuItem.Text = "Search for item name"
         '
         'SendToItemSearcherToolStripMenuItem
         '
@@ -2848,7 +2848,7 @@ Partial Class MainEditor
         Me.lbItemsListCount.Name = "lbItemsListCount"
         Me.lbItemsListCount.Size = New System.Drawing.Size(39, 13)
         Me.lbItemsListCount.TabIndex = 4
-        Me.lbItemsListCount.Text = "Label1"
+        Me.lbItemsListCount.Text = "0/0"
         '
         'TabPage3
         '
@@ -3073,7 +3073,7 @@ Partial Class MainEditor
         Me.GroupBox22.Size = New System.Drawing.Size(409, 520)
         Me.GroupBox22.TabIndex = 62
         Me.GroupBox22.TabStop = False
-        Me.GroupBox22.Text = "Monster in selected map"
+        Me.GroupBox22.Text = "Monsters in selected map"
         '
         'lvMapMonsters
         '
@@ -3105,7 +3105,7 @@ Partial Class MainEditor
         '
         'lwSpawnRate
         '
-        Me.lwSpawnRate.Text = "rate"
+        Me.lwSpawnRate.Text = "Rate"
         Me.lwSpawnRate.TextAlign = System.Windows.Forms.HorizontalAlignment.Center
         Me.lwSpawnRate.Width = 70
         '
@@ -3319,7 +3319,7 @@ Partial Class MainEditor
         Me.tbNpcWarning.Name = "tbNpcWarning"
         Me.tbNpcWarning.Size = New System.Drawing.Size(249, 52)
         Me.tbNpcWarning.TabIndex = 78
-        Me.tbNpcWarning.Text = "--->Waring!<--- " & Global.Microsoft.VisualBasic.ChrW(13) & Global.Microsoft.VisualBasic.ChrW(10) & "Only Change NPC skinn if you know what you do!" & Global.Microsoft.VisualBasic.ChrW(13) & Global.Microsoft.VisualBasic.ChrW(10) & "Server may Crash at wrong file!"
+        Me.tbNpcWarning.Text = "--->Warning!<--- " & Global.Microsoft.VisualBasic.ChrW(13) & Global.Microsoft.VisualBasic.ChrW(10) & "Only change the NPC skin if you know what you are doing!" & Global.Microsoft.VisualBasic.ChrW(13) & Global.Microsoft.VisualBasic.ChrW(10) & "The server may crash with a wrong file!"
         '
         'tbNPCSetupfileInI
         '
@@ -3356,7 +3356,7 @@ Partial Class MainEditor
         Me.Label99.Name = "Label99"
         Me.Label99.Size = New System.Drawing.Size(62, 13)
         Me.Label99.TabIndex = 74
-        Me.Label99.Text = "NPC Skinn:"
+        Me.Label99.Text = "NPC Skin:"
         '
         'LWNPCshop
         '
@@ -3421,7 +3421,7 @@ Partial Class MainEditor
         Me.Label106.Name = "Label106"
         Me.Label106.Size = New System.Drawing.Size(337, 13)
         Me.Label106.TabIndex = 65
-        Me.Label106.Text = "Chat:   Each line in this text represent a new J_Chat in NPC-zhoon file."
+        Me.Label106.Text = "Chat:   Each line in this text becomes a J_Chat line in the NPC .zhoon file."
         '
         'cmdNPCReload
         '
@@ -3838,7 +3838,7 @@ Partial Class MainEditor
         Me.Label100.Name = "Label100"
         Me.Label100.Size = New System.Drawing.Size(109, 13)
         Me.Label100.TabIndex = 15
-        Me.Label100.Text = "Delete all Backupfiles"
+        Me.Label100.Text = "Delete all backup files"
         '
         'cmdDelBackup
         '
@@ -4225,7 +4225,7 @@ Partial Class MainEditor
         Me.lblProg.Name = "lblProg"
         Me.lblProg.Size = New System.Drawing.Size(44, 13)
         Me.lblProg.TabIndex = 55
-        Me.lblProg.Text = "Nothing"
+        Me.lblProg.Text = "Idle"
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(1072, 734)
@@ -4247,7 +4247,7 @@ Partial Class MainEditor
         Me.MaximumSize = New System.Drawing.Size(1080, 800)
         Me.MinimumSize = New System.Drawing.Size(1080, 768)
         Me.Name = "MainEditor"
-        Me.Text = "Form1"
+        Me.Text = "PTEditor"
         Me.cnMonsterFiles.ResumeLayout(False)
         Me.GroupBox1.ResumeLayout(False)
         Me.GroupBox1.PerformLayout()

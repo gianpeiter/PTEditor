@@ -95,7 +95,7 @@ Friend Module ItemData
             If missingZhoon IsNot Nothing Then
                 missingZhoon.Add(detail)
             Else
-                If warnMissing Then MsgBox("No .zhoon File Found! " & path)
+                If warnMissing Then MsgBox("No .zhoon file found! " & path)
                 ErrorLog.Write("In ItemData.LoadAll: Warn" & vbCrLf & "No .zhoon file found! " & vbCrLf & detail)
             End If
             Return

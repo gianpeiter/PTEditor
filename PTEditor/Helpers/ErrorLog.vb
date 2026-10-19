@@ -73,7 +73,7 @@ Friend Module ErrorLog
     Friend Sub Report(ByVal context As String, ByVal ex As Exception)
         Dim site As String = If(ex.TargetSite Is Nothing, "", ex.TargetSite.Name)
         Write(context & vbCrLf & site & vbCrLf & ex.Message & vbCrLf & ex.Source & vbCrLf & ex.StackTrace)
-        MsgBox("Error: Please check errorlog!" & vbCrLf & LogPath, MsgBoxStyle.Critical)
+        MsgBox("Error: please check the error log!" & vbCrLf & LogPath, MsgBoxStyle.Critical)
     End Sub
 
 End Module

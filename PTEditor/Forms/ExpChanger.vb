@@ -35,8 +35,8 @@ Public Class ExpChanger
             Return
         End If
         If _monsters.Count > 0 AndAlso Not formula.Contains("EXP") AndAlso Not formula.Contains("LVL") Then
-            If Not Dialogs.Confirm("Warning!", "Set all selected monsters to same exp?", MsgBoxStyle.Exclamation) Then
-                MsgBox("canceled")
+            If Not Dialogs.Confirm("Warning!", "Set all selected monsters to the same EXP?", MsgBoxStyle.Exclamation) Then
+                MsgBox("Canceled")
                 Return
             End If
         End If
@@ -54,7 +54,7 @@ Public Class ExpChanger
             End If
             MonsterData.SetExp(monster, exp)
         Next
-        If warnings > 0 Then MsgBox("Warning! Some monsters have to high EXP, please check options!", MsgBoxStyle.Exclamation)
+        If warnings > 0 Then MsgBox("Warning! Some monsters have too high EXP, please check Options!", MsgBoxStyle.Exclamation)
 
         If Dialogs.Confirm("Save", "Save all monsters?") Then
             Dim done As Integer = 0
@@ -67,9 +67,9 @@ Public Class ExpChanger
                 pbProgress.Refresh()
             Next
             lblSave.Text = ""
-            MsgBox(_monsters.Count & " monster Saved!")
+            MsgBox(_monsters.Count & " monster(s) saved!")
         Else
-            MsgBox("Warning: No monster saved! Press reload button")
+            MsgBox("Warning: no monster saved! Press the Reload button")
         End If
         Close()
     End Sub

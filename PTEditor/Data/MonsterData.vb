@@ -110,7 +110,7 @@ Friend Module MonsterData
                 missingZhoon.Add(path)
             Else
                 If warnMissing Then MsgBox("No .zhoon file found! " & vbCrLf & path)
-                ErrorLog.Write("In ReadInGameName:" & vbCrLf & "Cant find path:" & path)
+                ErrorLog.Write("In ReadInGameName:" & vbCrLf & "Can't find path: " & path)
             End If
             Return NameNotFound
         Catch ex As Exception
