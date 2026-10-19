@@ -32,6 +32,8 @@ Friend Class SpawnMapCanvas
     Friend Event PointMoved(ByVal slot As Integer, ByVal x As Integer, ByVal z As Integer)
     ''' <summary>Tecla Delete com o foco no mapa.</summary>
     Friend Event DeleteRequested()
+    ''' <summary>Ctrl+clique num ponto (com ReplaceOnCtrlClick ligado): pedido para trocar o NPC daquele slot.</summary>
+    Friend Event ReplaceRequested(ByVal slot As Integer)
     ''' <summary>PageUp (+1) / PageDown (-1) com o foco no mapa: girar o ponto selecionado.</summary>
     Friend Event RotateRequested(ByVal direction As Integer)
     ''' <summary>Cursor sobre o mapa: posicao de mundo e altura do terreno (hasHeight False se nao ha terreno ali).</summary>
@@ -70,6 +72,9 @@ Friend Class SpawnMapCanvas
 
     ''' <summary>Se True, clicar em area vazia pede para adicionar um ponto.</summary>
     Friend Property AddOnClick As Boolean = True
+
+    ''' <summary>Se True, Ctrl+clique num ponto dispara ReplaceRequested em vez de selecionar/arrastar.</summary>
+    Friend Property ReplaceOnCtrlClick As Boolean
 
     ''' <summary>Se True, desenha o Label de todos os pontos (o do selecionado aparece sempre).</summary>
     Friend Property ShowLabels As Boolean
@@ -439,6 +444,10 @@ Friend Class SpawnMapCanvas
         Focus()
         If e.Button = MouseButtons.Left Then
             Dim hit = HitTest(e.Location)
+            If hit IsNot Nothing AndAlso ReplaceOnCtrlClick AndAlso (ModifierKeys And Keys.Control) = Keys.Control Then
+                RaiseEvent ReplaceRequested(hit.Slot)
+                Return
+            End If
             If hit IsNot Nothing Then
                 _selectedSlot = hit.Slot
                 _dragPoint = hit

@@ -28,6 +28,7 @@ cliente/servidor (PTClassic), não o comportamento observado em outros editores.
 | Lista e ordem dos campos | `src/field.cpp` → `InitField` (índice = índice no `StageInfo.dat`) |
 | Ponto fixo | `FLOATNS = 8` em `src/smLib3d/smType.h` (coordenada do jogo = valor `>> 8`) |
 | Registro do `.spc` (NPC fixo) | `smTRNAS_PLAYERINFO` em `Servidor/Network/smPacket.h` (504 bytes: `size`, `code`, `smCHAR_INFO`, `dwObjectSerial`, `x, y, z`, `ax, ay, az`, `state`); lido por `STG_AREA::LoadCharInfoFixed` em `Servidor/Legacy/SrcServer/OnSever.cpp` |
+| Modelo e `.NPC` do registro | `szModelName` (offset 40) é o modelo 3D (`SetLoadPattern`); `szModelName2` (offset 0x68) é o `.NPC` (`smCharDecode`), ambos em `STG_AREA::OpenNpc`. Trocar um NPC (Replace) muda os dois e mantém posição, direção e ID |
 | ID do NPC | É o `dwObjectSerial`. `STG_AREA::OpenNpc` o sobrescreve com `GetNewObjectSerial()` ao iniciar o mapa; o valor gravado no `.spc` não é usado (0 funciona) |
 | Posição e direção do NPC | `x, y, z` em ponto fixo (o editor lê os 3 bytes altos, `>> 8`); `ay` é a direção, de 0 a 4096. O `y` gravado é a altura do terreno do `.smd` no ponto (`StageMesh.TryHeightAt`) |
 

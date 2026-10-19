@@ -1774,6 +1774,7 @@ Public Class MainEditor
 
     Private Sub chkNpcAdd_CheckedChanged(ByVal sender As Object, ByVal e As EventArgs) Handles chkNpcAdd.CheckedChanged
         NpcCanvas.AddOnClick = chkNpcAdd.Checked
+        If chkNpcAdd.Checked Then SetNpcStatus("Click an empty spot to add an NPC.", False)
     End Sub
 
     Private Sub chkNpcNames_CheckedChanged(ByVal sender As Object, ByVal e As EventArgs) Handles chkNpcNames.CheckedChanged
@@ -2041,8 +2042,71 @@ Public Class MainEditor
         CreateNpc(False, 0, 0)
     End Sub
 
+    ''' <summary>Copia o .NPC de origem para um .NPC novo e cria o .zhoon (nome e uma fala padrao). Retorna o caminho do .NPC para o registro.</summary>
+    Private Function CreateNpcFiles(ByVal sourcePath As String, ByVal name As String) As String
+        Dim newNpcPath As String = AppState.NpcPath(name & ".NPC")
+        File.Copy(sourcePath, newNpcPath, False)
+        NpcData.SetZhoonReference(newNpcPath, name)
+        Using writer As New StreamWriter(AppState.ServerPath & AppState.NpcNameFolder & name & ".zhoon", False, AppState.FileEncoding)
+            writer.WriteLine(ZhoonFile.NameLine(name) & vbCrLf & vbCrLf)
+            writer.WriteLine(ZhoonFile.ChatLine("""What im talking?!?"""))
+        End Using
+        Return "GameServer\npc\" & name & ".NPC"
+    End Function
+
+    ''' <summary>Ctrl+clique num NPC (nao precisa de "Click map to add NPCs"): abre a janela para trocar o NPC daquele slot.</summary>
+    Private Sub NpcCanvas_ReplaceRequested(ByVal slot As Integer) Handles NpcCanvas.ReplaceRequested
+        ReplaceNpc(slot)
+    End Sub
+
     ''' <summary>
-    ''' Adiciona um NPC no primeiro slot livre. A janela Add NPC escolhe a origem e se ela e usada como esta (so o registro) ou
+    ''' Troca o NPC do slot por outro (a janela e a do Add NPC): muda o .NPC e o modelo do registro e mantem posicao, direcao,
+    ''' ID e Activated. E uma edicao em memoria (Desfazer/Save); com "criar a partir de", o .NPC/.zhoon novo e gravado na hora.
+    ''' </summary>
+    Private Sub ReplaceNpc(ByVal slot As Integer)
+        Dim spc = SelectedSpc()
+        If spc Is Nothing OrElse slot < 0 OrElse slot >= NpcData.RecordCount OrElse Not NpcData.IsRecordUsed(spc, slot) Then Return
+        If lbNPCList.SelectedIndex <> slot Then lbNPCList.SelectedIndex = slot
+        ApplyNpcFields("Edited NPC")
+
+        Dim current = NpcData.ReadRecord(spc, slot)
+        Dim copy As Boolean, sourcePath As String, name As String
+        Using dialog As New AddNpcDialog(AppState.Npcs, "slot #" & slot & " (" & lbNPCList.Items(slot).ToString() & ")", Path.GetFileName(current.SetupFile))
+            If dialog.ShowDialog(Me) <> DialogResult.OK Then
+                SetNpcStatus("Replace NPC canceled.", False)
+                Return
+            End If
+            copy = dialog.CreateCopy
+            sourcePath = dialog.SourcePath
+            name = dialog.NewName
+        End Using
+
+        Try
+            Dim setupFile As String = If(copy, CreateNpcFiles(sourcePath, name), "GameServer\npc\" & Path.GetFileName(sourcePath))
+            If setupFile.Equals(current.SetupFile, StringComparison.OrdinalIgnoreCase) Then
+                SetNpcStatus("Slot #" & slot & " already uses " & Path.GetFileName(setupFile) & ".", False)
+                Return
+            End If
+            ' O modelo (char\npc\...) vem do .NPC novo; sem ele no arquivo, mantem o atual.
+            Dim model As String = NpcData.ReadModelFile(sourcePath)
+            Dim rec As NpcData.NpcRecord = current
+            rec.SetupFile = setupFile
+            If model <> "" AndAlso model.Length <= NpcData.TextFieldSize Then rec.ModelFile = model
+            _npcHistory.Record(spc.Data, "Replaced NPC #" & slot)
+            NpcData.WriteRecord(spc, slot, rec)
+            If copy Then
+                NpcData.LoadNpcFiles()
+                RefreshNpcCombos()
+            End If
+            AfterNpcListChange(spc, slot, "Replaced NPC #" & slot & " with " & Path.GetFileName(setupFile) & If(copy, " (created)", "") &
+                               " (not saved yet).")
+        Catch ex As Exception
+            ErrorLog.Report("ReplaceNpc", ex)
+        End Try
+    End Sub
+
+    ''' <summary>
+    ''' Adiciona um NPC no slot vazio selecionado (ou no primeiro livre). A janela Add NPC escolhe a origem e se ela e usada como esta (so o registro) ou
     ''' copiada para um .NPC/.zhoon novo. Com hasPosition (clique no mapa) o NPC ja nasce em (x, z), com o Y do terreno; sem ele
     ''' fica na posicao do registro-modelo. O registro entra so na copia em memoria (Desfazer/Save); os arquivos novos sao
     ''' gravados na hora e o Desfazer nao os apaga.
@@ -2073,19 +2137,7 @@ Public Class MainEditor
         End Using
 
         Try
-            Dim setupFile As String
-            If copy Then
-                Dim newNpcPath As String = AppState.NpcPath(name & ".NPC")
-                File.Copy(sourcePath, newNpcPath, False)
-                NpcData.SetZhoonReference(newNpcPath, name)
-                Using writer As New StreamWriter(AppState.ServerPath & AppState.NpcNameFolder & name & ".zhoon", False, AppState.FileEncoding)
-                    writer.WriteLine(ZhoonFile.NameLine(name) & vbCrLf & vbCrLf)
-                    writer.WriteLine(ZhoonFile.ChatLine("""What im talking?!?"""))
-                End Using
-                setupFile = "GameServer\npc\" & name & ".NPC"
-            Else
-                setupFile = "GameServer\npc\" & Path.GetFileName(sourcePath)
-            End If
+            Dim setupFile As String = If(copy, CreateNpcFiles(sourcePath, name), "GameServer\npc\" & Path.GetFileName(sourcePath))
             _npcHistory.Record(spc.Data, "Added NPC #" & slot)
             NpcData.WriteTemplateRecord(spc, slot, setupFile)
             If hasPosition Then

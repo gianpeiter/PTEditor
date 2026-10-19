@@ -3495,6 +3495,7 @@ Partial Class MainEditor
         'NpcCanvas
         '
         Me.NpcCanvas.AddOnClick = False
+        Me.NpcCanvas.ReplaceOnCtrlClick = True
         Me.NpcCanvas.Location = New System.Drawing.Point(522, 142)
         Me.NpcCanvas.Name = "NpcCanvas"
         Me.NpcCanvas.Size = New System.Drawing.Size(512, 488)

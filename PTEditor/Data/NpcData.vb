@@ -194,6 +194,18 @@ Friend Module NpcData
         npc.SaveTo(npcPath)
     End Sub
 
+    ''' <summary>Modelo do NPC (linha de modelo do .NPC, sem aspas, como esta escrito), ou "" se nao houver.</summary>
+    Friend Function ReadModelFile(ByVal npcPath As String) As String
+        Try
+            For Each line In FileHelper.ReadLines(npcPath)
+                If line.StartsWith(GameFields.Npc.ModelFile) Then Return FileHelper.Between(line, """"c)
+            Next
+        Catch
+            ' Sem o arquivo: quem chama mantem o modelo atual.
+        End Try
+        Return ""
+    End Function
+
     ' ---- Arquivos binarios .spc / .spp ----------------------------------------------
 
     Friend Sub LoadSpcFiles()

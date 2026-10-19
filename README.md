@@ -94,6 +94,10 @@ As duas linhas podem ficar no mesmo NPC: um clique atende os dois sistemas. O `.
   e exatamente essa altura). PageUp/PageDown giram o NPC e Delete o apaga.
 - Marcando **Click map to add NPCs**, clicar num ponto vazio abre a janela **Add NPC** (o menu Add new NPC da lista abre a
   mesma) e o NPC ja nasce nessa posicao. Desmarcado por padrao para nao abrir a janela sem querer.
+- Para trocar um NPC existente, **Ctrl+clique** nele no mapa (nao precisa marcar **Click map to add NPCs**): abre a janela **Replace NPC**
+  (a do Add NPC, com o NPC atual selecionado e **Use it as is** como padrao). A troca muda o `.NPC` e o modelo do registro e
+  mantem posicao, direcao, ID e Activated; entra no Ctrl+Z e so grava em Save NPC. O `.NPC` e o `.zhoon` do NPC trocado nao
+  sao apagados.
 - O NPC entra no slot **Empty** que estiver selecionado na lista (selecionar um slot vazio nao mexe na vista do mapa); sem
   um slot vazio selecionado, entra no primeiro livre. O slot aparece no titulo da janela Add NPC.
 - A janela **Add NPC** tem a lista de NPCs existentes (nome e arquivo) e o botao **Browse...**, que abre `GameServer\NPC`.

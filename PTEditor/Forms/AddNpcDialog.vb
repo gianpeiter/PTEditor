@@ -1,7 +1,7 @@
 Imports System.IO
 
 ''' <summary>
-''' Janela do Add NPC: escolhe o NPC de origem (lista com nomes ou Browse na pasta GameServer\NPC) e se ele sera usado como esta
+''' Janela do Add NPC e do Replace NPC (mesma janela; o Replace recebe o .NPC atual do slot): escolhe o NPC de origem (lista com nomes ou Browse na pasta GameServer\NPC) e se ele sera usado como esta
 ''' ou copiado para um NPC novo (novo .NPC e .zhoon). Valida na hora: nome, tamanho do caminho (campo de 64 bytes do .spc)
 ''' e arquivo ja existente.
 ''' </summary>
@@ -51,8 +51,10 @@ Friend Class AddNpcDialog
         End Get
     End Property
 
-    Friend Sub New(ByVal npcs As IEnumerable(Of NpcFile), ByVal positionText As String)
-        Text = "Add NPC" & If(positionText <> "", " - " & positionText, "")
+    ''' <summary>replaceFile = nome do .NPC atual do slot (modo Replace: ele vem selecionado e "usar como esta" e o padrao); Nothing = Add.</summary>
+    Friend Sub New(ByVal npcs As IEnumerable(Of NpcFile), ByVal positionText As String, Optional ByVal replaceFile As String = Nothing)
+        Dim replacing As Boolean = replaceFile IsNot Nothing
+        Text = If(replacing, "Replace NPC", "Add NPC") & If(positionText <> "", " - " & positionText, "")
         AutoScaleMode = AutoScaleMode.None
         FormBorderStyle = FormBorderStyle.FixedDialog
         StartPosition = FormStartPosition.CenterParent
@@ -63,7 +65,7 @@ Friend Class AddNpcDialog
         AcceptButton = btnOk
         CancelButton = btnCancel
 
-        Dim caption As New Label() With {.Text = "NPC to place (pick from the list or use Browse):", .AutoSize = True, .Location = New Point(12, 12)}
+        Dim caption As New Label() With {.Text = If(replacing, "NPC to put in this slot (pick from the list or use Browse):", "NPC to place (pick from the list or use Browse):"), .AutoSize = True, .Location = New Point(12, 12)}
         cbSource.Location = New Point(12, 32)
         cbSource.Size = New Size(430, 21)
         cbSource.DropDownStyle = ComboBoxStyle.DropDown
@@ -114,6 +116,17 @@ Friend Class AddNpcDialog
             End If
         Next
 
+        If replacing Then
+            For Each pair In _pathByLabel
+                If Path.GetFileName(pair.Value).Equals(replaceFile, StringComparison.OrdinalIgnoreCase) Then
+                    cbSource.Text = pair.Key
+                    Exit For
+                End If
+            Next
+            rbUse.Checked = True
+        End If
+        SuggestName()
+
         AddHandler cbSource.TextChanged, AddressOf OnSourceChanged
         AddHandler cbSource.SelectedIndexChanged, AddressOf OnSourceChanged
         AddHandler tbName.TextChanged, Sub(s, e)
@@ -125,11 +138,15 @@ Friend Class AddNpcDialog
         Revalidate()
     End Sub
 
+    ''' <summary>Sugere "&lt;origem&gt;-new" como nome do NPC novo, enquanto o usuario nao digitou outro.</summary>
+    Private Sub SuggestName()
+        If _nameEdited Then Return
+        Dim source As String = SourcePath
+        tbName.Text = If(source = "", "", Path.GetFileNameWithoutExtension(source) & "-new")
+    End Sub
+
     Private Sub OnSourceChanged(ByVal sender As Object, ByVal e As EventArgs)
-        If Not _nameEdited Then
-            Dim source As String = SourcePath
-            tbName.Text = If(source = "", "", Path.GetFileNameWithoutExtension(source) & "-new")
-        End If
+        SuggestName()
         Revalidate()
     End Sub
 
