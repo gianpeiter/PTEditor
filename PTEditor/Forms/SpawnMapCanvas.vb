@@ -3,19 +3,26 @@ Imports System.Drawing.Imaging
 Imports System.Runtime.InteropServices
 
 ''' <summary>
-''' Vista de cima de um mapa (.smd) com os spawn points por cima. O terreno e rasterizado uma vez (so as faces
+''' Vista de cima de um mapa (.smd) com pontos por cima (spawn points do .spp e NPCs do .spc). O terreno e rasterizado uma vez (so as faces
 ''' viradas para cima, o mais alto vence, colorido por altura e sombreado); zoom e arraste so mudam a transformacao.
 ''' Norte (Z maior) fica em cima, como no minimapa do jogo. Sem malha, mostra so os pontos.
 ''' </summary>
 Friend Class SpawnMapCanvas
     Inherits Control
 
-    ''' <summary>Ponto exibido: slot do .spp e posicao em unidades de mundo.</summary>
+    ''' <summary>Ponto exibido: slot do arquivo e posicao em unidades de mundo.</summary>
     Friend Class CanvasPoint
         Friend Slot As Integer
         Friend X As Integer
         Friend Z As Integer
+        ''' <summary>Direcao em 0..4096 (NPC): desenha uma seta. -1 = sem direcao.</summary>
+        Friend Angle As Integer = -1
+        ''' <summary>Texto ao lado do marcador (nome do NPC).</summary>
+        Friend Label As String = ""
     End Class
+
+    ''' <summary>Angulo do NPC (0..4096) para radianos: 2*PI/4096.</summary>
+    Private Const AngleToRadians As Double = 0.0015339807878856412
 
     ''' <summary>Usuario clicou num ponto (selecao).</summary>
     Friend Event PointSelected(ByVal slot As Integer)
@@ -25,6 +32,8 @@ Friend Class SpawnMapCanvas
     Friend Event PointMoved(ByVal slot As Integer, ByVal x As Integer, ByVal z As Integer)
     ''' <summary>Tecla Delete com o foco no mapa.</summary>
     Friend Event DeleteRequested()
+    ''' <summary>PageUp (+1) / PageDown (-1) com o foco no mapa: girar o ponto selecionado.</summary>
+    Friend Event RotateRequested(ByVal direction As Integer)
     ''' <summary>Cursor sobre o mapa: posicao de mundo e altura do terreno (hasHeight False se nao ha terreno ali).</summary>
     Friend Event HoverChanged(ByVal x As Integer, ByVal z As Integer, ByVal hasHeight As Boolean, ByVal height As Single)
 
@@ -47,8 +56,13 @@ Friend Class SpawnMapCanvas
     Private _points As New List(Of CanvasPoint)()
     Private _selectedSlot As Integer = -1
 
+    Private _backdrop As Bitmap
+    Private _backdropMinX As Double, _backdropMaxX As Double, _backdropMinZ As Double, _backdropMaxZ As Double
+
     Private _panning As Boolean
     Private _panLast As Point
+    Private _panStart As Point
+    Private _panMoved As Boolean
     Private _dragPoint As CanvasPoint
     Private _pressed As Boolean
     Private _pressPos As Point
@@ -56,6 +70,34 @@ Friend Class SpawnMapCanvas
 
     ''' <summary>Se True, clicar em area vazia pede para adicionar um ponto.</summary>
     Friend Property AddOnClick As Boolean = True
+
+    ''' <summary>Se True, desenha o Label de todos os pontos (o do selecionado aparece sempre).</summary>
+    Friend Property ShowLabels As Boolean
+        Get
+            Return _showLabels
+        End Get
+        Set(ByVal value As Boolean)
+            _showLabels = value
+            Invalidate()
+        End Set
+    End Property
+    Private _showLabels As Boolean
+
+    ''' <summary>Menu mostrado no clique direito sem arrastar (arrastar com o direito move a vista).</summary>
+    Friend Property ClickMenu As ContextMenuStrip
+
+    ''' <summary>Centro da vista, em unidades de mundo.</summary>
+    Friend ReadOnly Property ViewCenterX As Integer
+        Get
+            Return CInt(Math.Round(_centerX))
+        End Get
+    End Property
+
+    Friend ReadOnly Property ViewCenterZ As Integer
+        Get
+            Return CInt(Math.Round(_centerZ))
+        End Get
+    End Property
 
     Friend Sub New()
         SetStyle(ControlStyles.AllPaintingInWmPaint Or ControlStyles.UserPaint Or ControlStyles.OptimizedDoubleBuffer Or
@@ -101,6 +143,26 @@ Friend Class SpawnMapCanvas
             Invalidate()
         End Set
     End Property
+
+    ''' <summary>
+    ''' Imagem (minimapa) usada no lugar do terreno quando nao ha malha; cobre o retangulo (minX..maxX, minZ..maxZ).
+    ''' O bitmap pertence a quem chamou. Nothing remove a imagem.
+    ''' </summary>
+    Friend Sub SetBackdrop(ByVal image As Bitmap, ByVal minX As Double, ByVal maxX As Double, ByVal minZ As Double, ByVal maxZ As Double)
+        _backdrop = image
+        _backdropMinX = minX : _backdropMaxX = maxX : _backdropMinZ = minZ : _backdropMaxZ = maxZ
+        FitView()
+    End Sub
+
+    ''' <summary>Atualiza posicao e direcao de um ponto ja exibido (edicao ainda nao gravada).</summary>
+    Friend Sub UpdatePoint(ByVal slot As Integer, ByVal x As Integer, ByVal z As Integer, ByVal angle As Integer)
+        Dim p = _points.FirstOrDefault(Function(q) q.Slot = slot)
+        If p IsNot Nothing Then
+            p.X = x : p.Z = z : p.Angle = angle
+        End If
+        _selectedSlot = slot
+        Invalidate()
+    End Sub
 
     ''' <summary>Centraliza a vista no ponto sem mudar o zoom.</summary>
     Friend Sub CenterOn(ByVal x As Integer, ByVal z As Integer)
@@ -272,6 +334,8 @@ Friend Class SpawnMapCanvas
         Dim minX As Double, maxX As Double, minZ As Double, maxZ As Double
         If _mesh IsNot Nothing Then
             minX = _mesh.MinX : maxX = _mesh.MaxX : minZ = _mesh.MinZ : maxZ = _mesh.MaxZ
+        ElseIf _backdrop IsNot Nothing Then
+            minX = _backdropMinX : maxX = _backdropMaxX : minZ = _backdropMinZ : maxZ = _backdropMaxZ
         ElseIf _points.Count > 0 Then
             minX = _points.Min(Function(p) p.X) : maxX = _points.Max(Function(p) p.X)
             minZ = _points.Min(Function(p) p.Z) : maxZ = _points.Max(Function(p) p.Z)
@@ -304,6 +368,12 @@ Friend Class SpawnMapCanvas
             End Using
         End If
 
+        If _raster Is Nothing AndAlso _backdrop IsNot Nothing Then
+            g.InterpolationMode = InterpolationMode.HighQualityBilinear
+            g.DrawImage(_backdrop, ScreenX(_backdropMinX), ScreenY(_backdropMaxZ),
+                        CSng((_backdropMaxX - _backdropMinX) * _scale), CSng((_backdropMaxZ - _backdropMinZ) * _scale))
+        End If
+
         g.SmoothingMode = SmoothingMode.AntiAlias
         For Each p In _points
             If p.Slot = _selectedSlot Then Continue For
@@ -326,15 +396,23 @@ Friend Class SpawnMapCanvas
         Dim sy As Single = ScreenY(p.Z)
         If sx < -20 OrElse sy < -20 OrElse sx > Width + 20 OrElse sy > Height + 20 Then Return
         Dim r As Single = If(selected, 8.0F, 5.5F)
+        If p.Angle >= 0 Then
+            Dim length As Single = r + 10.0F
+            Dim tipX As Single = sx + CSng(Math.Sin(AngleToRadians * p.Angle)) * length
+            Dim tipY As Single = sy - CSng(Math.Cos(AngleToRadians * p.Angle)) * length
+            Using arrow As New Pen(If(selected, Color.Gold, Color.Crimson), 2.0F)
+                g.DrawLine(arrow, sx, sy, tipX, tipY)
+            End Using
+        End If
         Using fill As New SolidBrush(If(selected, Color.Gold, Color.Crimson)),
               outline As New Pen(If(selected, Color.Black, Color.White), If(selected, 2.0F, 1.5F))
             g.FillEllipse(fill, sx - r, sy - r, r * 2, r * 2)
             g.DrawEllipse(outline, sx - r, sy - r, r * 2, r * 2)
         End Using
-        If selected Then
-            Using font As New Font(Me.Font.FontFamily, 8.5F, FontStyle.Bold),
+        If selected OrElse (_showLabels AndAlso p.Label <> "") Then
+            Using font As New Font(Me.Font.FontFamily, 8.5F, If(selected, FontStyle.Bold, FontStyle.Regular)),
                   back As New SolidBrush(Color.FromArgb(190, 0, 0, 0))
-                Dim label As String = "#" & p.Slot
+                Dim label As String = If(p.Label <> "", p.Label, "#" & p.Slot)
                 Dim size As SizeF = g.MeasureString(label, font)
                 g.FillRectangle(back, sx + r + 2, sy - size.Height / 2, size.Width, size.Height)
                 g.DrawString(label, font, Brushes.White, sx + r + 2, sy - size.Height / 2)
@@ -373,6 +451,8 @@ Friend Class SpawnMapCanvas
             Invalidate()
         ElseIf e.Button = MouseButtons.Right OrElse e.Button = MouseButtons.Middle Then
             _panning = True
+            _panMoved = False
+            _panStart = e.Location
             _panLast = e.Location
             Cursor = Cursors.SizeAll
         End If
@@ -381,6 +461,7 @@ Friend Class SpawnMapCanvas
     Protected Overrides Sub OnMouseMove(ByVal e As MouseEventArgs)
         MyBase.OnMouseMove(e)
         If _panning Then
+            If Math.Abs(e.X - _panStart.X) > DragThreshold OrElse Math.Abs(e.Y - _panStart.Y) > DragThreshold Then _panMoved = True
             _centerX -= (e.X - _panLast.X) / _scale
             _centerZ += (e.Y - _panLast.Y) / _scale
             _panLast = e.Location
@@ -420,6 +501,7 @@ Friend Class SpawnMapCanvas
         ElseIf _panning Then
             _panning = False
             Cursor = Cursors.Default
+            If e.Button = MouseButtons.Right AndAlso Not _panMoved AndAlso ClickMenu IsNot Nothing Then ClickMenu.Show(Me, e.Location)
         End If
     End Sub
 
@@ -438,11 +520,17 @@ Friend Class SpawnMapCanvas
         If e.KeyCode = Keys.Delete Then
             RaiseEvent DeleteRequested()
             e.Handled = True
+        ElseIf e.KeyCode = Keys.Prior Then
+            RaiseEvent RotateRequested(1)
+            e.Handled = True
+        ElseIf e.KeyCode = Keys.Next Then
+            RaiseEvent RotateRequested(-1)
+            e.Handled = True
         End If
     End Sub
 
     Protected Overrides Function IsInputKey(ByVal keyData As Keys) As Boolean
-        Return keyData = Keys.Delete OrElse MyBase.IsInputKey(keyData)
+        Return keyData = Keys.Delete OrElse keyData = Keys.Prior OrElse keyData = Keys.Next OrElse MyBase.IsInputKey(keyData)
     End Function
 
 #End Region

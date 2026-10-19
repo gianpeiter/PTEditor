@@ -11,7 +11,7 @@ Visual Studio 2022 / .NET Framework 4.8 / VB.NET.
 | Items | Edita os itens (`GameServer\OpenItem\*.txt`). |
 | Maps | Edita spawns e chefes dos mapas (`GameServer\Field\*.spm`). |
 | Spawn Point | Adiciona, move e remove os pontos de nascimento (`GameServer\Field\*.spp`) sobre a vista de cima do mapa (`Field\*.smd`). |
-| NPC Editor | Edita NPCs: nome, falas, loja e posicao no mapa. |
+| NPC Editor | Edita NPCs: nome, falas, loja e posicao no mapa (vista de cima do `.smd`, com arrastar e clicar para adicionar). |
 | Characters | Lista contas e personagens do `DataServer`, edita level, EXP, atributos, ouro, inventario, rank de classe (libera as skills no Skill Master) e quests, e exclui personagens. |
 | Item Finder | Busca itens em todos os personagens e baus, lista itens duplicados e com checksum invalido. |
 | Award Items | Envia itens para NPCs com `*AwardItem` (tabela `AwardItem_List` do SQL Server). |
@@ -84,6 +84,23 @@ As duas linhas podem ficar no mesmo NPC: um clique atende os dois sistemas. O `.
   desenhado de cima (so geometria, sem texturas), colorido por altura, com o norte (Z maior) para cima. Se o `.smd` nao estiver
   la, use "Browse map file..." (o `.smd` do cliente serve) ou edite os pontos sem o fundo.
 - O servidor le o `.spp` ao iniciar: reinicie-o depois de salvar.
+
+## NPC Editor
+
+- O mapa e a mesma vista de cima do Spawn Point (`Field\*.smd`, achado pelo nome base do `.spc`). Sem o `.smd`, usa o minimapa
+  `PTEditor\Maps\*.bmp` como fundo. Roda do mouse da zoom e o botao direito arrasta a vista.
+- Cada NPC aparece com a seta de direcao e o nome (caixa **Names**). Clicar num NPC o seleciona na lista; escolher na lista
+  centraliza o mapa nele. Arrastar move o NPC: X e Z mudam e o Y acompanha a altura do terreno (o Y gravado nos `.spc`
+  e exatamente essa altura). PageUp/PageDown giram o NPC e Delete o apaga.
+- Marcando **Click map to add NPCs**, clicar num ponto vazio cria um NPC no primeiro slot livre, ja nessa posicao (pede o nome e
+  o `.NPC` a duplicar, como o menu Add new NPC). Desmarcado por padrao para nao abrir o pedido de nome sem querer.
+- Como no Spawn Point, as edicoes (mover, girar, editar os campos ID/X/Y/Z/Angle/Activated/arquivos, adicionar, apagar, Up/Down)
+  ficam so em memoria ate **Save NPC**, que grava o `.spc` com backup em `Field\Backup` e o nome/falas no `.zhoon`. O botao
+  mostra `*` quando ha alteracoes pendentes, e trocar de mapa ou recarregar com pendencias pede confirmacao.
+- Ctrl+Z desfaz e Ctrl+Y (ou Ctrl+Shift+Z) refaz, ate 100 passos por mapa (nos campos de texto vale o desfazer do campo).
+  Isso cobre so o `.spc`: loja, nome, falas e o `.NPC`/`.zhoon` criados pelo Add nao sao desfeitos.
+- Clique direito sem arrastar mostra **Bring back to Map**, que leva o NPC para o centro da vista.
+- O servidor le os `.spc` ao iniciar: reinicie-o depois de salvar.
 
 ## Cuidados
 

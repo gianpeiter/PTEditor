@@ -13,7 +13,7 @@ encontrados (causa, correção e como evitar). Todo erro novo deve entrar na se�
 | `PTEditor/Forms` | Telas. `MainEditor` concentra as abas (Monsters, Items, Maps, NPC Editor, Characters, Options). |
 | `PTEditor/State` | `AppState`: caminhos do servidor e listas carregadas em memória. |
 | `PTEditor/Helpers` | Utilitários (arquivos, log de erros, diálogos, processos). |
-| `PTEditor/Maps` | Minimapas `.bmp` usados na aba NPC Editor (cópia dos `.tga` do cliente). |
+| `PTEditor/Maps` | Minimapas `.bmp` usados na aba NPC Editor quando o mapa não tem `.smd` (cópia dos `.tga` do cliente). |
 
 ## Fonte de verdade do jogo
 

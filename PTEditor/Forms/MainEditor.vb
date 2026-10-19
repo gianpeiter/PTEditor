@@ -26,12 +26,20 @@ Public Class MainEditor
     Private _findMapsEnabled As Boolean
     Private _dropColumnsReady As Boolean
 
-    ' Vista do mapa no editor de NPC: como no minimapa do jogo, a imagem inteira cobre o retangulo do cenario,
-    ' entao (x, z) viram pixels por regra de tres, seja a imagem 256x256 ou 512x512.
+    ' Vista do mapa no editor de NPC: terreno do .smd (NpcCanvas) ou, sem ele, o minimapa .bmp como fundo.
+    ' Como no minimapa do jogo, a imagem inteira cobre o retangulo do cenario (_mapRect).
     Private _mapImagePath As String = ""
     Private _mapImage As Bitmap
     Private _mapRect As MapRect = DefaultMapRect
-    Private _lastMouseX As Integer, _lastMouseY As Integer
+    Private _npcMesh As StageMesh
+    Private _npcFromCanvas As Boolean
+    ''' <summary>Desfazer/Refazer das edicoes em memoria do .spc do mapa aberto (zera ao trocar de mapa ou recarregar).</summary>
+    Private _npcHistory As New NpcUndoHistory()
+    ''' <summary>Arquivo .spc aberto na aba NPC Editor ("" = nenhum).</summary>
+    Private _npcMapName As String = ""
+    Private _npcMapChanging As Boolean
+    ''' <summary>Os dados foram relidos do disco (LoadAllData): a aba NPC Editor precisa reabrir o mapa.</summary>
+    Private _npcMapStale As Boolean
 
     ''' <summary>StageMapRect do cenario em coordenadas do jogo (a mesma unidade de X/Z do .spc).</summary>
     Private Structure MapRect
@@ -368,6 +376,7 @@ Public Class MainEditor
     End Sub
 
     Private Sub cmdReload_Click(ByVal sender As Object, ByVal e As EventArgs) Handles cmdReload.Click, cmdReload1.Click, cmdMapReload.Click
+        If Not ConfirmDiscardNpc() Then Return
         lbFiles.Items.Clear()
         lbItemFiles.Items.Clear()
         MoFound.Text = "0"
@@ -381,13 +390,16 @@ Public Class MainEditor
     End Sub
 
     Private Sub cmdNPCReload_Click(ByVal sender As Object, ByVal e As EventArgs) Handles cmdNPCReload.Click
+        If Not ConfirmDiscardNpc() Then Return
         LoadAllData()
-        FillNpcMapList()
+        FillNpcMapList(True)
     End Sub
 
     ''' <summary>Carrega monstros, itens, mapas (.spm/.spc/.spp) e NPCs do servidor.</summary>
     Private Sub LoadAllData()
         If AppState.ServerPath = "" Then AppState.ServerPath = NormalizeServerPath(My.Settings.sspath)
+        _npcHistory = New NpcUndoHistory()
+        _npcMapStale = True
         UpdateTitle()
         MoFound.Text = "0"
         ItemFound.Text = "0"
@@ -1538,26 +1550,92 @@ Public Class MainEditor
         Return NpcData.FindSpc(lbNPCMapFileList.SelectedItem.ToString())
     End Function
 
-    Private Sub FillNpcMapList()
-        lbNPCMapFileList.Items.Clear()
-        For Each spcFile In AppState.SpcFiles
-            lbNPCMapFileList.Items.Add(spcFile.FileName)
-        Next
+    ''' <summary>
+    ''' Preenche a lista de mapas mantendo o mapa aberto (com as edicoes em memoria). reopen (ou dados relidos do disco)
+    ''' reabre o mapa, descartando a copia anterior.
+    ''' </summary>
+    Private Sub FillNpcMapList(Optional ByVal reopen As Boolean = False)
+        reopen = reopen OrElse _npcMapStale
+        _npcMapStale = False
+        Dim keep As String = _npcMapName
+        _npcMapChanging = True
+        Try
+            lbNPCMapFileList.Items.Clear()
+            For Each spcFile In AppState.SpcFiles
+                lbNPCMapFileList.Items.Add(spcFile.FileName)
+            Next
+            If keep <> "" AndAlso lbNPCMapFileList.Items.Contains(keep) Then
+                lbNPCMapFileList.SelectedItem = keep
+            Else
+                _npcMapName = ""
+            End If
+        Finally
+            _npcMapChanging = False
+        End Try
+        If reopen AndAlso _npcMapName <> "" Then OpenNpcMap(SelectedSpc())
     End Sub
 
     Private Sub lbNPCMapFileList_SelectedIndexChanged(ByVal sender As Object, ByVal e As EventArgs) Handles lbNPCMapFileList.SelectedIndexChanged
+        If _npcMapChanging Then Return
         Dim spc = SelectedSpc()
         If spc Is Nothing Then Return
+        If _npcMapName <> "" AndAlso Not _npcMapName.Equals(spc.FileName, StringComparison.OrdinalIgnoreCase) AndAlso Not ConfirmDiscardNpc() Then
+            _npcMapChanging = True
+            Try
+                lbNPCMapFileList.SelectedItem = _npcMapName
+            Finally
+                _npcMapChanging = False
+            End Try
+            Return
+        End If
+        OpenNpcMap(spc)
+    End Sub
+
+    ''' <summary>Abre o mapa: vista (terreno ou minimapa), lista de NPCs e ponto de partida do Desfazer/Save.</summary>
+    Private Sub OpenNpcMap(ByVal spc As BinaryDataFile)
+        _npcMapName = spc.FileName
         Dim mapName As String = spc.FileName.ToUpper().Replace(".ASE.SPC", "")
         Dim imageName As String = Nothing
         If Not MapImageNames.TryGetValue(mapName, imageName) Then imageName = mapName
         _mapImagePath = AppState.MapImagePath(imageName & ".BMP")
         If Not MapRects.TryGetValue(mapName, _mapRect) Then _mapRect = DefaultMapRect
-        LoadMapImage()
+        _npcHistory = New NpcUndoHistory()
+        _npcHistory.MarkSaved(spc.Data)
+        Cursor = Cursors.WaitCursor
+        Try
+            LoadNpcMapView(spc)
+        Finally
+            Cursor = Cursors.Default
+        End Try
         ShowNpcList(spc)
+        UpdateNpcSaveButton()
+        SetNpcStatus("", False)
     End Sub
 
-    ''' <summary>Carrega a imagem do mapa (ou error.bmp) e a coloca no PictureBox como copia editavel.</summary>
+    ''' <summary>Mostra o terreno do .smd do mapa; sem ele, usa o minimapa (.bmp) como fundo.</summary>
+    Private Sub LoadNpcMapView(ByVal spc As BinaryDataFile)
+        _npcMesh = Nothing
+        Dim meshPath As String = StageMesh.FindFile(spc.FileName)
+        If meshPath <> "" Then
+            Try
+                _npcMesh = New StageMesh(meshPath)
+            Catch ex As Exception
+                ErrorLog.Write("NPC Editor: could not read " & meshPath & vbCrLf & ex.ToString())
+            End Try
+        End If
+        If _npcMesh IsNot Nothing Then
+            NpcCanvas.SetBackdrop(Nothing, 0, 0, 0, 0)
+            NpcCanvas.SetMesh(_npcMesh)
+            lblNpcSource.Text = "Terrain (.smd)"
+        Else
+            NpcCanvas.SetMesh(Nothing)
+            LoadMapImage()
+            NpcCanvas.SetBackdrop(_mapImage, _mapRect.Left, _mapRect.Right, _mapRect.Top, _mapRect.Bottom)
+            lblNpcSource.Text = If(meshPath = "", "No .smd: minimap image", "Bad .smd: minimap image")
+        End If
+    End Sub
+
+    ''' <summary>Carrega a imagem do mapa (ou error.bmp) usada como fundo quando nao ha .smd.</summary>
     Private Sub LoadMapImage()
         If _mapImage IsNot Nothing Then _mapImage.Dispose()
         _mapImage = Nothing
@@ -1570,13 +1648,6 @@ Public Class MainEditor
                 _mapImage = New Bitmap(256, 256)
             End Try
         End Try
-        ResetCanvas()
-    End Sub
-
-    Private Sub ResetCanvas()
-        Dim old = PictureBox1.Image
-        PictureBox1.Image = New Bitmap(_mapImage)
-        If old IsNot Nothing Then old.Dispose()
     End Sub
 
     ''' <summary>Preenche a lista de NPCs do .spc (100 slots) e marca todos no mapa.</summary>
@@ -1587,51 +1658,36 @@ Public Class MainEditor
                 Dim rec = NpcData.ReadRecord(spc, i)
                 Dim npc = NpcData.FindNpc(Path.GetFileName(rec.SetupFile))
                 lbNPCList.Items.Add(If(npc Is Nothing, "NPC File not found!", npc.Name))
-                DrawPoint(rec.X, rec.Z, Brushes.Red, 0, 0)
             Else
                 lbNPCList.Items.Add(NpcData.Empty)
             End If
         Next
-        PictureBox1.Refresh()
+        RefreshNpcCanvas()
     End Sub
 
-    Private Sub RedrawAllNpcs()
+    ''' <summary>Refaz os marcadores do mapa a partir do .spc em memoria (descarta o que foi movido e nao gravado).</summary>
+    Private Sub RefreshNpcCanvas()
         Dim spc = SelectedSpc()
-        If spc Is Nothing Then Return
-        For i = 0 To Math.Min(lbNPCList.Items.Count, NpcData.RecordCount) - 1
-            If Not NpcData.IsRecordUsed(spc, i) Then Continue For
-            Dim rec = NpcData.ReadRecord(spc, i)
-            DrawPoint(rec.X, rec.Z, Brushes.Red, 0, 0)
-        Next
+        Dim points As New List(Of SpawnMapCanvas.CanvasPoint)()
+        If spc IsNot Nothing Then
+            For i = 0 To Math.Min(lbNPCList.Items.Count, NpcData.RecordCount) - 1
+                If Not NpcData.IsRecordUsed(spc, i) Then Continue For
+                Dim rec = NpcData.ReadRecord(spc, i)
+                points.Add(New SpawnMapCanvas.CanvasPoint() With {
+                    .Slot = i, .X = rec.X, .Z = rec.Z, .Angle = rec.Angle, .Label = lbNPCList.Items(i).ToString()})
+            Next
+        End If
+        NpcCanvas.SetPoints(points)
+        NpcCanvas.SelectedSlot = lbNPCList.SelectedIndex
     End Sub
 
-    ''' <summary>Marca (x, z) do jogo na imagem; dx/dy desenham a direcao do NPC (em pixels de uma imagem 256).</summary>
-    Private Sub DrawPoint(ByVal x As Integer, ByVal z As Integer, ByVal brush As Brush, ByVal dx As Double, ByVal dy As Double)
-        Dim image = PictureBox1.Image
-        If image Is Nothing Then Return
-        ' Posicao continua (sem arredondar) e dimensoes proporcionais ao tamanho real da imagem.
-        Dim px As Single = CSng((x - _mapRect.Left) / _mapRect.Width * image.Width)
-        Dim py As Single = CSng((_mapRect.Bottom - z) / _mapRect.Height * image.Height)
-        Dim unit As Single = image.Width / 256.0F
-        Dim radius As Single = 2 * unit
-        Using g As Graphics = Graphics.FromImage(image)
-            g.DrawLine(Pens.Red, px, py, px + CSng(dx * unit), py + CSng(dy * unit))
-            g.FillEllipse(brush, px - radius, py - radius, radius * 2, radius * 2)
-            g.DrawEllipse(Pens.White, px - radius, py - radius, radius * 2, radius * 2)
-        End Using
-    End Sub
-
-    ''' <summary>Redesenha o mapa com todos os NPCs e o selecionado em verde (com direcao).</summary>
+    ''' <summary>Passa a posicao e a direcao digitadas (ainda nao gravadas) do NPC selecionado para o mapa.</summary>
     Private Sub DrawSelectedNpc()
         Dim x, z, angle As Integer
+        If lbNPCList.SelectedIndex < 0 Then Return
         If Not Integer.TryParse(tbNPCx.Text, x) OrElse Not Integer.TryParse(tbNPCz.Text, z) Then Return
         Integer.TryParse(tbNPCangle.Text, angle)
-        ResetCanvas()
-        RedrawAllNpcs()
-        Dim dx As Double = Math.Sin(AngleToRadians * angle) * 10
-        Dim dy As Double = Math.Cos(AngleToRadians * angle) * -10
-        DrawPoint(x, z, Brushes.Green, dx, dy)
-        PictureBox1.Refresh()
+        NpcCanvas.UpdatePoint(lbNPCList.SelectedIndex, x, z, angle)
     End Sub
 
     Private Sub lbNPCList_SelectedIndexChanged(ByVal sender As Object, ByVal e As EventArgs) Handles lbNPCList.SelectedIndexChanged
@@ -1658,60 +1714,73 @@ Public Class MainEditor
         tbNPCJ_Chat.Text = String.Join(vbCrLf, NpcData.ReadChat(npcPath)) & vbCrLf
 
         FillNpcShop()
-        DrawSelectedNpc()
+        RefreshNpcCanvas()
+        If Not _npcFromCanvas Then NpcCanvas.CenterOn(rec.X, rec.Z)
     End Sub
 
-    Private Sub PictureBox1_MouseMove(ByVal sender As Object, ByVal e As MouseEventArgs) Handles PictureBox1.MouseMove
-        If lbNPCList.SelectedItems.Count < 1 OrElse _mapImage Is Nothing Then Return
-        If Not (IsNumeric(tbNPCx.Text) AndAlso IsNumeric(tbNPCy.Text) AndAlso IsNumeric(tbNPCz.Text)) Then Return
-        PictureBox1.Focus()
-        If e.Button = MouseButtons.Left Then
-            PictureBox1.Cursor = Cursors.Cross
-            ' Mouse em pixels do PictureBox -> unidades do jogo.
-            tbNPCx.Text = CInt(Math.Round(CDbl(tbNPCx.Text) + (e.X - _lastMouseX) * _mapRect.Width / PictureBox1.ClientSize.Width)).ToString()
-            tbNPCz.Text = CInt(Math.Round(CDbl(tbNPCz.Text) - (e.Y - _lastMouseY) * _mapRect.Height / PictureBox1.ClientSize.Height)).ToString()
-            tbNPCx.Refresh()
-            tbNPCz.Refresh()
-        Else
-            PictureBox1.Cursor = Cursors.Default
-        End If
-        DrawSelectedNpc()
-        _lastMouseX = e.X
-        _lastMouseY = e.Y
+#Region "Mapa do NPC Editor"
+
+    Private Sub NpcCanvas_PointSelected(ByVal slot As Integer) Handles NpcCanvas.PointSelected
+        _npcFromCanvas = True
+        Try
+            If slot >= 0 AndAlso slot < lbNPCList.Items.Count Then lbNPCList.SelectedIndex = slot
+        Finally
+            _npcFromCanvas = False
+        End Try
     End Sub
 
-    Private Sub PictureBox1_MouseLeave(ByVal sender As Object, ByVal e As EventArgs) Handles PictureBox1.MouseLeave
-        If lbNPCMapFileList.SelectedItems.Count >= 1 AndAlso lbNPCList.SelectedItems.Count >= 1 Then
-            RedrawAllNpcs()
-            PictureBox1.Refresh()
-        End If
+    ''' <summary>Arrastou o NPC: X e Z mudam (e o Y acompanha o terreno) na copia em memoria, com Desfazer; Save NPC grava.</summary>
+    Private Sub NpcCanvas_PointMoved(ByVal slot As Integer, ByVal x As Integer, ByVal z As Integer) Handles NpcCanvas.PointMoved
+        If lbNPCList.SelectedIndex <> slot Then Return
+        tbNPCx.Text = x.ToString()
+        tbNPCz.Text = z.ToString()
+        Dim height As Single
+        If _npcMesh IsNot Nothing AndAlso _npcMesh.TryHeightAt(x, z, height) Then tbNPCy.Text = CInt(Math.Round(height)).ToString()
+        ApplyNpcFields("Moved NPC")
+    End Sub
+
+    Private Sub NpcCanvas_AddRequested(ByVal x As Integer, ByVal z As Integer) Handles NpcCanvas.AddRequested
+        CreateNpc(True, x, z)
+    End Sub
+
+    Private Sub NpcCanvas_DeleteRequested() Handles NpcCanvas.DeleteRequested
+        DeleteNPCToolStripMenuItem_Click(Me, EventArgs.Empty)
     End Sub
 
     ''' <summary>PageUp/PageDown giram o NPC em passos de 8 (0..4096).</summary>
-    Private Sub PictureBox1_PreviewKeyDown(ByVal sender As Object, ByVal e As PreviewKeyDownEventArgs) Handles PictureBox1.PreviewKeyDown
-        PictureBox1.Focus()
+    Private Sub NpcCanvas_RotateRequested(ByVal direction As Integer) Handles NpcCanvas.RotateRequested
+        If lbNPCList.SelectedIndex < 0 Then Return
         Dim angle As Integer
         Integer.TryParse(tbNPCangle.Text, angle)
-        If e.KeyCode = Keys.Prior Then angle += 8
-        If e.KeyCode = Keys.Next Then angle -= 8
+        angle += direction * 8
         If angle < 0 Then angle = MaxAngle
         If angle > MaxAngle Then angle = 0
         tbNPCangle.Text = angle.ToString()
-        DrawSelectedNpc()
-        PictureBox1.Cursor = Cursors.Default
+        ApplyNpcFields("Rotated NPC")
     End Sub
 
+    Private Sub NpcCanvas_HoverChanged(ByVal x As Integer, ByVal z As Integer, ByVal hasHeight As Boolean, ByVal height As Single) Handles NpcCanvas.HoverChanged
+        lblNpcHover.Text = "X: " & x & "   Z: " & z & If(hasHeight, "   Y: " & CInt(Math.Round(height)), "")
+    End Sub
+
+    Private Sub chkNpcAdd_CheckedChanged(ByVal sender As Object, ByVal e As EventArgs) Handles chkNpcAdd.CheckedChanged
+        NpcCanvas.AddOnClick = chkNpcAdd.Checked
+    End Sub
+
+    Private Sub chkNpcNames_CheckedChanged(ByVal sender As Object, ByVal e As EventArgs) Handles chkNpcNames.CheckedChanged
+        NpcCanvas.ShowLabels = chkNpcNames.Checked
+    End Sub
+
+    ''' <summary>Clique direito no mapa: leva o NPC selecionado para o centro da vista (e para a altura do terreno ali).</summary>
     Private Sub BringBackToMapToolStripMenuItem_Click(ByVal sender As Object, ByVal e As EventArgs) Handles BringBackToMapToolStripMenuItem.Click
-        tbNPCx.Text = CInt(Math.Round((_mapRect.Left + _mapRect.Right) / 2)).ToString()
-        tbNPCz.Text = CInt(Math.Round((_mapRect.Top + _mapRect.Bottom) / 2)).ToString()
+        If lbNPCList.SelectedIndex < 0 Then Return
+        NpcCanvas_PointMoved(lbNPCList.SelectedIndex, NpcCanvas.ViewCenterX, NpcCanvas.ViewCenterZ)
     End Sub
 
-    ''' <summary>Grava o registro do NPC no .spc e o nome/falas no .zhoon.</summary>
+#End Region
+
+    ''' <summary>Save: grava o .spc do mapa (com backup) e o nome/falas do NPC selecionado no .zhoon.</summary>
     Private Sub cmdNPCSave_Click(ByVal sender As Object, ByVal e As EventArgs) Handles cmdNPCSave.Click
-        If lbNPCList.SelectedItems.Count < 1 Then
-            MsgBox("Please select NPC")
-            Return
-        End If
         Dim spc = SelectedSpc()
         If spc Is Nothing Then
             MsgBox("Please select a map file")
@@ -1721,48 +1790,36 @@ Public Class MainEditor
             MsgBox("No NPC File found! Cant save NPC")
             Return
         End If
-        If tbNPCModelFile.Text.Length > NpcData.TextFieldSize Then
-            MsgBox("Error: Max. 64 chars supported in NPC model file" & vbCrLf & "NPC not saved!")
-            Return
-        End If
-        If tbNPCSetupfile.Text.Length > NpcData.TextFieldSize Then
-            MsgBox("Error: Max. 64 chars supported in NPC setup file" & vbCrLf & "NPC not saved!")
-            Return
-        End If
-        Dim rec As New NpcData.NpcRecord()
-        Dim id, x, y, z, angle As Integer
-        If Not (Integer.TryParse(tbNPCID.Text, id) AndAlso Integer.TryParse(tbNPCx.Text, x) AndAlso Integer.TryParse(tbNPCy.Text, y) AndAlso
-                Integer.TryParse(tbNPCz.Text, z) AndAlso Integer.TryParse(tbNPCangle.Text, angle)) Then
-            MsgBox("Error: Please check all values, one or some are not numeric!" & vbCrLf & "NPC not saved!")
-            Return
-        End If
-        If id > NpcData.MaxId Then
-            MsgBox("Error: ID value is to high!" & vbCrLf & "NPC not saved!")
-            Return
-        End If
-        rec.Active = cbNPCAktivated.Checked
-        rec.ModelFile = tbNPCModelFile.Text
-        rec.SetupFile = tbNPCSetupfile.Text
-        rec.Id = id : rec.X = x : rec.Y = y : rec.Z = z : rec.Angle = angle
-
         Dim index As Integer = lbNPCList.SelectedIndex
-        Try
-            NpcData.WriteRecord(spc.FileName, index, rec)
-
-            Dim zhoonPath As String = AppState.ServerPath & AppState.NpcFolder & NpcData.ReadZhoonReference(AppState.ServerPath & tbNPCSetupfile.Text)
-            If Not File.Exists(zhoonPath) Then
-                If Not Dialogs.Confirm("Warning!", "No Zhoon file found!" & vbCrLf & "Create one for this NPC?") Then Return
-                zhoonPath = AppState.ServerPath & AppState.NpcNameFolder & Path.GetFileNameWithoutExtension(tbNPCSetupfile.Text) & ".zhoon"
+        Dim hasNpc As Boolean = index >= 0 AndAlso NpcData.IsRecordUsed(spc, index)
+        If hasNpc Then
+            Dim rec As NpcData.NpcRecord = Nothing
+            Dim problem As String = ""
+            If Not TryReadNpcFields(rec, problem) Then
+                MsgBox(problem & vbCrLf & "NPC not saved!")
+                Return
             End If
-            NpcData.SaveZhoon(zhoonPath, Path.GetFileName(tbNPCSetupfile.Text), tbNPCName.Text, tbNPCJ_Chat.Lines)
+            ApplyNpcFields("Edited NPC")
+        End If
+        Try
+            If hasNpc Then SaveNpcZhoon()
+            NpcData.SaveSpc(spc)
+            _npcHistory.MarkSaved(spc.Data)
+            UpdateNpcSaveButton()
+            SetNpcStatus("Saved " & spc.FileName & ". Restart the server to apply.", False)
         Catch ex As Exception
             ErrorLog.Report("SaveNpc", ex)
-        Finally
-            NpcData.ReloadSpc(spc.FileName)
-            ResetCanvas()
-            ShowNpcList(spc)
-            If index < lbNPCList.Items.Count Then lbNPCList.SetSelected(index, True)
         End Try
+    End Sub
+
+    ''' <summary>Grava nome e falas do NPC selecionado no .zhoon (cria um se nao existir, depois de confirmar).</summary>
+    Private Sub SaveNpcZhoon()
+        Dim zhoonPath As String = AppState.ServerPath & AppState.NpcFolder & NpcData.ReadZhoonReference(AppState.ServerPath & tbNPCSetupfile.Text)
+        If Not File.Exists(zhoonPath) Then
+            If Not Dialogs.Confirm("Warning!", "No Zhoon file found!" & vbCrLf & "Create one for this NPC?") Then Return
+            zhoonPath = AppState.ServerPath & AppState.NpcNameFolder & Path.GetFileNameWithoutExtension(tbNPCSetupfile.Text) & ".zhoon"
+        End If
+        NpcData.SaveZhoon(zhoonPath, Path.GetFileName(tbNPCSetupfile.Text), tbNPCName.Text, tbNPCJ_Chat.Lines)
     End Sub
 
     ' ---- Loja do NPC ------------------------------------------------------------------
@@ -1819,40 +1876,168 @@ Public Class MainEditor
 
     ' ---- Menu da lista de NPCs ----------------------------------------------------------
 
-    Private Sub ReloadNpcListAndSelect(ByVal spc As BinaryDataFile, ByVal index As Integer)
-        NpcData.ReloadSpc(spc.FileName)
-        ResetCanvas()
-        ShowNpcList(spc)
-        If index >= 0 AndAlso index < lbNPCList.Items.Count Then lbNPCList.SetSelected(index, True)
+    ' ---- Edicao em memoria e Desfazer ----------------------------------------------------
+    ' Mover, girar, editar campos, adicionar, apagar e trocar de lugar so mudam a copia em memoria do .spc (spc.Data),
+    ' como o Spawn Point; o botao Save NPC grava (com backup). .NPC e .zhoon (loja, nome, falas, arquivos criados pelo
+    ' Add) sao outros arquivos e nao entram no Desfazer.
+
+    ''' <summary>Ha alteracoes no .spc aberto ainda nao gravadas (desfazer ate o estado salvo zera isso).</summary>
+    Private ReadOnly Property NpcIsDirty As Boolean
+        Get
+            Dim spc = If(_npcMapName = "", Nothing, NpcData.FindSpc(_npcMapName))
+            Return spc IsNot Nothing AndAlso _npcHistory.IsModified(spc.Data)
+        End Get
+    End Property
+
+    Private Sub UpdateNpcSaveButton()
+        cmdNPCSave.Text = If(NpcIsDirty, "Save NPC *", "Save NPC")
     End Sub
+
+    Private Sub SetNpcStatus(ByVal text As String, ByVal isError As Boolean)
+        lblNpcStatus.Text = text
+        lblNpcStatus.ForeColor = If(isError, Color.Firebrick, SystemColors.ControlText)
+    End Sub
+
+    ''' <summary>Se ha alteracoes pendentes, pergunta se pode descartar (e as descarta, relendo o .spc do disco).</summary>
+    Private Function ConfirmDiscardNpc() As Boolean
+        If Not NpcIsDirty Then Return True
+        If Not Dialogs.Confirm("NPC Editor", "Discard the unsaved changes to " & _npcMapName & "?", MsgBoxStyle.Exclamation) Then Return False
+        NpcData.ReloadSpc(_npcMapName)
+        _npcHistory = New NpcUndoHistory()
+        Return True
+    End Function
+
+    ''' <summary>Le os campos da tela num registro. Retorna False (com o motivo) se algum valor for invalido.</summary>
+    Private Function TryReadNpcFields(ByRef rec As NpcData.NpcRecord, ByRef problem As String) As Boolean
+        rec = New NpcData.NpcRecord()
+        If tbNPCModelFile.Text.Length > NpcData.TextFieldSize Then
+            problem = "Error: Max. 64 chars supported in NPC model file"
+            Return False
+        End If
+        If tbNPCSetupfile.Text.Length > NpcData.TextFieldSize Then
+            problem = "Error: Max. 64 chars supported in NPC setup file"
+            Return False
+        End If
+        Dim id, x, y, z, angle As Integer
+        If Not (Integer.TryParse(tbNPCID.Text, id) AndAlso Integer.TryParse(tbNPCx.Text, x) AndAlso Integer.TryParse(tbNPCy.Text, y) AndAlso
+                Integer.TryParse(tbNPCz.Text, z) AndAlso Integer.TryParse(tbNPCangle.Text, angle)) Then
+            problem = "Error: Please check all values, one or some are not numeric!"
+            Return False
+        End If
+        If id < 0 OrElse id > NpcData.MaxId Then
+            problem = "Error: ID value is to high!"
+            Return False
+        End If
+        rec.Active = cbNPCAktivated.Checked
+        rec.ModelFile = tbNPCModelFile.Text
+        rec.SetupFile = tbNPCSetupfile.Text
+        rec.Id = id : rec.X = x : rec.Y = y : rec.Z = z : rec.Angle = angle
+        Return True
+    End Function
+
+    ''' <summary>Passa os campos da tela para o registro do NPC selecionado (em memoria), se algo mudou. Um passo no Desfazer.</summary>
+    Private Sub ApplyNpcFields(ByVal description As String)
+        Dim spc = SelectedSpc()
+        Dim index As Integer = lbNPCList.SelectedIndex
+        If spc Is Nothing OrElse index < 0 OrElse Not NpcData.IsRecordUsed(spc, index) Then Return
+        Dim rec As NpcData.NpcRecord = Nothing
+        Dim problem As String = ""
+        If Not TryReadNpcFields(rec, problem) Then
+            SetNpcStatus(problem, True)
+            Return
+        End If
+        Dim current = NpcData.ReadRecord(spc, index)
+        If current.Active = rec.Active AndAlso current.ModelFile = rec.ModelFile AndAlso current.SetupFile = rec.SetupFile AndAlso
+           current.Id = rec.Id AndAlso current.X = rec.X AndAlso current.Y = rec.Y AndAlso current.Z = rec.Z AndAlso current.Angle = rec.Angle Then Return
+        _npcHistory.Record(spc.Data, description & " #" & index)
+        NpcData.WriteRecord(spc, index, rec)
+        RefreshNpcCanvas()
+        UpdateNpcSaveButton()
+        SetNpcStatus(description & " #" & index & " (not saved yet).", False)
+    End Sub
+
+    ''' <summary>Sair de um campo (ou marcar Activated) aplica a edicao ao registro, como o Spawn Point faz com X/Z.</summary>
+    Private Sub NpcField_Validated(ByVal sender As Object, ByVal e As EventArgs) Handles tbNPCID.Validated, tbNPCx.Validated, tbNPCy.Validated,
+        tbNPCz.Validated, tbNPCangle.Validated, tbNPCModelFile.Validated, tbNPCSetupfile.Validated, cbNPCAktivated.Click
+        ApplyNpcFields("Edited NPC")
+    End Sub
+
+    ''' <summary>Depois de uma alteracao que muda a lista (adicionar, apagar, trocar de lugar, desfazer): refaz tudo e mantem a selecao.</summary>
+    Private Sub AfterNpcListChange(ByVal spc As BinaryDataFile, ByVal selectIndex As Integer, ByVal message As String)
+        ShowNpcList(spc)
+        If selectIndex >= 0 AndAlso selectIndex < lbNPCList.Items.Count Then lbNPCList.SetSelected(selectIndex, True)
+        UpdateNpcSaveButton()
+        SetNpcStatus(message, False)
+    End Sub
+
+    ''' <summary>Ctrl+Z desfaz e Ctrl+Y / Ctrl+Shift+Z refazem, na aba NPC Editor. Em campos de texto o Ctrl+Z continua sendo o do campo.</summary>
+    Private Sub UndoRedoNpc(ByVal redo As Boolean)
+        Dim spc = SelectedSpc()
+        If spc Is Nothing Then Return
+        Dim description As String = ""
+        Dim data As Byte() = If(redo, _npcHistory.Redo(spc.Data, description), _npcHistory.Undo(spc.Data, description))
+        If data Is Nothing Then Return
+        Array.Copy(data, spc.Data, spc.Data.Length)
+        AfterNpcListChange(spc, lbNPCList.SelectedIndex, If(redo, "Redid: ", "Undid: ") & description & ".")
+    End Sub
+
+    Protected Overrides Function ProcessCmdKey(ByRef msg As Message, ByVal keyData As Keys) As Boolean
+        If TabControl1.SelectedTab IsNot Nothing AndAlso TabControl1.SelectedTab.Text = TabNpc Then
+            Dim focused As Control = ActiveControl
+            Do While TypeOf focused Is ContainerControl AndAlso DirectCast(focused, ContainerControl).ActiveControl IsNot Nothing
+                focused = DirectCast(focused, ContainerControl).ActiveControl
+            Loop
+            If Not (TypeOf focused Is TextBoxBase OrElse TypeOf focused Is ComboBox) Then
+                Select Case keyData
+                    Case Keys.Control Or Keys.Z
+                        UndoRedoNpc(False)
+                        Return True
+                    Case Keys.Control Or Keys.Y, Keys.Control Or Keys.Shift Or Keys.Z
+                        UndoRedoNpc(True)
+                        Return True
+                End Select
+            End If
+        End If
+        Return MyBase.ProcessCmdKey(msg, keyData)
+    End Function
 
     Private Sub UpToolStripMenuItem_Click(ByVal sender As Object, ByVal e As EventArgs) Handles UpToolStripMenuItem.Click
         Dim spc = SelectedSpc()
         Dim index As Integer = lbNPCList.SelectedIndex
         If spc Is Nothing OrElse index <= 0 Then Return
+        _npcHistory.Record(spc.Data, "Moved NPC #" & index & " up")
         NpcData.SwapRecords(spc, index - 1, index)
-        ReloadNpcListAndSelect(spc, index - 1)
+        AfterNpcListChange(spc, index - 1, "Moved NPC #" & index & " up (not saved yet).")
     End Sub
 
     Private Sub DownToolStripMenuItem_Click(ByVal sender As Object, ByVal e As EventArgs) Handles DownToolStripMenuItem.Click
         Dim spc = SelectedSpc()
         Dim index As Integer = lbNPCList.SelectedIndex
         If spc Is Nothing OrElse index < 0 OrElse index >= NpcData.RecordCount - 1 Then Return
+        _npcHistory.Record(spc.Data, "Moved NPC #" & index & " down")
         NpcData.SwapRecords(spc, index, index + 1)
-        ReloadNpcListAndSelect(spc, index + 1)
+        AfterNpcListChange(spc, index + 1, "Moved NPC #" & index & " down (not saved yet).")
     End Sub
 
     Private Sub DeleteNPCToolStripMenuItem_Click(ByVal sender As Object, ByVal e As EventArgs) Handles DeleteNPCToolStripMenuItem.Click
         Dim spc = SelectedSpc()
         Dim index As Integer = lbNPCList.SelectedIndex
-        If spc Is Nothing OrElse index < 0 Then Return
-        If Not Dialogs.Confirm("Delete", "Delete NPC:""" & lbNPCList.SelectedItem.ToString() & """ ?") Then Return
-        NpcData.ClearRecord(spc.FileName, index)
-        ReloadNpcListAndSelect(spc, index)
+        If spc Is Nothing OrElse index < 0 OrElse Not NpcData.IsRecordUsed(spc, index) Then Return
+        _npcHistory.Record(spc.Data, "Deleted NPC #" & index)
+        NpcData.ClearRecord(spc, index)
+        AfterNpcListChange(spc, -1, "Deleted NPC #" & index & " (not saved yet; Ctrl+Z undoes).")
     End Sub
 
-    ''' <summary>Cria um NPC novo no primeiro slot livre duplicando um .NPC existente.</summary>
     Private Sub AddNewNPCToolStripMenuItem_Click(ByVal sender As Object, ByVal e As EventArgs) Handles AddNewNPCToolStripMenuItem.Click
+        CreateNpc(False, 0, 0)
+    End Sub
+
+    ''' <summary>
+    ''' Cria um NPC novo no primeiro slot livre duplicando um .NPC existente. Com hasPosition (clique no mapa) o NPC ja nasce
+    ''' em (x, z), com o Y do terreno; sem ele fica na posicao do registro-modelo. O registro entra so na copia em memoria
+    ''' (Desfazer/Save), mas o .NPC e o .zhoon novos sao gravados na hora e o Desfazer nao os apaga.
+    ''' </summary>
+    Private Sub CreateNpc(ByVal hasPosition As Boolean, ByVal x As Integer, ByVal z As Integer)
         Dim spc = SelectedSpc()
         If spc Is Nothing Then
             MsgBox("Please select a map")
@@ -1865,14 +2050,14 @@ Public Class MainEditor
         End If
         Dim name As String = InputBox("NPC name", "Enter a name")
         If name = "" Then
-            MsgBox("Canceled")
+            SetNpcStatus("Add NPC canceled.", False)
             Return
         End If
         Dim newNpcPath As String = AppState.NpcPath(name & ".NPC")
         If File.Exists(newNpcPath) AndAlso Not Dialogs.Confirm("Save warning!", "File exist already! Overwrite?", MsgBoxStyle.Exclamation) Then
             name = InputBox("NPC name", "Enter a name")
             If name = "" Then
-                MsgBox("Canceled")
+                SetNpcStatus("Add NPC canceled.", False)
                 Return
             End If
             newNpcPath = AppState.NpcPath(name & ".NPC")
@@ -1890,21 +2075,27 @@ Public Class MainEditor
             dlgFile.Title = ""
         End Try
         If template Is Nothing Then
-            MsgBox("Canceled")
+            SetNpcStatus("Add NPC canceled.", False)
             Return
         End If
         Try
             File.Copy(template, newNpcPath, True)
-            NpcData.WriteTemplateRecord(spc.FileName, slot, "GameServer\npc\" & name & ".NPC")
             NpcData.SetZhoonReference(newNpcPath, name)
             Using writer As New StreamWriter(AppState.ServerPath & AppState.NpcNameFolder & name & ".zhoon", False, AppState.FileEncoding)
                 writer.WriteLine(ZhoonFile.NameLine(name) & vbCrLf & vbCrLf)
                 writer.WriteLine(ZhoonFile.ChatLine("""What im talking?!?"""))
             End Using
-            MsgBox("Created " & newNpcPath)
+            _npcHistory.Record(spc.Data, "Added NPC #" & slot)
+            NpcData.WriteTemplateRecord(spc, slot, "GameServer\npc\" & name & ".NPC")
+            If hasPosition Then
+                Dim y As Integer = NpcData.ReadRecord(spc, slot).Y
+                Dim height As Single
+                If _npcMesh IsNot Nothing AndAlso _npcMesh.TryHeightAt(x, z, height) Then y = CInt(Math.Round(height))
+                NpcData.WritePosition(spc, slot, x, y, z)
+            End If
             NpcData.LoadNpcFiles()
             RefreshNpcCombos()
-            ReloadNpcListAndSelect(spc, slot)
+            AfterNpcListChange(spc, slot, "Added NPC #" & slot & " (" & name & ".NPC created; the record is not saved yet).")
         Catch ex As Exception
             ErrorLog.Report("AddNewNpc", ex)
         End Try

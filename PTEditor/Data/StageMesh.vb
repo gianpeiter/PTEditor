@@ -101,6 +101,44 @@ Friend Class StageMesh
     End Sub
 
     ''' <summary>
+    ''' Altura do terreno em (x, z): a face virada para cima mais alta que cobre o ponto (a mesma regra da vista de cima).
+    ''' O Y dos NPCs gravados nos .spc e essa altura, na mesma unidade. False se nao ha terreno ali.
+    ''' </summary>
+    Friend Function TryHeightAt(ByVal px As Double, ByVal pz As Double, ByRef height As Single) As Boolean
+        Dim found As Boolean
+        Dim best As Double = Double.NegativeInfinity
+        For t = 0 To Triangles.Length - 3 Step 3
+            Dim ia = Triangles(t), ib = Triangles(t + 1), ic = Triangles(t + 2)
+            Dim ax As Double = X(ia), az As Double = Z(ia)
+            Dim bx As Double = X(ib), bz As Double = Z(ib)
+            Dim cx As Double = X(ic), cz As Double = Z(ic)
+            If px < Math.Min(ax, Math.Min(bx, cx)) - 0.5 OrElse px > Math.Max(ax, Math.Max(bx, cx)) + 0.5 Then Continue For
+            If pz < Math.Min(az, Math.Min(bz, cz)) - 0.5 OrElse pz > Math.Max(az, Math.Max(bz, cz)) + 0.5 Then Continue For
+            Dim denom As Double = (bz - cz) * (ax - cx) + (cx - bx) * (az - cz)
+            If Math.Abs(denom) < 0.000000001 Then Continue For
+            Dim w0 As Double = ((bz - cz) * (px - cx) + (cx - bx) * (pz - cz)) / denom
+            Dim w1 As Double = ((cz - az) * (px - cx) + (ax - cx) * (pz - cz)) / denom
+            Dim w2 As Double = 1.0 - w0 - w1
+            If w0 < -0.0001 OrElse w1 < -0.0001 OrElse w2 < -0.0001 Then Continue For
+            ' Mesma normal da vista de cima (SpawnMapCanvas): so faces viradas para cima contam.
+            Dim ux As Double = bx - ax, uy As Double = Y(ib) - Y(ia), uz As Double = bz - az
+            Dim vx As Double = cx - ax, vy As Double = Y(ic) - Y(ia), vz As Double = cz - az
+            Dim nx As Double = uy * vz - uz * vy
+            Dim ny As Double = uz * vx - ux * vz
+            Dim nz As Double = ux * vy - uy * vx
+            Dim length As Double = Math.Sqrt(nx * nx + ny * ny + nz * nz)
+            If length < 0.000001 OrElse -ny / length < 0.05 Then Continue For
+            Dim h As Double = w0 * Y(ia) + w1 * Y(ib) + w2 * Y(ic)
+            If h > best Then
+                best = h
+                found = True
+            End If
+        Next
+        If found Then height = CSng(best)
+        Return found
+    End Function
+
+    ''' <summary>
     ''' Procura o .smd do mapa em &lt;servidor&gt;\Field (qualquer subpasta) pelo nome base do .spp/.spm
     ''' ("Dun-6a.ASE.spp" procura Dun-6a.smd). Retorna "" se nao achar.
     ''' </summary>

@@ -357,7 +357,12 @@ Partial Class MainEditor
         Me.tbNPCID = New System.Windows.Forms.TextBox()
         Me.Label109 = New System.Windows.Forms.Label()
         Me.Label110 = New System.Windows.Forms.Label()
-        Me.PictureBox1 = New System.Windows.Forms.PictureBox()
+        Me.NpcCanvas = New PTEditor.SpawnMapCanvas()
+        Me.chkNpcAdd = New System.Windows.Forms.CheckBox()
+        Me.chkNpcNames = New System.Windows.Forms.CheckBox()
+        Me.lblNpcSource = New System.Windows.Forms.Label()
+        Me.lblNpcHover = New System.Windows.Forms.Label()
+        Me.lblNpcStatus = New System.Windows.Forms.Label()
         Me.CMNPCPicturebox = New System.Windows.Forms.ContextMenuStrip(Me.components)
         Me.BringBackToMapToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.Label111 = New System.Windows.Forms.Label()
@@ -472,7 +477,6 @@ Partial Class MainEditor
         Me.TabPage5.SuspendLayout()
         Me.GroupBox23.SuspendLayout()
         Me.CMSAddShopItem.SuspendLayout()
-        CType(Me.PictureBox1, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.CMNPCPicturebox.SuspendLayout()
         Me.CMSNPCList.SuspendLayout()
         Me.TabPageCharacters.SuspendLayout()
@@ -3234,7 +3238,12 @@ Partial Class MainEditor
         Me.TabPage5.Controls.Add(Me.tbNPCID)
         Me.TabPage5.Controls.Add(Me.Label109)
         Me.TabPage5.Controls.Add(Me.Label110)
-        Me.TabPage5.Controls.Add(Me.PictureBox1)
+        Me.TabPage5.Controls.Add(Me.NpcCanvas)
+        Me.TabPage5.Controls.Add(Me.chkNpcAdd)
+        Me.TabPage5.Controls.Add(Me.chkNpcNames)
+        Me.TabPage5.Controls.Add(Me.lblNpcSource)
+        Me.TabPage5.Controls.Add(Me.lblNpcHover)
+        Me.TabPage5.Controls.Add(Me.lblNpcStatus)
         Me.TabPage5.Controls.Add(Me.Label111)
         Me.TabPage5.Controls.Add(Me.Label112)
         Me.TabPage5.Controls.Add(Me.cbNPCAktivated)
@@ -3483,16 +3492,58 @@ Partial Class MainEditor
         Me.Label110.TabIndex = 57
         Me.Label110.Text = "NPC Name:"
         '
-        'PictureBox1
+        'NpcCanvas
         '
-        Me.PictureBox1.BackColor = System.Drawing.SystemColors.ControlText
-        Me.PictureBox1.ContextMenuStrip = Me.CMNPCPicturebox
-        Me.PictureBox1.Location = New System.Drawing.Point(522, 142)
-        Me.PictureBox1.Name = "PictureBox1"
-        Me.PictureBox1.Size = New System.Drawing.Size(512, 512)
-        Me.PictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage
-        Me.PictureBox1.TabIndex = 56
-        Me.PictureBox1.TabStop = False
+        Me.NpcCanvas.AddOnClick = False
+        Me.NpcCanvas.Location = New System.Drawing.Point(522, 142)
+        Me.NpcCanvas.Name = "NpcCanvas"
+        Me.NpcCanvas.Size = New System.Drawing.Size(512, 488)
+        Me.NpcCanvas.TabIndex = 56
+        '
+        'chkNpcAdd
+        '
+        Me.chkNpcAdd.AutoSize = True
+        Me.chkNpcAdd.Location = New System.Drawing.Point(522, 636)
+        Me.chkNpcAdd.Name = "chkNpcAdd"
+        Me.chkNpcAdd.Size = New System.Drawing.Size(131, 17)
+        Me.chkNpcAdd.TabIndex = 90
+        Me.chkNpcAdd.Text = "Click map to add NPCs"
+        Me.chkNpcAdd.UseVisualStyleBackColor = True
+        '
+        'chkNpcNames
+        '
+        Me.chkNpcNames.AutoSize = True
+        Me.chkNpcNames.Checked = True
+        Me.chkNpcNames.CheckState = System.Windows.Forms.CheckState.Checked
+        Me.chkNpcNames.Location = New System.Drawing.Point(662, 636)
+        Me.chkNpcNames.Name = "chkNpcNames"
+        Me.chkNpcNames.Size = New System.Drawing.Size(57, 17)
+        Me.chkNpcNames.TabIndex = 91
+        Me.chkNpcNames.Text = "Names"
+        Me.chkNpcNames.UseVisualStyleBackColor = True
+        '
+        'lblNpcSource
+        '
+        Me.lblNpcSource.AutoSize = True
+        Me.lblNpcSource.Location = New System.Drawing.Point(728, 637)
+        Me.lblNpcSource.Name = "lblNpcSource"
+        Me.lblNpcSource.Size = New System.Drawing.Size(0, 13)
+        Me.lblNpcSource.TabIndex = 92
+        '
+        'lblNpcStatus
+        '
+        Me.lblNpcStatus.Location = New System.Drawing.Point(9, 347)
+        Me.lblNpcStatus.Name = "lblNpcStatus"
+        Me.lblNpcStatus.Size = New System.Drawing.Size(505, 16)
+        Me.lblNpcStatus.TabIndex = 94
+        '
+        'lblNpcHover
+        '
+        Me.lblNpcHover.Location = New System.Drawing.Point(834, 637)
+        Me.lblNpcHover.Name = "lblNpcHover"
+        Me.lblNpcHover.Size = New System.Drawing.Size(200, 13)
+        Me.lblNpcHover.TabIndex = 93
+        Me.lblNpcHover.TextAlign = System.Drawing.ContentAlignment.TopRight
         '
         'CMNPCPicturebox
         '
@@ -4261,7 +4312,6 @@ Partial Class MainEditor
         Me.GroupBox23.ResumeLayout(False)
         Me.GroupBox23.PerformLayout()
         Me.CMSAddShopItem.ResumeLayout(False)
-        CType(Me.PictureBox1, System.ComponentModel.ISupportInitialize).EndInit()
         Me.CMNPCPicturebox.ResumeLayout(False)
         Me.CMSNPCList.ResumeLayout(False)
         Me.TabPageCharacters.ResumeLayout(False)
@@ -4554,7 +4604,12 @@ Partial Class MainEditor
     Friend WithEvents Mapsfound As System.Windows.Forms.Label
     Friend WithEvents MoFound As System.Windows.Forms.Label
     Friend WithEvents pbWorking As System.Windows.Forms.ProgressBar
-    Friend WithEvents PictureBox1 As System.Windows.Forms.PictureBox
+    Friend WithEvents NpcCanvas As PTEditor.SpawnMapCanvas
+    Friend WithEvents chkNpcAdd As System.Windows.Forms.CheckBox
+    Friend WithEvents chkNpcNames As System.Windows.Forms.CheckBox
+    Friend WithEvents lblNpcSource As System.Windows.Forms.Label
+    Friend WithEvents lblNpcHover As System.Windows.Forms.Label
+    Friend WithEvents lblNpcStatus As System.Windows.Forms.Label
     Friend WithEvents RemoveAllToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
     Friend WithEvents RemoveAllBossesToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem
     Friend WithEvents RemoveFromListToolStripMenuItem As System.Windows.Forms.ToolStripMenuItem

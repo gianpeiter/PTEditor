@@ -262,42 +262,61 @@ Friend Module NpcData
         Return rec
     End Function
 
-    ''' <summary>Grava os campos editaveis do registro no .spc em disco (nao mexe no restante do registro).</summary>
-    Friend Sub WriteRecord(ByVal spcFileName As String, ByVal index As Integer, ByVal rec As NpcRecord)
-        Dim path As String = AppState.FieldPath(spcFileName)
-        Dim base As Integer = index * RecordSize
-        FileHelper.WriteBytes(path, base + OffsetActive, BitConverter.GetBytes(If(rec.Active, ActiveMagic, 0)), 4)
-        FileHelper.WriteBytes(path, base + OffsetModelFile, FileHelper.FixedBytes(rec.ModelFile, TextFieldSize), TextFieldSize)
-        FileHelper.WriteBytes(path, base + OffsetSetupFile, FileHelper.FixedBytes(rec.SetupFile, TextFieldSize), TextFieldSize)
-        FileHelper.WriteBytes(path, base + OffsetId, BitConverter.GetBytes(rec.Id), 3)
-        FileHelper.WriteBytes(path, base + OffsetX, CoordinateBytes(rec.X), 4)
-        FileHelper.WriteBytes(path, base + OffsetY, CoordinateBytes(rec.Y), 4)
-        FileHelper.WriteBytes(path, base + OffsetZ, CoordinateBytes(rec.Z), 4)
-        FileHelper.WriteBytes(path, base + OffsetAngle, CoordinateBytes(rec.Angle), 4)
+    ' ---- Edicao em memoria: nada vai para o disco ate SaveSpc ---------------------------------------
+
+    Private Sub PutBytes(ByVal spc As BinaryDataFile, ByVal offset As Integer, ByVal bytes As Byte(), ByVal count As Integer)
+        Array.Copy(bytes, 0, spc.Data, offset, count)
     End Sub
 
-    ''' <summary>Zera o registro (slot livre).</summary>
-    Friend Sub ClearRecord(ByVal spcFileName As String, ByVal index As Integer)
-        FileHelper.WriteBytes(AppState.FieldPath(spcFileName), index * RecordSize, New Byte(RecordSize - 1) {}, RecordSize)
+    ''' <summary>Altera os campos editaveis do registro na copia em memoria (nao mexe no restante do registro).</summary>
+    Friend Sub WriteRecord(ByVal spc As BinaryDataFile, ByVal index As Integer, ByVal rec As NpcRecord)
+        Dim base As Integer = index * RecordSize
+        PutBytes(spc, base + OffsetActive, BitConverter.GetBytes(If(rec.Active, ActiveMagic, 0)), 4)
+        PutBytes(spc, base + OffsetModelFile, FileHelper.FixedBytes(rec.ModelFile, TextFieldSize), TextFieldSize)
+        PutBytes(spc, base + OffsetSetupFile, FileHelper.FixedBytes(rec.SetupFile, TextFieldSize), TextFieldSize)
+        PutBytes(spc, base + OffsetId, BitConverter.GetBytes(rec.Id), 3)
+        PutBytes(spc, base + OffsetX, CoordinateBytes(rec.X), 4)
+        PutBytes(spc, base + OffsetY, CoordinateBytes(rec.Y), 4)
+        PutBytes(spc, base + OffsetZ, CoordinateBytes(rec.Z), 4)
+        PutBytes(spc, base + OffsetAngle, CoordinateBytes(rec.Angle), 4)
+    End Sub
+
+    ''' <summary>Altera so a posicao (X, Y, Z) do registro na copia em memoria.</summary>
+    Friend Sub WritePosition(ByVal spc As BinaryDataFile, ByVal index As Integer, ByVal x As Integer, ByVal y As Integer, ByVal z As Integer)
+        Dim base As Integer = index * RecordSize
+        PutBytes(spc, base + OffsetX, CoordinateBytes(x), 4)
+        PutBytes(spc, base + OffsetY, CoordinateBytes(y), 4)
+        PutBytes(spc, base + OffsetZ, CoordinateBytes(z), 4)
+    End Sub
+
+    ''' <summary>Zera o registro (slot livre) na copia em memoria.</summary>
+    Friend Sub ClearRecord(ByVal spc As BinaryDataFile, ByVal index As Integer)
+        Array.Clear(spc.Data, index * RecordSize, RecordSize)
     End Sub
 
     Friend Sub SwapRecords(ByVal spc As BinaryDataFile, ByVal first As Integer, ByVal second As Integer)
         Dim a = FileHelper.Slice(spc.Data, first * RecordSize, RecordSize)
         Dim b = FileHelper.Slice(spc.Data, second * RecordSize, RecordSize)
-        Dim path As String = AppState.FieldPath(spc.FileName)
-        FileHelper.WriteBytes(path, first * RecordSize, b, RecordSize)
-        FileHelper.WriteBytes(path, second * RecordSize, a, RecordSize)
+        PutBytes(spc, first * RecordSize, b, RecordSize)
+        PutBytes(spc, second * RecordSize, a, RecordSize)
     End Sub
 
-    ''' <summary>Grava o registro-modelo no slot apontando para o .NPC informado (caminho relativo).</summary>
-    Friend Sub WriteTemplateRecord(ByVal spcFileName As String, ByVal index As Integer, ByVal setupFileRelativePath As String)
+    ''' <summary>Grava o registro-modelo no slot (em memoria) apontando para o .NPC informado (caminho relativo).</summary>
+    Friend Sub WriteTemplateRecord(ByVal spc As BinaryDataFile, ByVal index As Integer, ByVal setupFileRelativePath As String)
         Dim tokens = TemplateHex.Split({" "c}, StringSplitOptions.RemoveEmptyEntries)
         Dim record(RecordSize - 1) As Byte
         For i = 0 To RecordSize - 1
             record(i) = Convert.ToByte(tokens(i), 16)
         Next
         Array.Copy(FileHelper.FixedBytes(setupFileRelativePath, TextFieldSize), 0, record, OffsetSetupFile, TextFieldSize)
-        FileHelper.WriteBytes(AppState.FieldPath(spcFileName), index * RecordSize, record, RecordSize)
+        PutBytes(spc, index * RecordSize, record, RecordSize)
+    End Sub
+
+    ''' <summary>Faz backup do .spc existente (Field\Backup) e grava a copia em memoria no disco.</summary>
+    Friend Sub SaveSpc(ByVal spc As BinaryDataFile)
+        Dim folder As String = AppState.ServerPath & AppState.FieldFolder
+        BackupHelper.CreateBackup(folder, spc.FileName)
+        File.WriteAllBytes(folder & spc.FileName, spc.Data)
     End Sub
 
 End Module

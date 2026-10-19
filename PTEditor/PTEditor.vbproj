@@ -61,6 +61,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Data\AwardItems\AwardItemRepository.vb" />
+    <Compile Include="Data\NpcUndoHistory.vb" />
     <Compile Include="Data\PostBox\PostBoxRepository.vb" />
     <Compile Include="Data\Database\DatabaseConfig.vb" />
     <Compile Include="Data\Database\ServerDatabase.vb" />
