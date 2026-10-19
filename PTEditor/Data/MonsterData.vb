@@ -6,8 +6,9 @@ Friend Module MonsterData
 
     Friend Const NameNotFound As String = "Name not found!"
 
-    ''' <summary>Recarrega todos os .inf do servidor. progress(atual, total) e opcional.</summary>
-    Friend Sub LoadAll(ByVal warnMissingZhoon As Boolean, Optional ByVal progress As Action(Of Integer, Integer) = Nothing)
+    ''' <summary>Recarrega todos os .inf do servidor. progress(atual, total) e opcional.
+    ''' Pode rodar fora da thread da UI: devolve o aviso de .zhoon ausentes ("" se nenhum) em vez de exibi-lo.</summary>
+    Friend Function LoadAll(Optional ByVal progress As Action(Of Integer, Integer) = Nothing) As String
         AppState.Monsters.Clear()
         ZhoonFile.ResetDetection()
         Dim files = FileHelper.ListFiles(AppState.ServerPath & AppState.MonsterFolder, AppState.MonsterPattern)
@@ -15,18 +16,17 @@ Friend Module MonsterData
         For i = 0 To files.Count - 1
             Dim monster As New MonsterFile(files(i))
             monster.LoadFrom(AppState.MonsterPath(monster.FileName))
-            RefreshInfo(monster, warnMissingZhoon, missingZhoon)
+            RefreshInfo(monster, False, missingZhoon)
             AppState.Monsters.Add(monster)
             If progress IsNot Nothing Then progress(i + 1, files.Count)
         Next
         If missingZhoon.Count > 0 Then
             ErrorLog.Write("In MonsterData.LoadAll: Warn" & vbCrLf & missingZhoon.Count & " .zhoon file(s) not found:" & vbCrLf & vbCrLf &
                            String.Join(vbCrLf, missingZhoon))
-            If warnMissingZhoon Then
-                MsgBox(missingZhoon.Count & " monster(s) with no .zhoon file found." & vbCrLf & "Check the error log for details.")
-            End If
+            Return missingZhoon.Count & " monster(s) with no .zhoon file found." & vbCrLf & "Check the error log for details."
         End If
-    End Sub
+        Return ""
+    End Function
 
     ''' <summary>Relê o arquivo do disco, descartando alteracoes em memoria.</summary>
     Friend Sub Reload(ByVal monster As MonsterFile)

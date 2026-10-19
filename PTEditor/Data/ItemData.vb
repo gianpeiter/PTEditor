@@ -3,25 +3,26 @@
 ''' <summary>Carga, consulta e gravacao dos itens (GameServer\OpenItem\*.txt).</summary>
 Friend Module ItemData
 
-    Friend Sub LoadAll(ByVal warnMissingZhoon As Boolean, Optional ByVal progress As Action(Of Integer, Integer) = Nothing)
+    ''' <summary>Recarrega todos os arquivos de item do servidor. progress(atual, total) e opcional.
+    ''' Pode rodar fora da thread da UI: devolve o aviso de .zhoon ausentes ("" se nenhum) em vez de exibi-lo.</summary>
+    Friend Function LoadAll(Optional ByVal progress As Action(Of Integer, Integer) = Nothing) As String
         AppState.Items.Clear()
         Dim files = FileHelper.ListFiles(AppState.ServerPath & AppState.ItemFolder, AppState.ItemPattern)
         Dim missingZhoon As New List(Of String)()
         For i = 0 To files.Count - 1
             Dim item As New ItemFile(files(i))
             item.LoadFrom(AppState.ItemPath(item.FileName))
-            RefreshInfo(item, warnMissingZhoon, missingZhoon)
+            RefreshInfo(item, False, missingZhoon)
             AppState.Items.Add(item)
             If progress IsNot Nothing Then progress(i + 1, files.Count)
         Next
         If missingZhoon.Count > 0 Then
             ErrorLog.Write("In ItemData.LoadAll: Warn" & vbCrLf & missingZhoon.Count & " .zhoon file(s) not found:" & vbCrLf &
                            String.Join(vbCrLf, missingZhoon))
-            If warnMissingZhoon Then
-                MsgBox(missingZhoon.Count & " item(s) with no .zhoon file found." & vbCrLf & "Check the error log for details.")
-            End If
+            Return missingZhoon.Count & " item(s) with no .zhoon file found." & vbCrLf & "Check the error log for details."
         End If
-    End Sub
+        Return ""
+    End Function
 
     ''' <summary>Carrega um backup (OpenItem\Backup\nome) para a memoria, sem gravar.</summary>
     Friend Sub LoadBackup(ByVal item As ItemFile, ByVal backupFileName As String)

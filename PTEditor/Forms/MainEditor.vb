@@ -1,5 +1,6 @@
 ﻿Imports System.IO
 Imports System.Text
+Imports System.Threading.Tasks
 
 ''' <summary>Janela principal: abas de monstros, itens, mapas, NPCs e opcoes.</summary>
 Public Class MainEditor
@@ -324,7 +325,7 @@ Public Class MainEditor
         End Try
     End Sub
 
-    Private Sub cmdPath_Click(ByVal sender As Object, ByVal e As EventArgs) Handles cmdPath.Click
+    Private Async Sub cmdPath_Click(ByVal sender As Object, ByVal e As EventArgs) Handles cmdPath.Click
         Try
             If dlgFolder.ShowDialog() = DialogResult.Cancel Then Return
             AppState.ServerPath = NormalizeServerPath(dlgFolder.SelectedPath)
@@ -333,7 +334,7 @@ Public Class MainEditor
             ErrorLog.Report("cmdPath", ex)
             Return
         End Try
-        LoadAllData()
+        Await LoadAllDataAsync()
         lbItemFiles.Items.Clear()
         RefreshMonsterList()
         ServerDatabase.Reload()
@@ -375,28 +376,38 @@ Public Class MainEditor
         TabControl1.SelectedTab = TabPage4
     End Sub
 
-    Private Sub cmdReload_Click(ByVal sender As Object, ByVal e As EventArgs) Handles cmdReload.Click, cmdReload1.Click, cmdMapReload.Click
+    Private Async Sub cmdReload_Click(ByVal sender As Object, ByVal e As EventArgs) Handles cmdReload.Click, cmdReload1.Click, cmdMapReload.Click
         If Not ConfirmDiscardNpc() Then Return
         lbFiles.Items.Clear()
         lbItemFiles.Items.Clear()
         MoFound.Text = "0"
         ItemFound.Text = "0"
         Mapsfound.Text = "0"
-        LoadAllData()
+        Await LoadAllDataAsync()
         RefreshItemList()
         RefreshMapList()
         RefreshMonsterList()
         RefreshMonsterSource()
     End Sub
 
-    Private Sub cmdNPCReload_Click(ByVal sender As Object, ByVal e As EventArgs) Handles cmdNPCReload.Click
+    Private Async Sub cmdNPCReload_Click(ByVal sender As Object, ByVal e As EventArgs) Handles cmdNPCReload.Click
         If Not ConfirmDiscardNpc() Then Return
-        LoadAllData()
+        Await LoadAllDataAsync()
         FillNpcMapList(True)
     End Sub
 
-    ''' <summary>Carrega monstros, itens, mapas (.spm/.spc/.spp) e NPCs do servidor.</summary>
-    Private Sub LoadAllData()
+    ''' <summary>True enquanto LoadAllDataAsync esta lendo o servidor em outra thread.</summary>
+    Private _loading As Boolean
+    ''' <summary>Ultimo percentual enviado a barra (so atualiza quando muda; usado apenas na thread de carga).</summary>
+    Private _lastProgress As Integer
+
+    ''' <summary>
+    ''' Carrega monstros, itens, mapas (.spm/.spc/.spp) e NPCs do servidor em uma thread de fundo, mantendo a janela
+    ''' responsiva. As abas ficam desabilitadas durante a carga (os dados em AppState estao sendo reescritos).
+    ''' </summary>
+    Private Async Function LoadAllDataAsync() As Task
+        If _loading Then Return
+        _loading = True
         If AppState.ServerPath = "" Then AppState.ServerPath = NormalizeServerPath(My.Settings.sspath)
         _npcHistory = New NpcUndoHistory()
         _npcMapStale = True
@@ -405,58 +416,85 @@ Public Class MainEditor
         ItemFound.Text = "0"
         Mapsfound.Text = "0"
         pbWorking.Value = 0
+        _lastProgress = -1
+        TabControl1.Enabled = False
         Try
             SetProgress("Loading monster files", 0)
-            MonsterData.LoadAll(cbMoZhoonWarn.Checked, Sub(i, n) pbWorking.Value = 0 + CInt(25 * i / n))
+            Dim monsterWarning As String = Await Task.Run(Function() MonsterData.LoadAll(Sub(i, n) ReportProgress(0, i, n)))
             MoFound.Text = AppState.Monsters.Count.ToString()
 
             SetProgress("Loading item files", 25)
-            ItemData.LoadAll(cbMoZhoonWarn.Checked, Sub(i, n) pbWorking.Value = 25 + CInt(25 * i / n))
+            Dim itemWarning As String = Await Task.Run(Function() ItemData.LoadAll(Sub(i, n) ReportProgress(25, i, n)))
             ItemFound.Text = AppState.Items.Count.ToString()
 
             SetProgress("Loading map files", 50)
-            NpcData.LoadSpcFiles()
-            NpcData.LoadSppFiles()
-            MapData.LoadAll(Sub(i, n) pbWorking.Value = 50 + CInt(25 * i / n))
+            Await Task.Run(Sub()
+                               NpcData.LoadSpcFiles()
+                               NpcData.LoadSppFiles()
+                               MapData.LoadAll(Sub(i, n) ReportProgress(50, i, n))
+                           End Sub)
             Mapsfound.Text = AppState.Maps.Count.ToString()
             lblTextCoding.Text = AppState.FileEncoding.HeaderName & "/" & Encoding.Default.EncodingName
 
             SetProgress("Loading NPC files", 75)
-            NpcData.LoadNpcFiles(Sub(i, n) pbWorking.Value = 75 + CInt(25 * i / n))
+            Await Task.Run(Sub() NpcData.LoadNpcFiles(Sub(i, n) ReportProgress(75, i, n)))
             RefreshNpcCombos()
 
             pbWorking.Value = 0
             Label117.Text = "Status:"
             lblProg.Text = "Done"
+            If cbMoZhoonWarn.Checked Then
+                If monsterWarning <> "" Then MsgBox(monsterWarning)
+                If itemWarning <> "" Then MsgBox(itemWarning)
+            End If
         Catch ex As Exception
             Label117.Text = "Status:"
             lblProg.Text = "Error loading"
             ErrorLog.Report("LoadAllData", ex)
+        Finally
+            TabControl1.Enabled = True
+            _loading = False
         End Try
+    End Function
+
+    ''' <summary>Progresso vindo da thread de carga: posta na UI so quando o percentual inteiro muda.</summary>
+    Private Sub ReportProgress(ByVal basePercent As Integer, ByVal current As Integer, ByVal total As Integer)
+        Dim percent As Integer = basePercent + CInt(25 * current / Math.Max(total, 1))
+        If percent = _lastProgress Then Return
+        _lastProgress = percent
+        Dim value As Integer = Math.Max(0, Math.Min(100, percent))
+        If IsHandleCreated Then BeginInvoke(Sub() pbWorking.Value = value)
     End Sub
 
     Private Sub SetProgress(ByVal text As String, ByVal percent As Integer)
         Label117.Text = "Progressing:"
-        Label117.Refresh()
         lblProg.Text = text
-        lblProg.Refresh()
         pbWorking.Value = percent
     End Sub
 
     Private Sub RefreshNpcCombos()
-        tbNPCSetupfile.Items.Clear()
-        tbNPCModelFile.Items.Clear()
-        For Each npc In AppState.Npcs
-            tbNPCSetupfile.Items.Add(npc.FileName)
-            If npc.SetupIni <> "" Then tbNPCModelFile.Items.Add(npc.SetupIni)
-        Next
-        tbNPCSetupfileInI.Items.Clear()
-        Dim charFolder As String = Path.Combine(AppState.ServerPath, AppState.CharFolder)
-        If Directory.Exists(charFolder) Then
-            For Each f In Directory.GetFiles(charFolder, "*.inx", SearchOption.AllDirectories)
-                tbNPCSetupfileInI.Items.Add(f.Substring(AppState.ServerPath.Length))
+        tbNPCSetupfile.BeginUpdate()
+        tbNPCModelFile.BeginUpdate()
+        tbNPCSetupfileInI.BeginUpdate()
+        Try
+            tbNPCSetupfile.Items.Clear()
+            tbNPCModelFile.Items.Clear()
+            For Each npc In AppState.Npcs
+                tbNPCSetupfile.Items.Add(npc.FileName)
+                If npc.SetupIni <> "" Then tbNPCModelFile.Items.Add(npc.SetupIni)
             Next
-        End If
+            tbNPCSetupfileInI.Items.Clear()
+            Dim charFolder As String = Path.Combine(AppState.ServerPath, AppState.CharFolder)
+            If Directory.Exists(charFolder) Then
+                For Each f In Directory.GetFiles(charFolder, "*.inx", SearchOption.AllDirectories)
+                    tbNPCSetupfileInI.Items.Add(f.Substring(AppState.ServerPath.Length))
+                Next
+            End If
+        Finally
+            tbNPCSetupfile.EndUpdate()
+            tbNPCModelFile.EndUpdate()
+            tbNPCSetupfileInI.EndUpdate()
+        End Try
     End Sub
 
     Private Sub TabControl1_Selected(ByVal sender As Object, ByVal e As TabControlEventArgs) Handles TabControl1.Selected
@@ -556,10 +594,15 @@ Public Class MainEditor
     Private Sub ShowMonsterList(ByVal monsters As IEnumerable(Of MonsterFile))
         TabControl1.SelectedIndex = 0
         cbMonsterSelector.Text = "Name="
-        lbFiles.Items.Clear()
-        For Each monster In monsters
-            lbFiles.Items.Add(monster.FileName)
-        Next
+        lbFiles.BeginUpdate()
+        Try
+            lbFiles.Items.Clear()
+            For Each monster In monsters
+                lbFiles.Items.Add(monster.FileName)
+            Next
+        Finally
+            lbFiles.EndUpdate()
+        End Try
         UpdateMonsterCount()
     End Sub
 
@@ -661,6 +704,7 @@ Public Class MainEditor
                 lwItems.Columns.Add("Items", 800, HorizontalAlignment.Left)
                 _dropColumnsReady = True
             End If
+            lwItems.BeginUpdate()
             lwItems.Items.Clear()
             For Each entry In MonsterData.GetDrops(monster)
                 If entry.IsExtra Then
@@ -675,6 +719,8 @@ Public Class MainEditor
             Next
         Catch ex As Exception
             ErrorLog.Report("ShowDrops", ex)
+        Finally
+            lwItems.EndUpdate()
         End Try
     End Sub
 
@@ -828,14 +874,13 @@ Public Class MainEditor
     ''' <summary>Lista os arquivos de item dos codigos da linha de drop selecionada.</summary>
     Private Sub ShowItemsForDrop()
         Try
+            lbItemFiles.BeginUpdate()
+            lbItemsRealName.BeginUpdate()
             lbItemFiles.Items.Clear()
             lbItemsRealName.Items.Clear()
             If tbDrops.Text.StartsWith("Gold") OrElse tbDrops.Text.StartsWith("Nothing") Then Return
             Dim codes = tbDrops.Text.Split(" "c)
-            Dim done As Integer = 0
             For Each code In codes
-                done += 1
-                pbWorking.Value = CInt(Math.Min(100, Math.Round(done * 100 / codes.Length)))
                 If code.Trim() = "" Then Continue For
                 Dim item = ItemData.FindByCode("""" & code.Trim().ToUpper() & """")
                 If item IsNot Nothing Then
@@ -849,8 +894,8 @@ Public Class MainEditor
         Catch ex As Exception
             ErrorLog.Report("ShowItemsForDrop", ex)
         Finally
-            ' A barra e a do carregamento: volta a vazia ao terminar (senao fica em 100% e parece que ja carregou).
-            pbWorking.Value = 0
+            lbItemFiles.EndUpdate()
+            lbItemsRealName.EndUpdate()
         End Try
     End Sub
 
@@ -907,6 +952,7 @@ Public Class MainEditor
     ''' <summary>Mapas cujas linhas citam o *이름 do monstro (ou, com "not in map", os que nao citam).</summary>
     Private Sub ShowMapsForMonster()
         If lbFiles.SelectedItems.Count = 0 Then Return
+        lbMaps.BeginUpdate()
         lbMaps.Items.Clear()
         Dim mapName As String = tbMoMapName.Text
         Try
@@ -916,6 +962,8 @@ Public Class MainEditor
             Next
         Catch ex As Exception
             ErrorLog.Report("ShowMapsForMonster", ex)
+        Finally
+            lbMaps.EndUpdate()
         End Try
     End Sub
 
@@ -1043,6 +1091,7 @@ Public Class MainEditor
 
     ''' <summary>Filtro "Nome=da1,da2": itens cujo codigo comeca com um dos prefixos.</summary>
     Private Sub RefreshItemList()
+        lbFileListItems.BeginUpdate()
         lbFileListItems.Items.Clear()
         Try
             Dim expression As String = cbItemSelector.Text.ToUpper()
@@ -1054,6 +1103,8 @@ Public Class MainEditor
             Next
         Catch ex As Exception
             ErrorLog.Report("RefreshItemList", ex)
+        Finally
+            lbFileListItems.EndUpdate()
         End Try
         UpdateItemCount()
     End Sub
@@ -1095,10 +1146,15 @@ Public Class MainEditor
         tbItmCode.Text = item.Code
         tbItmInGameNAme.Text = item.Name
         If cbItemMo.Checked Then
-            lbItemMo.Items.Clear()
-            For Each monster In AppState.Monsters
-                If MonsterData.DropsItem(monster, item.Code) Then lbItemMo.Items.Add(monster.FileName)
-            Next
+            lbItemMo.BeginUpdate()
+            Try
+                lbItemMo.Items.Clear()
+                For Each monster In AppState.Monsters
+                    If MonsterData.DropsItem(monster, item.Code) Then lbItemMo.Items.Add(monster.FileName)
+                Next
+            Finally
+                lbItemMo.EndUpdate()
+            End Try
         End If
         For Each line In item.Lines
             If Not line.StartsWith("*") Then Continue For
@@ -1330,19 +1386,29 @@ Public Class MainEditor
     End Function
 
     Private Sub RefreshMapList()
-        lbFilesMaps.Items.Clear()
-        For Each map In AppState.Maps
-            lbFilesMaps.Items.Add(map.FileName)
-        Next
+        lbFilesMaps.BeginUpdate()
+        Try
+            lbFilesMaps.Items.Clear()
+            For Each map In AppState.Maps
+                lbFilesMaps.Items.Add(map.FileName)
+            Next
+        Finally
+            lbFilesMaps.EndUpdate()
+        End Try
     End Sub
 
     ''' <summary>Lista de monstros disponiveis para arrastar ao mapa (filtro do combo da aba).</summary>
     Private Sub RefreshMonsterSource()
-        lvMonsterSource.Items.Clear()
-        Dim errorMessage As String = Nothing
-        For Each monster In MonsterData.Filter(cbMonsterSelector1.Text, errorMessage)
-            lvMonsterSource.Items.Add(monster.FileName).SubItems.Add(monster.Name)
-        Next
+        lvMonsterSource.BeginUpdate()
+        Try
+            lvMonsterSource.Items.Clear()
+            Dim errorMessage As String = Nothing
+            For Each monster In MonsterData.Filter(cbMonsterSelector1.Text, errorMessage)
+                lvMonsterSource.Items.Add(monster.FileName).SubItems.Add(monster.Name)
+            Next
+        Finally
+            lvMonsterSource.EndUpdate()
+        End Try
     End Sub
 
     Private Sub cbMonsterSelector1_SelectedIndexChanged(ByVal sender As Object, ByVal e As EventArgs) Handles cbMonsterSelector1.SelectedIndexChanged
@@ -1364,6 +1430,8 @@ Public Class MainEditor
         lvMapMonsters.Items.Clear()
         lvMapBosses.Items.Clear()
         If map Is Nothing Then Return
+        lvMapMonsters.BeginUpdate()
+        lvMapBosses.BeginUpdate()
         Try
             tbMapValue1.Text = MapData.GetValue(map, GameFields.Map.MaxSpawn)
             tbMapValue2.Text = MapData.GetValue(map, GameFields.Map.SpawnInterval)
@@ -1396,6 +1464,9 @@ Public Class MainEditor
             Next
         Catch ex As Exception
             ErrorLog.Report("ShowMap", ex)
+        Finally
+            lvMapMonsters.EndUpdate()
+            lvMapBosses.EndUpdate()
         End Try
     End Sub
 
@@ -1562,6 +1633,7 @@ Public Class MainEditor
         _npcMapStale = False
         Dim keep As String = _npcMapName
         _npcMapChanging = True
+        lbNPCMapFileList.BeginUpdate()
         Try
             lbNPCMapFileList.Items.Clear()
             For Each spcFile In AppState.SpcFiles
@@ -1573,6 +1645,7 @@ Public Class MainEditor
                 _npcMapName = ""
             End If
         Finally
+            lbNPCMapFileList.EndUpdate()
             _npcMapChanging = False
         End Try
         If reopen AndAlso _npcMapName <> "" Then OpenNpcMap(SelectedSpc())
@@ -1655,16 +1728,21 @@ Public Class MainEditor
 
     ''' <summary>Preenche a lista de NPCs do .spc (100 slots) e marca todos no mapa.</summary>
     Private Sub ShowNpcList(ByVal spc As BinaryDataFile)
-        lbNPCList.Items.Clear()
-        For i = 0 To NpcData.RecordCount - 1
-            If NpcData.IsRecordUsed(spc, i) Then
-                Dim rec = NpcData.ReadRecord(spc, i)
-                Dim npc = NpcData.FindNpc(Path.GetFileName(rec.SetupFile))
-                lbNPCList.Items.Add(If(npc Is Nothing, "NPC File not found!", npc.Name))
-            Else
-                lbNPCList.Items.Add(NpcData.Empty)
-            End If
-        Next
+        lbNPCList.BeginUpdate()
+        Try
+            lbNPCList.Items.Clear()
+            For i = 0 To NpcData.RecordCount - 1
+                If NpcData.IsRecordUsed(spc, i) Then
+                    Dim rec = NpcData.ReadRecord(spc, i)
+                    Dim npc = NpcData.FindNpc(Path.GetFileName(rec.SetupFile))
+                    lbNPCList.Items.Add(If(npc Is Nothing, "NPC File not found!", npc.Name))
+                Else
+                    lbNPCList.Items.Add(NpcData.Empty)
+                End If
+            Next
+        Finally
+            lbNPCList.EndUpdate()
+        End Try
         RefreshNpcCanvas()
     End Sub
 
@@ -1835,21 +1913,26 @@ Public Class MainEditor
     ' ---- Loja do NPC ------------------------------------------------------------------
 
     Private Sub FillNpcShop()
-        LWNPCshop.Items.Clear()
-        If CBShopItem.SelectedIndex < 0 Then Return
-        Dim shopKey As String = GameFields.Npc.ShopKeys(CBShopItem.SelectedIndex)
-        For Each code In NpcData.ReadShopItems(AppState.ServerPath & tbNPCSetupfile.Text, shopKey)
-            If code = GameFields.Monster.DropNothing Then
-                LWNPCshop.Items.Add(NpcData.Empty)
-                Continue For
-            End If
-            Dim item = ItemData.FindByCode("""" & code.ToUpper() & """")
-            If item Is Nothing Then
-                LWNPCshop.Items.Add("no code").SubItems.Add("item dont exist")
-            Else
-                LWNPCshop.Items.Add(item.Code).SubItems.Add(item.Name)
-            End If
-        Next
+        LWNPCshop.BeginUpdate()
+        Try
+            LWNPCshop.Items.Clear()
+            If CBShopItem.SelectedIndex < 0 Then Return
+            Dim shopKey As String = GameFields.Npc.ShopKeys(CBShopItem.SelectedIndex)
+            For Each code In NpcData.ReadShopItems(AppState.ServerPath & tbNPCSetupfile.Text, shopKey)
+                If code = GameFields.Monster.DropNothing Then
+                    LWNPCshop.Items.Add(NpcData.Empty)
+                    Continue For
+                End If
+                Dim item = ItemData.FindByCode("""" & code.ToUpper() & """")
+                If item Is Nothing Then
+                    LWNPCshop.Items.Add("no code").SubItems.Add("item dont exist")
+                Else
+                    LWNPCshop.Items.Add(item.Code).SubItems.Add(item.Name)
+                End If
+            Next
+        Finally
+            LWNPCshop.EndUpdate()
+        End Try
     End Sub
 
     Private Sub CBShopItem_SelectedIndexChanged(ByVal sender As Object, ByVal e As EventArgs) Handles CBShopItem.SelectedIndexChanged
