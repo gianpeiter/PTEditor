@@ -43,10 +43,9 @@ Public Class BellatraAdminPanel
         AddHandler ServerDatabase.StatusChanged, AddressOf ServerDatabase_StatusChanged
     End Sub
 
-    ''' <summary>Uma semana a partir de agora, na hora cheia.</summary>
+    ''' <summary>Uma semana a partir de hoje (so a data).</summary>
     Private Shared Function DefaultNewEnd() As DateTime
-        Dim target As DateTime = DateTime.Now.AddDays(7)
-        Return New DateTime(target.Year, target.Month, target.Day, target.Hour, 0, 0)
+        Return DateTime.Today.AddDays(7)
     End Function
 
     ''' <summary>Chamado ao abrir a aba: mostra o banco e, na primeira vez, le tudo.</summary>
@@ -232,7 +231,7 @@ Public Class BellatraAdminPanel
 
     Private Sub cmdClose_Click(ByVal sender As Object, ByVal e As EventArgs) Handles cmdClose.Click
         If _manager Is Nothing Then Return
-        Dim newEnd As DateTime = dtpNewEnd.Value
+        Dim newEnd As DateTime = dtpNewEnd.Value.Date
         If newEnd <= DateTime.Now Then
             MsgBox("The new period must end in the future.", MsgBoxStyle.Exclamation, "Bellatra Admin")
             Return
@@ -240,7 +239,7 @@ Public Class BellatraAdminPanel
         Dim outgoing As String = If(_manager.Exists AndAlso _manager.Idx > 0, "clan " & _manager.ClanName, "nobody")
         Dim pendingText As String = If(_pending > 0, "The revenue to release (" & _pending.ToString("N0") & " gold) goes to " & outgoing & ". ", "")
         If Not Dialogs.Confirm("Close period", "Close the period now?" & vbCrLf & vbCrLf &
-                               pendingText & "The 1st of the ranking becomes the manager until " & FormatDate(newEnd) & ", the ranking points of all " &
+                               pendingText & "The 1st of the ranking becomes the manager until " & newEnd.ToString("yyyy-MM-dd") & ", the ranking points of all " &
                                "clans are reset." & vbCrLf & vbCrLf & "This cannot be undone.",
                                MsgBoxStyle.Exclamation) Then Return
         Dim repo = Repository(True)

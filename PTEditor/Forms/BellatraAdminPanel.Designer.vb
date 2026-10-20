@@ -177,7 +177,7 @@ Partial Class BellatraAdminPanel
         '
         'dtpNewEnd
         '
-        Me.dtpNewEnd.CustomFormat = "yyyy-MM-dd HH:mm"
+        Me.dtpNewEnd.CustomFormat = "yyyy-MM-dd"
         Me.dtpNewEnd.Format = System.Windows.Forms.DateTimePickerFormat.Custom
         Me.dtpNewEnd.Location = New System.Drawing.Point(112, 21)
         Me.dtpNewEnd.Name = "dtpNewEnd"
