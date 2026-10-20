@@ -16,6 +16,7 @@ Visual Studio 2022 / .NET Framework 4.8 / VB.NET.
 | Item Finder | Busca itens em todos os personagens e baus, lista itens duplicados e com checksum invalido. |
 | Award Items | Envia itens para NPCs com `*AwardItem` (tabela `AwardItem_List` do SQL Server). |
 | PostBox | Envia itens para NPCs com `*경품배달`, como o Item Distributor (arquivos `PostBox\<n>\<conta>.dat`). |
+| Bellatra | Faz o papel do antigo site de gerencia do Bellatra: gerente e ranking da semana, renda, saudacao da Karina, horario do fechamento e `Bellatra\bellatra.ini` (taxa, monstros e chefes de cada round). |
 | Options | Pasta do servidor, banco de dados, editor de texto e perfis de personagem. |
 
 ## Compilar
@@ -111,6 +112,26 @@ As duas linhas podem ficar no mesmo NPC: um clique atende os dois sistemas. O `.
   Isso cobre so o `.spc`: loja, nome, falas e o `.NPC`/`.zhoon` criados pelo Add nao sao desfeitos.
 - Clique direito sem arrastar mostra **Bring back to Map**, que leva o NPC para o centro da vista.
 - O servidor le os `.spc` ao iniciar: reinicie-o depois de salvar.
+
+## Bellatra
+
+No legado, o clan dono do Bellatra configurava o torneio pelo site. O site gravava `Bellatra\bellatra.ini`, que o
+servidor rele no inicio de cada SoD; a aba grava o mesmo arquivo, entao a mudanca vale no SoD seguinte, sem reiniciar.
+
+- **Gerente da semana:** como no site, o ranking e semanal. No fechamento (dia e hora em `server.ini` `[Bellatra]`,
+  padrao segunda as 15h; campo **Weekly close**) o 1o do ranking vira o gerente ate o proximo fechamento e o ranking
+  recomeca. O servidor faz isso sozinho (`SoD2DB.Sod2Config`); a aba mostra o gerente, o periodo e a renda: a taxa do
+  dia, entregue ao `ClanMoney` no fechamento diario (mesma hora), o que foi entregue "ontem" e no periodo.
+- **Ranking:** os pontos da semana (`ClanDB.CL.Cpoint`), os mesmos 10 que a Karina lista.
+- **Saudacao da Karina:** `Sod2Config.Note` do gerente (ate 89 caracteres, sem `|`). E limpa quando outro clan assume.
+- **Taxa:** 0 a 10% (como no site), descontada do premio de cada jogador e dada ao gerente. O Save grava o
+  `bellatra.ini` e tambem `Sod2Config.TaxRates`, com uma linha em `Sod2TaxLog` quando muda.
+- **Rounds 1 a 8:** ate 4 monstros com a % de cada (soma 100), maximo de monstros vivos por sala (11 a 50; o chefe nasce
+  depois de maximo - 10) e o chefe dos rounds 3, 6 e 8. Os monstros vem do `*이름` dos `.inf` carregados.
+- **Load monsters** preenche os rounds com uma das 3 tabelas do codigo do servidor. **Save** grava as 8 linhas (backup em
+  `Bellatra\backup`) e so grava se tudo estiver valido. **Remove file** apaga o arquivo: o servidor volta a sortear uma das
+  3 tabelas do codigo a cada SoD.
+- Se o arquivo nao tiver as 8 linhas `*BELATRA_MONSTER`, o servidor ignora o arquivo inteiro, inclusive a taxa.
 
 ## Cuidados
 

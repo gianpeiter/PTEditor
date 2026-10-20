@@ -13,6 +13,7 @@ Public Class MainEditor
     Private Const TabAwardItems As String = "Award Items"
     Private Const TabPostBox As String = "PostBox"
     Private Const TabSpawn As String = "Spawn Point"
+    Private Const TabBellatra As String = "Bellatra"
 
     ''' <summary>Conversao do angulo do NPC (0..4096) para radianos: 2*PI/4096.</summary>
     Private Const AngleToRadians As Double = 0.0015339807878856412
@@ -372,7 +373,7 @@ Public Class MainEditor
         End Try
     End Sub
 
-    Private Sub AwardItemsPanel1_OptionsRequested() Handles AwardItemsPanel1.OptionsRequested, PostBoxPanel1.OptionsRequested
+    Private Sub AwardItemsPanel1_OptionsRequested() Handles AwardItemsPanel1.OptionsRequested, PostBoxPanel1.OptionsRequested, BellatraPanel1.OptionsRequested
         TabControl1.SelectedTab = TabPage4
     End Sub
 
@@ -517,6 +518,8 @@ Public Class MainEditor
                     AwardItemsPanel1.EnsureLoaded()
                 Case TabPostBox
                     PostBoxPanel1.EnsureLoaded()
+                Case TabBellatra
+                    BellatraPanel1.EnsureLoaded()
             End Select
         Catch ex As Exception
             ErrorLog.Report("TabControl1_Selected", ex)
