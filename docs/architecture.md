@@ -31,7 +31,7 @@ cliente/servidor (PTClassic), não o comportamento observado em outros editores.
 | Modelo e `.NPC` do registro | `szModelName` (offset 40) é o modelo 3D (`SetLoadPattern`); `szModelName2` (offset 0x68) é o `.NPC` (`smCharDecode`), ambos em `STG_AREA::OpenNpc`. Trocar um NPC (Replace) muda os dois e mantém posição, direção e ID |
 | ID do NPC | É o `dwObjectSerial`. `STG_AREA::OpenNpc` o sobrescreve com `GetNewObjectSerial()` ao iniciar o mapa; o valor gravado no `.spc` não é usado (0 funciona) |
 | Configuração do Bellatra | `Bellatra\bellatra.ini` lido por `Open_SODConfig` (`Servidor\fileread.cpp`) no início de cada SoD (`rsOpen_SODConfig`). Exige as 8 linhas `*BELATRA_MONSTER` (senão ignora o arquivo todo); nome até 31 bytes (`szName[32]`) e linha até 254 bytes (`fgets(line, 255)`). Sem o arquivo, sorteia `sHCoreEvent1/2/3` de `OnSever.cpp` |
-| Gerente do Bellatra | `SoD2DB.Sod2Config.MIDX`, trocado por `Bellatra::Tick` no fechamento semanal (`server.ini` `[Bellatra] CloseDay`/`CloseHour`) para o maior `CL.Cpoint` > 0 (desempate por `IDX`); a Karina mostra `Sod2Config.Note` e a renda (`BeforeMoney`, `TotalMoney`) |
+| Gerente do Bellatra | `SoD2DB.Sod2Config.MIDX`, trocado pelo administrador na aba Bellatra Admin (`Sod2ClosePeriod`, em `Database\SoD2DB.sql` do Servidor) para o maior `CL.Cpoint` > 0 (desempate por `IDX`); `Sod2DeliverRevenue` soma a renda em `CL.ClanMoney`; a Karina mostra `Sod2Config.Note` e a renda (`BeforeMoney`, `TotalMoney`) |
 | Posição e direção do NPC | `x, y, z` em ponto fixo (o editor lê os 3 bytes altos, `>> 8`); `ay` é a direção, de 0 a 4096. O `y` gravado é a altura do terreno do `.smd` no ponto (`StageMesh.TryHeightAt`) |
 
 ## Registro de erros

@@ -1,11 +1,10 @@
 ﻿Imports System.IO
 
 ''' <summary>
-''' Aba Bellatra: faz o papel do site de gerencia do Bellatra do legado (priston.com.br/bellatra). Mostra o clan gerente
-''' da semana e a renda ([SoD2DB].[dbo].[Sod2Config]), o ranking da semana ([ClanDB].[dbo].[CL]), edita a saudacao da
-''' Karina (Sod2Config.Note), o dia/hora do fechamento (server.ini [Bellatra]) e grava Bellatra\bellatra.ini (taxa,
-''' monstros e chefes de cada round), que o servidor rele no inicio de cada SoD. Os pontos (SQL.dll), os fechamentos do
-''' dia e da semana e o repasse do imposto (Bellatra::Tick/AddClanTax) continuam automaticos no servidor.
+''' Aba Bellatra: a pagina do gerente do site do Bellatra do legado (priston.com.br/bellatra). Mostra o clan gerente e a
+''' renda ([SoD2DB].[dbo].[Sod2Config]), edita a saudacao da Karina (Sod2Config.Note) e grava Bellatra\bellatra.ini (taxa,
+''' monstros e chefes de cada round), que o servidor rele no inicio de cada SoD. A parte do site que rodava sozinha
+''' (ranking, entrega da renda, troca do gerente) fica na aba Bellatra Admin (BellatraAdminPanel).
 ''' </summary>
 Public Class BellatraPanel
 
@@ -61,11 +60,6 @@ Public Class BellatraPanel
     Private Sub EnsureSetup()
         If _setupDone Then Return
         _setupDone = True
-        lvRanking.Columns.Add("#", 30)
-        lvRanking.Columns.Add("Clan", 130)
-        lvRanking.Columns.Add("Points (week)", 80)
-        lvRanking.Columns.Add("Clan money", 100)
-        lvRanking.Columns.Add("Created", 76)
         For tax = 0 To BellatraConfig.MaxTax
             cbTax.Items.Add(tax & "%")
         Next
@@ -73,7 +67,6 @@ Public Class BellatraPanel
             cbLegacyTable.Items.Add("Code table " & table)
         Next
         cbLegacyTable.SelectedIndex = 0
-        cbCloseDay.Items.AddRange(Globalization.CultureInfo.InvariantCulture.DateTimeFormat.DayNames)
         BuildRows()
         AddHandler ServerDatabase.StatusChanged, AddressOf ServerDatabase_StatusChanged
     End Sub
@@ -84,7 +77,6 @@ Public Class BellatraPanel
         ShowDatabase()
         If _choicesFrom <> AppState.Monsters.Count Then FillChoices()
         If Not _dirty AndAlso Not BellatraConfig.FilePath().Equals(_loadedPath, StringComparison.OrdinalIgnoreCase) Then LoadFile()
-        LoadSchedule()
         If Not _ownerChecked Then
             _ownerChecked = True
             RefreshOwner(False)
@@ -138,35 +130,20 @@ Public Class BellatraPanel
         RefreshOwner(True)
     End Sub
 
-    ''' <summary>Le o ranking da semana e a gerencia (Sod2Config): gerente, periodo, renda e saudacao da Karina.</summary>
+    ''' <summary>Le a gerencia (Sod2Config): gerente, periodo, renda e saudacao da Karina.</summary>
     Private Sub RefreshOwner(ByVal showErrors As Boolean)
         Dim repo = Repository(showErrors)
         If repo Is Nothing Then
             ShowManager(Nothing, "Database not configured. Set it in Options.")
             Return
         End If
-        Dim ranking As List(Of BellatraClan) = Nothing
         Dim manager As BellatraManager = Nothing
-        If Not RunDb(Sub()
-                         ranking = repo.Ranking()
-                         manager = repo.Manager()
-                     End Sub, "Reading the Bellatra ranking", showErrors) Then
-            ShowManager(Nothing, "Could not read the ranking (see the status above). SoD2DB needs the Sod2Config table (Database\SoD2DB.sql).")
+        If Not RunDb(Sub() manager = repo.Manager(), "Reading the Bellatra manager", showErrors) Then
+            ShowManager(Nothing, "Could not read the manager (see the status above). SoD2DB needs the Sod2Config table (Database\SoD2DB.sql).")
             Return
         End If
-        lvRanking.BeginUpdate()
-        lvRanking.Items.Clear()
-        For i = 0 To ranking.Count - 1
-            Dim clan = ranking(i)
-            Dim row = lvRanking.Items.Add((i + 1).ToString())
-            row.SubItems.Add(clan.ClanName)
-            row.SubItems.Add(clan.Points.ToString("N0"))
-            row.SubItems.Add(clan.ClanMoney.ToString("N0"))
-            row.SubItems.Add(clan.RegiDate)
-        Next
-        lvRanking.EndUpdate()
         ShowManager(manager, "")
-        ServerDatabase.SetStatus("Connected: " & ranking.Count & " clan(s) in this week's ranking.", Color.DarkGreen)
+        ServerDatabase.SetStatus("Connected: Bellatra manager read.", Color.DarkGreen)
     End Sub
 
     Private Shared Function FormatDate(ByVal value As DateTime) As String
@@ -179,17 +156,16 @@ Public Class BellatraPanel
         If manager Is Nothing Then
             lblOwnerInfo.Text = errorText
         ElseIf Not manager.Exists Then
-            lblOwnerInfo.Text = "No management yet: the server creates it on the first SoD tick (Bellatra enabled), " &
-                                "and the 1st of the weekly ranking becomes the manager."
+            lblOwnerInfo.Text = "No management yet: the administrator starts it with Close period in the Bellatra Admin tab " &
+                                "(the 1st of the ranking becomes the manager)."
         ElseIf Not hasManager Then
-            lblOwnerInfo.Text = "No manager this week (no clan had points at the last close)." & vbCrLf &
+            lblOwnerInfo.Text = "No manager in this period (no clan had points at the last close)." & vbCrLf &
                                 "Period: " & FormatDate(manager.OperFrom) & " to " & FormatDate(manager.OperTo) & vbCrLf &
-                                "The 1st of the weekly ranking takes over at the next close."
+                                "The 1st of the ranking takes over at the next Close period."
         Else
             lblOwnerInfo.Text = "Clan: " & manager.ClanName & "   (leader " & manager.Leader & ")" & vbCrLf &
                                 "Period: " & FormatDate(manager.OperFrom) & " to " & FormatDate(manager.OperTo) & "   Tax: " & manager.TaxRates & "%" & vbCrLf &
-                                "Tax today (paid at the daily close): " & manager.TodayMoney.ToString("N0") &
-                                "   Yesterday: " & manager.BeforeMoney.ToString("N0") & "   Period: " & manager.TotalMoney.ToString("N0") & vbCrLf &
+                                "Last delivery: " & manager.BeforeMoney.ToString("N0") & "   Delivered in the period: " & manager.TotalMoney.ToString("N0") & vbCrLf &
                                 "Clan money (the leader withdraws it at Karina): " & manager.ClanMoney.ToString("N0")
         End If
         tbGreeting.Text = If(hasManager, manager.Note, "")
@@ -210,41 +186,8 @@ Public Class BellatraPanel
         If repo Is Nothing Then Return
         Dim saved As Boolean
         If Not RunDb(Sub() saved = repo.SaveNote(_manager.Idx, note), "Saving Karina's greeting", True) Then Return
-        If Not saved Then MsgBox("Clan " & _manager.ClanName & " is no longer the manager (the week closed).", MsgBoxStyle.Exclamation, "Bellatra")
+        If Not saved Then MsgBox("Clan " & _manager.ClanName & " is no longer the manager (the period closed).", MsgBoxStyle.Exclamation, "Bellatra")
         RefreshOwner(True)
-    End Sub
-
-    ''' <summary>Dia e hora do fechamento lidos do server.ini do servidor atual.</summary>
-    Private Sub LoadSchedule()
-        Dim day, hour As Integer
-        Try
-            BellatraConfig.ReadSchedule(day, hour)
-        Catch ex As Exception
-            ErrorLog.Write("Bellatra: reading server.ini" & vbCrLf & ex.ToString())
-            day = BellatraConfig.DefaultCloseDay
-            hour = BellatraConfig.DefaultCloseHour
-        End Try
-        cbCloseDay.SelectedIndex = day
-        nudCloseHour.Value = hour
-    End Sub
-
-    Private Sub cmdSaveSchedule_Click(ByVal sender As Object, ByVal e As EventArgs) Handles cmdSaveSchedule.Click
-        If AppState.ServerPath = "" OrElse Not File.Exists(Path.Combine(AppState.ServerPath, DatabaseConfig.FileName)) Then
-            MsgBox("server.ini not found in the server folder. Set it in Options.", MsgBoxStyle.Exclamation, "Bellatra")
-            Return
-        End If
-        Dim day As Integer = cbCloseDay.SelectedIndex
-        Dim hour As Integer = CInt(nudCloseHour.Value)
-        If Not Dialogs.Confirm("Bellatra", "Close the week every " & cbCloseDay.Text & " at " & hour & "h and the day every day at " & hour & "h?" & vbCrLf & vbCrLf &
-                               "Saved in server.ini [Bellatra]. The server reads it within a minute. The current period still ends on its date; " &
-                               "the next periods follow the new day.") Then Return
-        Try
-            BellatraConfig.WriteSchedule(day, hour)
-        Catch ex As Exception
-            ErrorLog.Report("BellatraPanel.SaveSchedule", ex)
-            Return
-        End Try
-        LoadSchedule()
     End Sub
 
 #End Region

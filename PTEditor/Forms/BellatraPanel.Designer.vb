@@ -23,13 +23,7 @@ Partial Class BellatraPanel
         Me.lblDbInfo = New System.Windows.Forms.Label()
         Me.lblDatabase = New System.Windows.Forms.Label()
         Me.gbOwner = New System.Windows.Forms.GroupBox()
-        Me.cmdSaveSchedule = New System.Windows.Forms.Button()
-        Me.lblCloseHour = New System.Windows.Forms.Label()
-        Me.nudCloseHour = New System.Windows.Forms.NumericUpDown()
-        Me.cbCloseDay = New System.Windows.Forms.ComboBox()
-        Me.lblClose = New System.Windows.Forms.Label()
         Me.cmdRefresh = New System.Windows.Forms.Button()
-        Me.lvRanking = New System.Windows.Forms.ListView()
         Me.lblGreetingHint = New System.Windows.Forms.Label()
         Me.cmdSaveGreeting = New System.Windows.Forms.Button()
         Me.tbGreeting = New System.Windows.Forms.TextBox()
@@ -49,7 +43,6 @@ Partial Class BellatraPanel
         Me.lblFileInfo = New System.Windows.Forms.Label()
         Me.pnlTop.SuspendLayout()
         Me.gbOwner.SuspendLayout()
-        CType(Me.nudCloseHour, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.gbSettings.SuspendLayout()
         Me.SuspendLayout()
         '
@@ -106,13 +99,7 @@ Partial Class BellatraPanel
         '
         'gbOwner
         '
-        Me.gbOwner.Controls.Add(Me.cmdSaveSchedule)
-        Me.gbOwner.Controls.Add(Me.lblCloseHour)
-        Me.gbOwner.Controls.Add(Me.nudCloseHour)
-        Me.gbOwner.Controls.Add(Me.cbCloseDay)
-        Me.gbOwner.Controls.Add(Me.lblClose)
         Me.gbOwner.Controls.Add(Me.cmdRefresh)
-        Me.gbOwner.Controls.Add(Me.lvRanking)
         Me.gbOwner.Controls.Add(Me.lblGreetingHint)
         Me.gbOwner.Controls.Add(Me.cmdSaveGreeting)
         Me.gbOwner.Controls.Add(Me.tbGreeting)
@@ -120,22 +107,22 @@ Partial Class BellatraPanel
         Me.gbOwner.Controls.Add(Me.lblOwnerInfo)
         Me.gbOwner.Location = New System.Drawing.Point(6, 62)
         Me.gbOwner.Name = "gbOwner"
-        Me.gbOwner.Size = New System.Drawing.Size(1022, 172)
+        Me.gbOwner.Size = New System.Drawing.Size(1022, 150)
         Me.gbOwner.TabIndex = 1
         Me.gbOwner.TabStop = False
-        Me.gbOwner.Text = "Bellatra manager of the week (1st of the weekly ranking at the last close)"
+        Me.gbOwner.Text = "Clan that manages the Bellatra (set by the administrator in the Bellatra Admin tab)"
         '
         'lblOwnerInfo
         '
         Me.lblOwnerInfo.Location = New System.Drawing.Point(8, 20)
         Me.lblOwnerInfo.Name = "lblOwnerInfo"
-        Me.lblOwnerInfo.Size = New System.Drawing.Size(470, 76)
+        Me.lblOwnerInfo.Size = New System.Drawing.Size(920, 58)
         Me.lblOwnerInfo.TabIndex = 0
         '
         'lblGreeting
         '
         Me.lblGreeting.AutoSize = True
-        Me.lblGreeting.Location = New System.Drawing.Point(8, 100)
+        Me.lblGreeting.Location = New System.Drawing.Point(8, 82)
         Me.lblGreeting.Name = "lblGreeting"
         Me.lblGreeting.Size = New System.Drawing.Size(220, 13)
         Me.lblGreeting.TabIndex = 1
@@ -143,15 +130,15 @@ Partial Class BellatraPanel
         '
         'tbGreeting
         '
-        Me.tbGreeting.Location = New System.Drawing.Point(8, 118)
+        Me.tbGreeting.Location = New System.Drawing.Point(8, 100)
         Me.tbGreeting.MaxLength = 89
         Me.tbGreeting.Name = "tbGreeting"
-        Me.tbGreeting.Size = New System.Drawing.Size(400, 20)
+        Me.tbGreeting.Size = New System.Drawing.Size(600, 20)
         Me.tbGreeting.TabIndex = 2
         '
         'cmdSaveGreeting
         '
-        Me.cmdSaveGreeting.Location = New System.Drawing.Point(414, 116)
+        Me.cmdSaveGreeting.Location = New System.Drawing.Point(614, 98)
         Me.cmdSaveGreeting.Name = "cmdSaveGreeting"
         Me.cmdSaveGreeting.Size = New System.Drawing.Size(64, 23)
         Me.cmdSaveGreeting.TabIndex = 3
@@ -161,68 +148,11 @@ Partial Class BellatraPanel
         'lblGreetingHint
         '
         Me.lblGreetingHint.ForeColor = System.Drawing.SystemColors.GrayText
-        Me.lblGreetingHint.Location = New System.Drawing.Point(8, 142)
+        Me.lblGreetingHint.Location = New System.Drawing.Point(8, 124)
         Me.lblGreetingHint.Name = "lblGreetingHint"
-        Me.lblGreetingHint.Size = New System.Drawing.Size(470, 26)
+        Me.lblGreetingHint.Size = New System.Drawing.Size(900, 18)
         Me.lblGreetingHint.TabIndex = 4
-        Me.lblGreetingHint.Text = "Shown in Karina's window (up to 89 characters). It is cleared when another clan " &
-            "becomes the manager."
-        '
-        'lvRanking
-        '
-        Me.lvRanking.FullRowSelect = True
-        Me.lvRanking.GridLines = True
-        Me.lvRanking.HideSelection = False
-        Me.lvRanking.Location = New System.Drawing.Point(490, 18)
-        Me.lvRanking.MultiSelect = False
-        Me.lvRanking.Name = "lvRanking"
-        Me.lvRanking.Size = New System.Drawing.Size(440, 114)
-        Me.lvRanking.TabIndex = 5
-        Me.lvRanking.UseCompatibleStateImageBehavior = False
-        Me.lvRanking.View = System.Windows.Forms.View.Details
-        '
-        'lblClose
-        '
-        Me.lblClose.AutoSize = True
-        Me.lblClose.Location = New System.Drawing.Point(490, 143)
-        Me.lblClose.Name = "lblClose"
-        Me.lblClose.Size = New System.Drawing.Size(72, 13)
-        Me.lblClose.TabIndex = 7
-        Me.lblClose.Text = "Weekly close:"
-        '
-        'cbCloseDay
-        '
-        Me.cbCloseDay.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
-        Me.cbCloseDay.Location = New System.Drawing.Point(568, 139)
-        Me.cbCloseDay.Name = "cbCloseDay"
-        Me.cbCloseDay.Size = New System.Drawing.Size(100, 21)
-        Me.cbCloseDay.TabIndex = 8
-        '
-        'nudCloseHour
-        '
-        Me.nudCloseHour.Location = New System.Drawing.Point(674, 140)
-        Me.nudCloseHour.Maximum = New Decimal(New Integer() {23, 0, 0, 0})
-        Me.nudCloseHour.Name = "nudCloseHour"
-        Me.nudCloseHour.Size = New System.Drawing.Size(44, 20)
-        Me.nudCloseHour.TabIndex = 9
-        '
-        'lblCloseHour
-        '
-        Me.lblCloseHour.AutoSize = True
-        Me.lblCloseHour.Location = New System.Drawing.Point(720, 143)
-        Me.lblCloseHour.Name = "lblCloseHour"
-        Me.lblCloseHour.Size = New System.Drawing.Size(140, 13)
-        Me.lblCloseHour.TabIndex = 10
-        Me.lblCloseHour.Text = "h (also the daily close)"
-        '
-        'cmdSaveSchedule
-        '
-        Me.cmdSaveSchedule.Location = New System.Drawing.Point(866, 138)
-        Me.cmdSaveSchedule.Name = "cmdSaveSchedule"
-        Me.cmdSaveSchedule.Size = New System.Drawing.Size(64, 23)
-        Me.cmdSaveSchedule.TabIndex = 11
-        Me.cmdSaveSchedule.Text = "Save"
-        Me.cmdSaveSchedule.UseVisualStyleBackColor = True
+        Me.lblGreetingHint.Text = "Shown in Karina's window (up to 89 characters)."
         '
         'cmdRefresh
         '
@@ -246,7 +176,7 @@ Partial Class BellatraPanel
         Me.gbSettings.Controls.Add(Me.cbTax)
         Me.gbSettings.Controls.Add(Me.lblTax)
         Me.gbSettings.Controls.Add(Me.lblFileInfo)
-        Me.gbSettings.Location = New System.Drawing.Point(6, 238)
+        Me.gbSettings.Location = New System.Drawing.Point(6, 216)
         Me.gbSettings.Name = "gbSettings"
         Me.gbSettings.Size = New System.Drawing.Size(1022, 410)
         Me.gbSettings.TabIndex = 2
@@ -286,7 +216,7 @@ Partial Class BellatraPanel
         Me.lblTaxHint.Name = "lblTaxHint"
         Me.lblTaxHint.Size = New System.Drawing.Size(500, 13)
         Me.lblTaxHint.TabIndex = 3
-        Me.lblTaxHint.Text = "Taken from each player's prize and given to the owner clan (0 to 10%, as on the legacy site)."
+        Me.lblTaxHint.Text = "Taken from each player's prize and paid to the manager clan (0 to 10%, as on the legacy site)."
         '
         'pnlRounds
         '
@@ -361,7 +291,6 @@ Partial Class BellatraPanel
         Me.Size = New System.Drawing.Size(1034, 654)
         Me.pnlTop.ResumeLayout(False)
         Me.pnlTop.PerformLayout()
-        CType(Me.nudCloseHour, System.ComponentModel.ISupportInitialize).EndInit()
         Me.gbOwner.ResumeLayout(False)
         Me.gbOwner.PerformLayout()
         Me.gbSettings.ResumeLayout(False)
@@ -376,13 +305,7 @@ Partial Class BellatraPanel
     Friend WithEvents lblDbInfo As System.Windows.Forms.Label
     Friend WithEvents lblDatabase As System.Windows.Forms.Label
     Friend WithEvents gbOwner As System.Windows.Forms.GroupBox
-    Friend WithEvents cmdSaveSchedule As System.Windows.Forms.Button
-    Friend WithEvents lblCloseHour As System.Windows.Forms.Label
-    Friend WithEvents nudCloseHour As System.Windows.Forms.NumericUpDown
-    Friend WithEvents cbCloseDay As System.Windows.Forms.ComboBox
-    Friend WithEvents lblClose As System.Windows.Forms.Label
     Friend WithEvents cmdRefresh As System.Windows.Forms.Button
-    Friend WithEvents lvRanking As System.Windows.Forms.ListView
     Friend WithEvents lblGreetingHint As System.Windows.Forms.Label
     Friend WithEvents cmdSaveGreeting As System.Windows.Forms.Button
     Friend WithEvents tbGreeting As System.Windows.Forms.TextBox

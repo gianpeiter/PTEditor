@@ -1,7 +1,7 @@
 ﻿Imports System.Data
 Imports System.Data.SqlClient
 
-''' <summary>Um clan do ranking da semana ([ClanDB].[dbo].[CL]).</summary>
+''' <summary>Um clan do ranking do periodo ([ClanDB].[dbo].[CL]).</summary>
 Friend Class BellatraClan
     Public Property Idx As Integer
     Public Property ClanName As String = ""
@@ -10,20 +10,31 @@ Friend Class BellatraClan
     Public Property RegiDate As String = ""
 End Class
 
-''' <summary>Gerencia da semana ([SoD2DB].[dbo].[Sod2Config], tabela do site de gerencia do legado).</summary>
-Friend Class BellatraManager
-    ''' <summary>False = o servidor ainda nao criou a linha (cria no primeiro tick do SoD).</summary>
-    Public Property Exists As Boolean
-    ''' <summary>CL.IDX do clan gerente; 0 = sem gerente nesta semana.</summary>
+''' <summary>Um periodo de gerencia ja encerrado ([SoD2DB].[dbo].[Sod2ConfigLog]).</summary>
+Friend Class BellatraPeriod
     Public Property Idx As Integer
     Public Property ClanName As String = ""
     Public Property Leader As String = ""
     Public Property OperFrom As DateTime
     Public Property OperTo As DateTime
     Public Property TaxRates As Integer
-    ''' <summary>Taxa do dia, entregue ao ClanMoney no proximo fechamento do dia.</summary>
+    Public Property TotalMoney As Long
+End Class
+
+''' <summary>Gerencia do periodo ([SoD2DB].[dbo].[Sod2Config], tabela do site de gerencia do legado).</summary>
+Friend Class BellatraManager
+    ''' <summary>False = ainda nao ha linha (a cria o primeiro "Close period" da aba Bellatra Admin).</summary>
+    Public Property Exists As Boolean
+    ''' <summary>CL.IDX do clan gerente; 0 = sem gerente neste periodo.</summary>
+    Public Property Idx As Integer
+    Public Property ClanName As String = ""
+    Public Property Leader As String = ""
+    Public Property OperFrom As DateTime
+    Public Property OperTo As DateTime
+    Public Property TaxRates As Integer
+    ''' <summary>Sod2Config.TodayMoney (a renda pendente e calculada por Sod2PendingRevenue).</summary>
     Public Property TodayMoney As Long
-    ''' <summary>Entregue no ultimo fechamento do dia ("ontem" na janela da Karina).</summary>
+    ''' <summary>Entregue na ultima entrega de renda ("ontem" na janela da Karina).</summary>
     Public Property BeforeMoney As Long
     ''' <summary>Entregue ao gerente no periodo.</summary>
     Public Property TotalMoney As Long
@@ -34,9 +45,10 @@ End Class
 
 ''' <summary>
 ''' Dados do Bellatra no banco, com os mesmos criterios do servidor:
-''' - o ranking da semana e CL.Cpoint (&gt; 0), gravado pelo SQL.dll a cada SoD e zerado no fechamento da semana;
-''' - o gerente da semana fica em SoD2DB.Sod2Config (Bellatra::Tick o troca no fechamento da semana e entrega a
-'''   renda do dia ao CL.ClanMoney no fechamento do dia); a janela da Karina mostra Sod2Config.Note.
+''' - o ranking do periodo e CL.Cpoint (&gt; 0), gravado a cada SoD pela procedure Sod2Record_Web (chamada pela SQL.dll)
+'''   e zerado por Sod2ClosePeriod;
+''' - o gerente fica em SoD2DB.Sod2Config; Sod2DeliverRevenue entrega a renda ao CL.ClanMoney e Sod2ClosePeriod troca
+'''   o gerente (procedures de Database\SoD2DB.sql, acionadas pela aba Bellatra Admin); a janela da Karina mostra Sod2Config.Note.
 ''' Todas as consultas sao parametrizadas.
 ''' </summary>
 Friend NotInheritable Class BellatraRepository
@@ -47,6 +59,12 @@ Friend NotInheritable Class BellatraRepository
     Friend Const MaxNoteLength As Integer = 89
     ''' <summary>A janela da Karina lista os 10 primeiros (ClanService::Sod2Info, indice 3).</summary>
     Friend Const RankingSize As Integer = 10
+    Friend Const HistorySize As Integer = 20
+    ''' <summary>Padrao de Sod2Setting: 3 sobreviventes do clan (guia de 2004 e guia PT).</summary>
+    Friend Const DefaultMinSurvivors As Integer = 3
+    Friend Const MaxMinSurvivors As Integer = 20
+    ''' <summary>Padrao de Sod2Setting.ReleasePercent: 100% do recolhido (o administrador ajusta).</summary>
+    Friend Const DefaultReleasePercent As Integer = 100
 
     Private ReadOnly _config As DatabaseConfig
 
@@ -60,7 +78,7 @@ Friend NotInheritable Class BellatraRepository
         Return connection
     End Function
 
-    ''' <summary>Ranking da semana: os 10 clans com Cpoint &gt; 0, na ordem do servidor.</summary>
+    ''' <summary>Ranking do periodo: os 10 clans com Cpoint &gt; 0, na ordem da Sod2ClosePeriod.</summary>
     Public Function Ranking() As List(Of BellatraClan)
         Dim result As New List(Of BellatraClan)()
         Using connection = Open(ClanDatabase)
@@ -83,7 +101,7 @@ Friend NotInheritable Class BellatraRepository
         Return result
     End Function
 
-    ''' <summary>Gerencia da semana (linha de Sod2Config), com o nome e o dinheiro atuais do clan.</summary>
+    ''' <summary>Gerencia do periodo (linha de Sod2Config), com o nome e o dinheiro atuais do clan.</summary>
     Public Function Manager() As BellatraManager
         Using connection = Open(SodDatabase)
             Using command As New SqlCommand(
@@ -109,6 +127,114 @@ Friend NotInheritable Class BellatraRepository
                 End Using
             End Using
         End Using
+    End Function
+
+    ''' <summary>
+    ''' Sod2PendingRevenue: o dinheiro recolhido (taxa sobre os premios pagos) desde a ultima entrega e a parte liberada ao
+    ''' gerente (recolhido x ReleasePercent / 100).
+    ''' </summary>
+    Public Sub PendingRevenue(ByRef collected As Long, ByRef pending As Long)
+        Using connection = Open(SodDatabase)
+            Using command As New SqlCommand("dbo.Sod2PendingRevenue", connection) With {.CommandType = CommandType.StoredProcedure}
+                Using reader = command.ExecuteReader()
+                    If reader.Read() Then
+                        collected = Convert.ToInt64(reader.GetValue(0))
+                        pending = Convert.ToInt64(reader.GetValue(1))
+                    End If
+                End Using
+            End Using
+        End Using
+    End Sub
+
+    ''' <summary>Porcentagem do recolhido que o administrador libera ao clan gerente (Sod2Setting.ReleasePercent).</summary>
+    Public Function ReleasePercent() As Integer
+        Using connection = Open(SodDatabase)
+            Using command As New SqlCommand("SELECT TOP 1 ReleasePercent FROM [dbo].[Sod2Setting]", connection)
+                Dim value As Object = command.ExecuteScalar()
+                Return If(value Is Nothing OrElse value Is DBNull.Value, DefaultReleasePercent, Convert.ToInt32(value))
+            End Using
+        End Using
+    End Function
+
+    Public Sub SaveReleasePercent(ByVal value As Integer)
+        Using connection = Open(SodDatabase)
+            Using command As New SqlCommand(
+                "UPDATE [dbo].[Sod2Setting] SET ReleasePercent = @value; " &
+                "IF @@ROWCOUNT = 0 INSERT INTO [dbo].[Sod2Setting] (MinClanSurvivors, ReleasePercent) VALUES (@min, @value)", connection)
+                command.Parameters.Add("@value", SqlDbType.Int).Value = value
+                command.Parameters.Add("@min", SqlDbType.Int).Value = DefaultMinSurvivors
+                command.ExecuteNonQuery()
+            End Using
+        End Using
+    End Sub
+
+    ''' <summary>Entrega a renda pendente ao ClanMoney do gerente (Sod2DeliverRevenue). Devolve o valor entregue.</summary>
+    Public Function DeliverRevenue() As Long
+        Using connection = Open(SodDatabase)
+            Using command As New SqlCommand("dbo.Sod2DeliverRevenue", connection) With {.CommandType = CommandType.StoredProcedure}
+                Return Convert.ToInt64(command.ExecuteScalar())
+            End Using
+        End Using
+    End Function
+
+    ''' <summary>
+    ''' Fecha o periodo (Sod2ClosePeriod): entrega a renda, grava o historico, o 1o do ranking vira o gerente ate operTo e o
+    ''' ranking zera. tax so vale se ainda nao existe linha em Sod2Config. Devolve CL.IDX do novo gerente (0 = ninguem).
+    ''' </summary>
+    Public Function ClosePeriod(ByVal operTo As DateTime, ByVal tax As Integer) As Integer
+        Using connection = Open(SodDatabase)
+            Using command As New SqlCommand("dbo.Sod2ClosePeriod", connection) With {.CommandType = CommandType.StoredProcedure}
+                command.Parameters.Add("@OperTo", SqlDbType.DateTime).Value = operTo
+                command.Parameters.Add("@Tax", SqlDbType.Int).Value = tax
+                Return Convert.ToInt32(command.ExecuteScalar())
+            End Using
+        End Using
+    End Function
+
+    ''' <summary>Minimo de membros do clan que terminam o mesmo SoD para o Cpoint contar (Sod2Setting).</summary>
+    Public Function MinSurvivors() As Integer
+        Using connection = Open(SodDatabase)
+            Using command As New SqlCommand("SELECT TOP 1 MinClanSurvivors FROM [dbo].[Sod2Setting]", connection)
+                Dim value As Object = command.ExecuteScalar()
+                Return If(value Is Nothing OrElse value Is DBNull.Value, DefaultMinSurvivors, Convert.ToInt32(value))
+            End Using
+        End Using
+    End Function
+
+    Public Sub SaveMinSurvivors(ByVal value As Integer)
+        Using connection = Open(SodDatabase)
+            Using command As New SqlCommand(
+                "UPDATE [dbo].[Sod2Setting] SET MinClanSurvivors = @value; " &
+                "IF @@ROWCOUNT = 0 INSERT INTO [dbo].[Sod2Setting] (MinClanSurvivors) VALUES (@value)", connection)
+                command.Parameters.Add("@value", SqlDbType.Int).Value = value
+                command.ExecuteNonQuery()
+            End Using
+        End Using
+    End Sub
+
+    ''' <summary>Ultimos periodos de gerencia (Sod2ConfigLog), do mais recente para o mais antigo.</summary>
+    Public Function History() As List(Of BellatraPeriod)
+        Dim result As New List(Of BellatraPeriod)()
+        Using connection = Open(SodDatabase)
+            Using command As New SqlCommand(
+                "SELECT TOP (@top) IDX, ISNULL(ClanName, ''), ISNULL(CharName, ''), OperFrom, OperTo, TaxRates, ISNULL(TotalMoney, 0) " &
+                "FROM [dbo].[Sod2ConfigLog] ORDER BY IDX DESC", connection)
+                command.Parameters.Add("@top", SqlDbType.Int).Value = HistorySize
+                Using reader = command.ExecuteReader()
+                    Do While reader.Read()
+                        result.Add(New BellatraPeriod With {
+                            .Idx = Convert.ToInt32(reader.GetValue(0)),
+                            .ClanName = Text(reader, 1),
+                            .Leader = Text(reader, 2),
+                            .OperFrom = reader.GetDateTime(3),
+                            .OperTo = reader.GetDateTime(4),
+                            .TaxRates = reader.GetInt32(5),
+                            .TotalMoney = Convert.ToInt64(reader.GetValue(6))})
+                    Loop
+                End Using
+            End Using
+        End Using
+        Return result
     End Function
 
     Private Shared Function Text(ByVal reader As SqlDataReader, ByVal index As Integer) As String

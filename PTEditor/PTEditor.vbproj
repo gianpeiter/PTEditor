@@ -109,6 +109,12 @@
     <Compile Include="Forms\BellatraPanel.Designer.vb">
       <DependentUpon>BellatraPanel.vb</DependentUpon>
     </Compile>
+    <Compile Include="Forms\BellatraAdminPanel.vb">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Forms\BellatraAdminPanel.Designer.vb">
+      <DependentUpon>BellatraAdminPanel.vb</DependentUpon>
+    </Compile>
     <Compile Include="Forms\SpawnMapCanvas.vb">
       <SubType>Component</SubType>
     </Compile>

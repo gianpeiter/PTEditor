@@ -392,6 +392,8 @@ Partial Class MainEditor
         Me.PostBoxPanel1 = New PTEditor.PostBoxPanel()
         Me.TabPageBellatra = New System.Windows.Forms.TabPage()
         Me.BellatraPanel1 = New PTEditor.BellatraPanel()
+        Me.TabPageBellatraAdmin = New System.Windows.Forms.TabPage()
+        Me.BellatraAdminPanel1 = New PTEditor.BellatraAdminPanel()
         Me.TabPageSpawn = New System.Windows.Forms.TabPage()
         Me.SpawnPointPanel1 = New PTEditor.SpawnPointPanel()
         Me.TabPage4 = New System.Windows.Forms.TabPage()
@@ -486,6 +488,7 @@ Partial Class MainEditor
         Me.TabPageAwardItems.SuspendLayout()
         Me.TabPagePostBox.SuspendLayout()
         Me.TabPageBellatra.SuspendLayout()
+        Me.TabPageBellatraAdmin.SuspendLayout()
         Me.TabPageSpawn.SuspendLayout()
         Me.TabPage4.SuspendLayout()
         Me.GroupBox7.SuspendLayout()
@@ -1270,6 +1273,7 @@ Partial Class MainEditor
         Me.TabControl1.Controls.Add(Me.TabPageAwardItems)
         Me.TabControl1.Controls.Add(Me.TabPagePostBox)
         Me.TabControl1.Controls.Add(Me.TabPageBellatra)
+        Me.TabControl1.Controls.Add(Me.TabPageBellatraAdmin)
         Me.TabControl1.Controls.Add(Me.TabPage4)
         Me.TabControl1.Location = New System.Drawing.Point(4, 5)
         Me.TabControl1.Name = "TabControl1"
@@ -3811,6 +3815,25 @@ Partial Class MainEditor
         Me.BellatraPanel1.Size = New System.Drawing.Size(1034, 654)
         Me.BellatraPanel1.TabIndex = 0
         '
+        'TabPageBellatraAdmin
+        '
+        Me.TabPageBellatraAdmin.Controls.Add(Me.BellatraAdminPanel1)
+        Me.TabPageBellatraAdmin.Location = New System.Drawing.Point(4, 22)
+        Me.TabPageBellatraAdmin.Name = "TabPageBellatraAdmin"
+        Me.TabPageBellatraAdmin.Padding = New System.Windows.Forms.Padding(3)
+        Me.TabPageBellatraAdmin.Size = New System.Drawing.Size(1040, 660)
+        Me.TabPageBellatraAdmin.TabIndex = 11
+        Me.TabPageBellatraAdmin.Text = "Bellatra Admin"
+        Me.TabPageBellatraAdmin.UseVisualStyleBackColor = True
+        '
+        'BellatraAdminPanel1
+        '
+        Me.BellatraAdminPanel1.Dock = System.Windows.Forms.DockStyle.Fill
+        Me.BellatraAdminPanel1.Location = New System.Drawing.Point(3, 3)
+        Me.BellatraAdminPanel1.Name = "BellatraAdminPanel1"
+        Me.BellatraAdminPanel1.Size = New System.Drawing.Size(1034, 654)
+        Me.BellatraAdminPanel1.TabIndex = 0
+        '
         'TabPage4
         '
         Me.TabPage4.Controls.Add(Me.ProfilePanel1)
@@ -4343,6 +4366,7 @@ Partial Class MainEditor
         Me.TabPageAwardItems.ResumeLayout(False)
         Me.TabPagePostBox.ResumeLayout(False)
         Me.TabPageBellatra.ResumeLayout(False)
+        Me.TabPageBellatraAdmin.ResumeLayout(False)
         Me.TabPageSpawn.ResumeLayout(False)
         Me.TabPage4.ResumeLayout(False)
         Me.GroupBox7.ResumeLayout(False)
@@ -4663,6 +4687,8 @@ Partial Class MainEditor
     Friend WithEvents PostBoxPanel1 As PTEditor.PostBoxPanel
     Friend WithEvents TabPageBellatra As System.Windows.Forms.TabPage
     Friend WithEvents BellatraPanel1 As PTEditor.BellatraPanel
+    Friend WithEvents TabPageBellatraAdmin As System.Windows.Forms.TabPage
+    Friend WithEvents BellatraAdminPanel1 As PTEditor.BellatraAdminPanel
     Friend WithEvents TabPageSpawn As System.Windows.Forms.TabPage
     Friend WithEvents SpawnPointPanel1 As PTEditor.SpawnPointPanel
     Friend WithEvents TabPage5 As System.Windows.Forms.TabPage
