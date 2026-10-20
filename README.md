@@ -16,6 +16,7 @@ Visual Studio 2022 / .NET Framework 4.8 / VB.NET.
 | Item Finder | Busca itens em todos os personagens e baus, lista itens duplicados e com checksum invalido. |
 | Award Items | Envia itens para NPCs com `*AwardItem` (tabela `AwardItem_List` do SQL Server). |
 | PostBox | Envia itens para NPCs com `*경품배달`, como o Item Distributor (arquivos `PostBox\<n>\<conta>.dat`). |
+| Bellatra | A pagina do clan dono do antigo site do Bellatra: clan dono e periodo, saudacao da Karina e `Bellatra\bellatra.ini` (taxa, monstros e chefes de cada round). |
 | Options | Pasta do servidor, banco de dados, editor de texto e perfis de personagem. |
 
 ## Compilar
@@ -111,6 +112,31 @@ As duas linhas podem ficar no mesmo NPC: um clique atende os dois sistemas. O `.
   Isso cobre so o `.spc`: loja, nome, falas e o `.NPC`/`.zhoon` criados pelo Add nao sao desfeitos.
 - Clique direito sem arrastar mostra **Bring back to Map**, que leva o NPC para o centro da vista.
 - O servidor le os `.spc` ao iniciar: reinicie-o depois de salvar.
+
+## Bellatra
+
+No legado, o clan dono do Bellatra configurava o torneio pelo site. O site gravava `Bellatra\bellatra.ini`, que o
+servidor rele no inicio de cada SoD; a aba grava o mesmo arquivo, entao a mudanca vale no SoD seguinte, sem reiniciar.
+A aba faz o papel do lider do clan dono, sem verificacao (so o administrador usa o PTEditor).
+
+- **Clan dono:** o maior `ClanDB.CL.Cpoint` acima de 0 (desempate pelo `IDX`), o mesmo que a Karina mostra. Sem clan com
+  pontos nao ha dono. A aba mostra lider, pontos, `CL.ClanMoney` (o lider saca na Karina) e o periodo de
+  `SoD2DB.Sod2Config` que inclui hoje: taxa exibida, rendimento (`TotalEnterMoney`) e recompensas (`TotalMoney`).
+- **Saudacao da Karina:** `CL.Note` do clan dono (ate 89 caracteres, uma linha, sem `|`). E a nota do clan: a janela do
+  clan tambem a mostra.
+- **Taxa:** 0 a 10% (como no site), descontada do premio de cada jogador; nao vai para nenhum clan. O Save grava o
+  `bellatra.ini` e copia a taxa para `Sod2Config.TaxRates` do periodo atual (o que a Karina exibe); sem periodo atual so o
+  arquivo e gravado.
+- **Rounds 1 a 8:** ate 4 monstros com a % de cada (soma 100), maximo de monstros vivos por sala (11 a 50; o chefe nasce
+  depois de maximo - 10) e o chefe dos rounds 3, 6 e 8. Os nomes sao os nomes **em execucao**: o `*B_NAME` do `.zhoon`
+  (o servidor troca o `*이름` por ele ao abrir e le o arquivo depois); um por nome, o primeiro na ordem de carga, como o
+  servidor. Nome que nao existe deixa o monstro sem nascer.
+- **Load monsters** preenche os rounds com uma das 3 tabelas do codigo do servidor (convertidas do `*이름` para o nome em
+  execucao). **Save** grava as 8 linhas (backup em `Bellatra\backup`) e so grava se tudo estiver valido. **Remove file**
+  apaga o arquivo: o servidor volta a sortear uma das 3 tabelas do codigo a cada SoD.
+- Se o arquivo nao tiver as 8 linhas `*BELATRA_MONSTER`, o servidor ignora o arquivo inteiro, inclusive a taxa. Sem a
+  linha `*BELATRA_TAX` a taxa e 0.
+- Ranking, periodos de `Sod2Config` e os pontos dos clans ficam para a futura aba **Bellatra Admin**.
 
 ## Cuidados
 
