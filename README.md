@@ -16,8 +16,6 @@ Visual Studio 2022 / .NET Framework 4.8 / VB.NET.
 | Item Finder | Busca itens em todos os personagens e baus, lista itens duplicados e com checksum invalido. |
 | Award Items | Envia itens para NPCs com `*AwardItem` (tabela `AwardItem_List` do SQL Server). |
 | PostBox | Envia itens para NPCs com `*경품배달`, como o Item Distributor (arquivos `PostBox\<n>\<conta>.dat`). |
-| Bellatra | A pagina do gerente do antigo site do Bellatra: gerente e renda, saudacao da Karina e `Bellatra\bellatra.ini` (taxa, monstros e chefes de cada round). |
-| Bellatra Admin | A parte do antigo site que rodava sozinha, agora feita pelo administrador: entrega da renda ao clan gerente, fechamento do periodo (novo gerente e ranking zerado), ranking, historico e minimo de membros do clan nos pontos. |
 | Options | Pasta do servidor, banco de dados, editor de texto e perfis de personagem. |
 
 ## Compilar
@@ -113,41 +111,6 @@ As duas linhas podem ficar no mesmo NPC: um clique atende os dois sistemas. O `.
   Isso cobre so o `.spc`: loja, nome, falas e o `.NPC`/`.zhoon` criados pelo Add nao sao desfeitos.
 - Clique direito sem arrastar mostra **Bring back to Map**, que leva o NPC para o centro da vista.
 - O servidor le os `.spc` ao iniciar: reinicie-o depois de salvar.
-
-## Bellatra
-
-No legado, o clan dono do Bellatra configurava o torneio pelo site. O site gravava `Bellatra\bellatra.ini`, que o
-servidor rele no inicio de cada SoD; a aba grava o mesmo arquivo, entao a mudanca vale no SoD seguinte, sem reiniciar.
-
-- **Gerente:** a aba mostra o clan gerente, o periodo e a renda (`SoD2DB.Sod2Config`): o que foi entregue na ultima
-  entrega ("ontem" na Karina) e no periodo. Quem entrega a renda e troca o gerente e a aba **Bellatra Admin**.
-- **Saudacao da Karina:** `Sod2Config.Note` do gerente (ate 89 caracteres, sem `|`). Nao e apagada quando outro clan assume.
-- **Taxa:** 0 a 10% (como no site), descontada do premio de cada jogador e dada ao gerente. O Save grava o
-  `bellatra.ini` e tambem `Sod2Config.TaxRates`, com uma linha em `Sod2TaxLog` quando muda.
-- **Rounds 1 a 8:** ate 4 monstros com a % de cada (soma 100), maximo de monstros vivos por sala (11 a 50; o chefe nasce
-  depois de maximo - 10) e o chefe dos rounds 3, 6 e 8. Os monstros vem do `*이름` dos `.inf` carregados.
-- **Load monsters** preenche os rounds com uma das 3 tabelas do codigo do servidor. **Save** grava as 8 linhas (backup em
-  `Bellatra\backup`) e so grava se tudo estiver valido. **Remove file** apaga o arquivo: o servidor volta a sortear uma das
-  3 tabelas do codigo a cada SoD.
-- Se o arquivo nao tiver as 8 linhas `*BELATRA_MONSTER`, o servidor ignora o arquivo inteiro, inclusive a taxa.
-
-## Bellatra Admin
-
-No legado, o site tambem rodava sozinho a parte de baixo: calculava o ranking dos clans, depositava a renda do gerente e
-trocava o gerente no fim do periodo. O site se perdeu; aqui o administrador faz isso, pelas procedures de
-`Database\SoD2DB.sql` do Servidor (precisam existir no SQL Server):
-
-- **Manager and revenue:** gerente, periodo, taxa, o recolhido desde a ultima entrega (taxa sobre os premios pagos), a parte a
-  liberar ao clan, a ultima entrega e o total do periodo. **Deliver revenue** soma a parte liberada em `CL.ClanMoney` do gerente
-  (`Sod2DeliverRevenue`, com linha em `ClanMoneyLog`); o lider saca na Karina.
-- **Close the period:** escolha quando o novo periodo termina e clique **Close period** (`Sod2ClosePeriod`): entrega a renda,
-  guarda o periodo em `Sod2ConfigLog`, o 1o do ranking vira o gerente e os pontos de todos os
-  clans voltam a 0. Nada fecha sozinho.
-- **Ranking:** os pontos do periodo (`ClanDB.CL.Cpoint`, os mesmos 10 que a Karina lista), gravados a cada SoD pela
-  `SQL.dll` (procedure `Sod2Record_Web`).
-- **Rules:** minimo de membros do clan que terminam o mesmo SoD para os pontos contarem (`Sod2Setting`, padrao 3) e a
-  porcentagem do recolhido liberada ao clan gerente (`Sod2Setting.ReleasePercent`, padrao 100; a taxa em si continua na aba Bellatra).
-- **Previous periods:** o historico de `Sod2ConfigLog`.
 
 ## Cuidados
 

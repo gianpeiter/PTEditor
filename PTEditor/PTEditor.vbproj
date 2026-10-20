@@ -61,8 +61,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Data\AwardItems\AwardItemRepository.vb" />
-    <Compile Include="Data\Bellatra\BellatraConfig.vb" />
-    <Compile Include="Data\Bellatra\BellatraRepository.vb" />
     <Compile Include="Data\NpcUndoHistory.vb" />
     <Compile Include="Data\PostBox\PostBoxRepository.vb" />
     <Compile Include="Data\Database\DatabaseConfig.vb" />
@@ -102,18 +100,6 @@
     </Compile>
     <Compile Include="Forms\PostBoxPanel.Designer.vb">
       <DependentUpon>PostBoxPanel.vb</DependentUpon>
-    </Compile>
-    <Compile Include="Forms\BellatraPanel.vb">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="Forms\BellatraPanel.Designer.vb">
-      <DependentUpon>BellatraPanel.vb</DependentUpon>
-    </Compile>
-    <Compile Include="Forms\BellatraAdminPanel.vb">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="Forms\BellatraAdminPanel.Designer.vb">
-      <DependentUpon>BellatraAdminPanel.vb</DependentUpon>
     </Compile>
     <Compile Include="Forms\SpawnMapCanvas.vb">
       <SubType>Component</SubType>
