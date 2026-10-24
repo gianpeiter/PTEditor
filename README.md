@@ -44,6 +44,8 @@ DataServer-Path=C:\Servidor\DataServer
 - **Banco de dados:** a conexao vem da secao `[Database]` do `server.ini` da pasta do servidor. Em Options, o botao
   Database abre esse arquivo e Test confere `PristonDB.AwardItem_List` (Award Items) e `ClanDB` (verificacao de clan
   ao excluir personagem).
+  Se o `server.ini` nao existir, o botao Database oferece cria-lo com a secao `[Database]` (`Host`, `User`, `Pass`) em
+  branco para preencher; `User` vazio usa o login do Windows. Nunca sobrescreve um arquivo existente.
 
 ## Entrega de itens: Award Items e PostBox
 
