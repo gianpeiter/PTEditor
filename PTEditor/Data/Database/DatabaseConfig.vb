@@ -38,6 +38,25 @@ Friend NotInheritable Class DatabaseConfig
         Return New DatabaseConfig(path, host, If(user, ""), If(pass, ""))
     End Function
 
+    ''' <summary>
+    ''' Cria um server.ini modelo na pasta do servidor, com a secao [Database] (Host, User, Pass) em branco para o
+    ''' usuario preencher. Nunca sobrescreve: lanca excecao se o arquivo ja existe. Devolve o caminho criado.
+    ''' </summary>
+    Public Shared Function CreateTemplate(ByVal serverPath As String) As String
+        Dim path As String = System.IO.Path.Combine(serverPath, FileName)
+        If File.Exists(path) Then Throw New IOException(FileName & " already exists: " & path)
+        Dim lines As String() = {
+            "; SQL Server connection used by the server and by PTEditor (Award Items, Bellatra, character delete).",
+            "; Host: server name or address, e.g. localhost or localhost\SQLEXPRESS",
+            "; User / Pass: SQL Server login. Leave User empty to use the Windows login.",
+            "[Database]",
+            "Host=",
+            "User=",
+            "Pass="}
+        File.WriteAllLines(path, lines, AppState.FileEncoding)
+        Return path
+    End Function
+
     Private Shared Function ReadSection(ByVal path As String, ByVal name As String) As Dictionary(Of String, String)
         Dim result As New Dictionary(Of String, String)(StringComparer.OrdinalIgnoreCase)
         Dim inSection As Boolean = False

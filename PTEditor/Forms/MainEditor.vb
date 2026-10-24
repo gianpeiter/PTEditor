@@ -354,9 +354,24 @@ Public Class MainEditor
     Private Sub cmdDatabase_Click(ByVal sender As Object, ByVal e As EventArgs) Handles cmdDatabase.Click
         Dim path As String = System.IO.Path.Combine(AppState.ServerPath, DatabaseConfig.FileName)
         If Not File.Exists(path) Then
-            MsgBox(DatabaseConfig.FileName & " not found in the server folder:" & vbCrLf & path & vbCrLf & vbCrLf &
-                   "Check the Server Path.", MsgBoxStyle.Exclamation, "Database")
-            Return
+            If Not Directory.Exists(AppState.ServerPath) Then
+                MsgBox("Server folder not found:" & vbCrLf & AppState.ServerPath & vbCrLf & vbCrLf &
+                       "Check the Server Path.", MsgBoxStyle.Exclamation, "Database")
+                Return
+            End If
+            If MsgBox(DatabaseConfig.FileName & " not found in the server folder:" & vbCrLf & path & vbCrLf & vbCrLf &
+                      "Create it with an empty [Database] section (Host, User, Pass) so you can fill in the connection?",
+                      MsgBoxStyle.YesNo Or MsgBoxStyle.Question, "Database") <> MsgBoxResult.Yes Then Return
+            Try
+                DatabaseConfig.CreateTemplate(AppState.ServerPath)
+            Catch ex As Exception When TypeOf ex Is UnauthorizedAccessException OrElse TypeOf ex Is IOException
+                MsgBox("Could not create " & path & vbCrLf & vbCrLf & ex.Message & vbCrLf & vbCrLf &
+                       "Check that the Server Path points to the server folder and that you can write to it.",
+                       MsgBoxStyle.Exclamation, "Database")
+                ErrorLog.Write("cmdDatabase: " & path & vbCrLf & ex.ToString())
+                Return
+            End Try
+            ServerDatabase.Reload()
         End If
         ProcessHelper.Open(AppState.EditorExe, path)
     End Sub
